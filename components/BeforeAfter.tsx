@@ -64,7 +64,7 @@ export function BeforeAfter({
             />
             {/* Visible circular grip (keyboard focus ring driven by the range's peer state). */}
             <div
-              className="pointer-events-none absolute top-1/2 z-10 flex h-8 w-8 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white text-emerald shadow-md ring-1 ring-black/10 peer-focus-visible:ring-2 peer-focus-visible:ring-emerald"
+              className="pointer-events-none absolute top-1/2 z-10 flex h-8 w-8 -translate-x-1/2 -translate-y-1/2 items-center justify-center rounded-full bg-white text-primary shadow-md ring-1 ring-black/10 peer-focus-visible:ring-2 peer-focus-visible:ring-primary"
               style={{ left: `${pos}%` }}
               aria-hidden
             >
@@ -73,7 +73,7 @@ export function BeforeAfter({
             <span className="absolute left-3 top-3 rounded-full bg-ink/70 px-2.5 py-1 text-xs font-medium text-white">
               Your photo
             </span>
-            <span className="absolute right-3 top-3 rounded-full bg-emerald/85 px-2.5 py-1 text-xs font-medium text-white">
+            <span className="absolute right-3 top-3 rounded-full bg-primary/85 px-2.5 py-1 text-xs font-medium text-white">
               What YouCam sees
             </span>
             {!touched && (

@@ -1,16 +1,17 @@
 @import "tailwindcss";
 
-/* ---- Aphrodite design tokens (editorial beauty concierge) ---- */
+/* ---- Aphrodite design tokens (cherry-blossom beauty concierge) ---- */
 @theme {
-  --color-paper: #f6f4ef; /* warm ivory background */
-  --color-surface: #fffdf9; /* card surface */
-  --color-ink: #1b1d1a; /* near-black warm ink */
-  --color-muted: #6b6e68; /* secondary text */
-  --color-line: #e5e0d6; /* hairline borders */
-  --color-emerald: #0f5f4e; /* primary accent (hero) */
-  --color-emerald-soft: #dfeae5;
-  --color-gold: #c9a24b; /* secondary accent */
-  --color-rose: #b5563c; /* warm highlight */
+  --color-paper: #fbf2f2; /* blush ivory background */
+  --color-surface: #fffafb; /* rose-white card surface */
+  --color-ink: #2c2126; /* warm plum-ink */
+  --color-muted: #937a80; /* dusty mauve secondary text */
+  --color-line: #f0dbdd; /* blossom hairline borders */
+  --color-primary: #aa4467; /* cherry-rose primary accent */
+  --color-primary-soft: #f8e4ea; /* pale blossom */
+  --color-gold: #cba86a; /* soft warm gold (emblem / secondary) */
+  --color-rose: #bf5140; /* attention / low-health (distinct warm red) */
+  --color-leaf: #6f9e78; /* leaf green — healthy / "strong" (blossom-branch) */
 
   --font-serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua",
     Georgia, "Times New Roman", serif;
@@ -25,7 +26,12 @@ html {
 }
 
 body {
-  background: var(--color-paper);
+  /* Soft cherry-blossom glow blooming from the top, over blush ivory. */
+  background:
+    radial-gradient(1100px 460px at 50% -12%, #fbdCe8 0%, rgba(251, 220, 232, 0) 60%),
+    radial-gradient(760px 380px at 88% 4%, #f6e6d9 0%, rgba(246, 230, 217, 0) 55%),
+    var(--color-paper);
+  background-attachment: fixed;
   color: var(--color-ink);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;

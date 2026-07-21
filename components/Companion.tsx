@@ -2,23 +2,26 @@
 
 import { useState, type ReactNode } from "react";
 
-/** Aphrodite's emblem — an elegant monogram mark, theme-tinted, no image asset. */
+/** Aphrodite's emblem — a five-petal cherry blossom, theme-tinted, no image asset. */
 export function AphroditeMark({ size = 28 }: { size?: number }) {
+  const petals = [0, 72, 144, 216, 288];
   return (
     <svg width={size} height={size} viewBox="0 0 40 40" role="img" aria-label="Aphrodite">
-      <circle cx="20" cy="20" r="19" fill="var(--color-emerald)" />
-      <circle cx="20" cy="20" r="18" fill="none" stroke="var(--color-gold)" strokeWidth="1.25" opacity="0.9" />
-      <text
-        x="20"
-        y="28"
-        textAnchor="middle"
-        fontFamily="var(--font-serif)"
-        fontSize="23"
-        fontStyle="italic"
-        fill="#fffdf9"
-      >
-        A
-      </text>
+      <g transform="translate(20 20)">
+        {petals.map((a) => (
+          <ellipse
+            key={a}
+            cx="0"
+            cy="-10"
+            rx="5"
+            ry="8"
+            transform={`rotate(${a})`}
+            fill="var(--color-primary)"
+            opacity="0.85"
+          />
+        ))}
+        <circle r="3.6" fill="var(--color-gold)" />
+      </g>
     </svg>
   );
 }
@@ -75,10 +78,10 @@ export function NextWithAphrodite() {
             onClick={() => setPicked(n.key)}
             aria-pressed={picked === n.key}
             title={n.api}
-            className={`rounded-full border px-3 py-1.5 text-xs transition focus-visible:ring-2 focus-visible:ring-emerald ${
+            className={`rounded-full border px-3 py-1.5 text-xs transition focus-visible:ring-2 focus-visible:ring-primary ${
               picked === n.key
-                ? "border-emerald bg-emerald text-white"
-                : "border-line text-ink hover:border-emerald hover:text-emerald"
+                ? "border-primary bg-primary text-white"
+                : "border-line text-ink hover:border-primary hover:text-primary"
             }`}
           >
             {n.label}

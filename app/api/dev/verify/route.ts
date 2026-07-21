@@ -9,7 +9,7 @@ import { tryOnApparel } from "@/lib/youcam/apparel";
  * exact v2 schema. Disabled outside development.
  *
  * Usage (after setting YOUCAM_API_KEY in .env.local and `npm run dev`):
- *   /api/dev/verify?image=<https selfie url>&garment=emerald-slip-dress&steps=skin,color,apparel
+ *   /api/dev/verify?image=<https selfie url>&garment=primary-slip-dress&steps=skin,color,apparel
  */
 export const runtime = "nodejs";
 export const maxDuration = 300;

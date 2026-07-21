@@ -74,17 +74,17 @@ export function Concierge() {
       <header className="mb-10 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <AphroditeMark size={26} />
-          <span className="font-serif text-2xl tracking-tight text-emerald">Aphrodite</span>
+          <span className="font-serif text-2xl tracking-tight text-primary">Aphrodite</span>
           <span className="hidden text-sm text-muted sm:inline">occasion concierge</span>
         </div>
         <div className="flex items-center gap-3">
           <span className="hidden text-xs text-muted sm:inline">
-            Powered by <span className="font-medium text-emerald">YouCam AI</span>
+            Powered by <span className="font-medium text-primary">YouCam AI</span>
           </span>
           {state.phase !== "idle" && (
             <button
               onClick={startOver}
-              className="rounded-full border border-line px-4 py-1.5 text-sm text-ink transition hover:bg-white focus-visible:ring-2 focus-visible:ring-emerald"
+              className="rounded-full border border-line px-4 py-1.5 text-sm text-ink transition hover:bg-white focus-visible:ring-2 focus-visible:ring-primary"
             >
               Start over
             </button>
@@ -105,13 +105,13 @@ export function Concierge() {
             on you.
           </p>
           <p className="mt-3 text-sm text-muted">
-            Powered by <span className="font-medium text-emerald">YouCam AI</span> — Skin
+            Powered by <span className="font-medium text-primary">YouCam AI</span> — Skin
             Analysis · Color Analysis · Apparel Try-On · Photo Lighting
           </p>
 
           <div className="mt-6 max-w-xl">
             <CompanionBubble>
-              Hi, I&apos;m <span className="font-medium text-emerald">Aphrodite</span>, your beauty
+              Hi, I&apos;m <span className="font-medium text-primary">Aphrodite</span>, your beauty
               companion. Tell me the occasion and share a selfie — I&apos;ll read your skin and your
               colors and get you ready to shine. ✨
             </CompanionBubble>
@@ -125,7 +125,7 @@ export function Concierge() {
                 onChange={(e) => setOccasion(e.target.value)}
                 rows={2}
                 placeholder="e.g. An evening wedding in 3 weeks"
-                className="mt-2 w-full resize-none rounded-lg border border-line bg-paper px-3 py-2 text-ink outline-none focus:border-emerald"
+                className="mt-2 w-full resize-none rounded-lg border border-line bg-paper px-3 py-2 text-ink outline-none focus:border-primary"
               />
               <p className="mt-4 text-xs font-medium uppercase tracking-wide text-muted">
                 Or start from an occasion
@@ -138,8 +138,8 @@ export function Concierge() {
                       key={p.label}
                       onClick={() => setOccasion(p.occasion)}
                       aria-pressed={active}
-                      className={`rounded-lg border px-3 py-2 text-left transition focus-visible:ring-2 focus-visible:ring-emerald ${
-                        active ? "border-emerald bg-emerald-soft" : "border-line hover:border-emerald"
+                      className={`rounded-lg border px-3 py-2 text-left transition focus-visible:ring-2 focus-visible:ring-primary ${
+                        active ? "border-primary bg-primary-soft" : "border-line hover:border-primary"
                       }`}
                     >
                       <span className="block text-sm font-medium text-ink">{p.label}</span>
@@ -162,7 +162,7 @@ export function Concierge() {
               <button
                 type="button"
                 onClick={loadSamples}
-                className="mt-2 text-xs font-medium text-emerald underline-offset-2 hover:underline focus-visible:ring-2 focus-visible:ring-emerald"
+                className="mt-2 text-xs font-medium text-primary underline-offset-2 hover:underline focus-visible:ring-2 focus-visible:ring-primary"
               >
                 No photo handy? Try a sample →
               </button>
@@ -193,7 +193,7 @@ export function Concierge() {
           <button
             onClick={submit}
             disabled={!canSubmit}
-            className="mt-6 rounded-full bg-emerald px-7 py-3 text-base font-medium text-white shadow-sm transition enabled:hover:bg-[#0c4d40] focus-visible:ring-2 focus-visible:ring-emerald disabled:cursor-not-allowed disabled:opacity-40"
+            className="mt-6 rounded-full bg-primary px-7 py-3 text-base font-medium text-white shadow-sm transition enabled:hover:bg-[#8c3556] focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-40"
           >
             Build my look
           </button>
@@ -252,7 +252,7 @@ function Results({
           {state.mode && (
             <span
               className={`rounded-full px-2.5 py-0.5 text-xs font-medium ${
-                state.mode === "agentic" ? "bg-emerald text-white" : "border border-line text-muted"
+                state.mode === "agentic" ? "bg-primary text-white" : "border border-line text-muted"
               }`}
             >
               {state.mode === "agentic" ? "YouCam AI · orchestrated by Claude" : "YouCam AI · guided"}
@@ -364,7 +364,7 @@ function BoardActions({ board, occasion }: { board: LookBoard; occasion: string 
   };
 
   const btn =
-    "rounded-full border border-line px-4 py-1.5 text-sm text-ink transition hover:border-emerald hover:text-emerald focus-visible:ring-2 focus-visible:ring-emerald";
+    "rounded-full border border-line px-4 py-1.5 text-sm text-ink transition hover:border-primary hover:text-primary focus-visible:ring-2 focus-visible:ring-primary";
   return (
     <div className="aura-no-print mt-3 flex flex-wrap gap-2">
       <button onClick={() => window.print()} className={btn}>
@@ -427,7 +427,7 @@ function RefineBar({
             key={r.adjust}
             disabled={disabled}
             onClick={() => refine(r.adjust)}
-            className="rounded-full border border-line px-3 py-1.5 text-xs text-ink transition hover:border-emerald hover:text-emerald focus-visible:ring-2 focus-visible:ring-emerald disabled:cursor-not-allowed disabled:opacity-40"
+            className="rounded-full border border-line px-3 py-1.5 text-xs text-ink transition hover:border-primary hover:text-primary focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-40"
           >
             {r.label}
           </button>
@@ -448,7 +448,7 @@ function StatStrip({ state }: { state: ConciergeState }) {
   if (state.board) stats.push(`${state.board.shopping.length} products`);
   if (state.color?.undertone) stats.push(`${state.color.undertone} undertone`);
   if (stats.length === 0) return null;
-  return <p className="mt-2 text-sm text-emerald">{stats.join(" · ")}</p>;
+  return <p className="mt-2 text-sm text-primary">{stats.join(" · ")}</p>;
 }
 
 function StreamPanel({ state }: { state: ConciergeState }) {
@@ -463,8 +463,8 @@ function StreamPanel({ state }: { state: ConciergeState }) {
           const cls = failed
             ? "bg-rose/10 text-rose"
             : active
-              ? "bg-emerald text-white"
-              : "bg-emerald-soft text-emerald";
+              ? "bg-primary text-white"
+              : "bg-primary-soft text-primary";
           return (
             <span
               key={`${s.name}-${i}`}
@@ -517,7 +517,7 @@ function ApiLedger({ state }: { state: ConciergeState }) {
   return (
     <div className="rounded-[var(--radius-card)] border border-line bg-surface p-4">
       <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted">
-        Powered by <span className="text-emerald">YouCam AI</span> — {count} Perfect Corp{" "}
+        Powered by <span className="text-primary">YouCam AI</span> — {count} Perfect Corp{" "}
         {count === 1 ? "API" : "APIs"} this run
       </p>
       <div className="flex flex-wrap gap-2">
@@ -526,9 +526,9 @@ function ApiLedger({ state }: { state: ConciergeState }) {
             key={i}
             className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium ${
               r.status === "done"
-                ? "bg-emerald-soft text-emerald"
+                ? "bg-primary-soft text-primary"
                 : r.status === "running"
-                  ? "bg-emerald text-white"
+                  ? "bg-primary text-white"
                   : "border border-line text-muted"
             }`}
           >
@@ -562,10 +562,10 @@ function SkinConcerns({ skin }: { skin: SkinAnalysis }) {
           const s = clamp(c.score);
           const strong = s >= 75;
           const watch = !strong && s >= 55;
-          const tone = strong ? "bg-emerald" : watch ? "bg-gold" : "bg-rose";
+          const tone = strong ? "bg-leaf" : watch ? "bg-gold" : "bg-rose";
           const word = strong ? "Strong" : watch ? "Watch" : "Focus";
           const wordCls = strong
-            ? "bg-emerald-soft text-emerald"
+            ? "bg-leaf/20 text-ink"
             : watch
               ? "bg-gold/25 text-ink"
               : "bg-rose/15 text-rose";
@@ -645,7 +645,7 @@ function LookBoardPanel({ board }: { board: LookBoard }) {
   const products = board.shopping.filter((s) => typeof s.price === "number");
   const total = products.reduce((sum, p) => sum + (p.price ?? 0), 0);
   return (
-    <div className="aura-reveal space-y-6 rounded-[var(--radius-card)] border border-emerald/25 bg-surface p-6 shadow-sm">
+    <div className="aura-reveal space-y-6 rounded-[var(--radius-card)] border border-primary/25 bg-surface p-6 shadow-sm">
       {board.narrative && (
         <p className="max-w-3xl font-serif text-lg leading-relaxed text-ink">{board.narrative}</p>
       )}
@@ -657,8 +657,8 @@ function LookBoardPanel({ board }: { board: LookBoard }) {
             <ol className="relative space-y-4 border-l border-line pl-5">
               {board.countdown.map((s, i) => (
                 <li key={i} className="relative">
-                  <span className="absolute -left-[26px] top-1 h-3 w-3 rounded-full bg-emerald ring-4 ring-emerald-soft" />
-                  <p className="text-sm font-medium text-emerald">{s.when}</p>
+                  <span className="absolute -left-[26px] top-1 h-3 w-3 rounded-full bg-primary ring-4 ring-primary-soft" />
+                  <p className="text-sm font-medium text-primary">{s.when}</p>
                   <p className="text-[15px] text-ink">{s.action}</p>
                   {s.productCategory && <p className="text-xs text-muted">→ {s.productCategory}</p>}
                 </li>
@@ -691,7 +691,7 @@ function LookBoardPanel({ board }: { board: LookBoard }) {
 
       <div className="space-y-3 border-t border-line pt-4">
         <p className="text-xs text-muted">
-          Every image in this look is a real <span className="font-medium text-emerald">YouCam AI</span>{" "}
+          Every image in this look is a real <span className="font-medium text-primary">YouCam AI</span>{" "}
           render of you — nothing is simulated or faked.
         </p>
         <details className="aura-no-print text-sm">
@@ -737,7 +737,7 @@ function ShopItem({ item }: { item: ShoppingItem }) {
           href={item.url}
           target="_blank"
           rel="noopener noreferrer"
-          className="shrink-0 rounded-full bg-emerald px-3 py-1.5 text-xs font-medium text-white transition hover:bg-[#0c4d40]"
+          className="shrink-0 rounded-full bg-primary px-3 py-1.5 text-xs font-medium text-white transition hover:bg-[#8c3556]"
         >
           Shop
         </a>
@@ -776,7 +776,7 @@ function Uploader({
         void take(e.dataTransfer.files?.[0]);
       }}
       className={`group relative flex aspect-[4/5] cursor-pointer flex-col items-center justify-center overflow-hidden rounded-lg border border-dashed text-center transition ${
-        drag ? "border-emerald bg-emerald-soft" : "border-line bg-paper hover:border-emerald"
+        drag ? "border-primary bg-primary-soft" : "border-line bg-paper hover:border-primary"
       }`}
     >
       {value ? (
@@ -792,7 +792,7 @@ function Uploader({
           {label}
           {required && <span className="text-rose"> *</span>}
           <br />
-          <span className="text-emerald group-hover:underline">upload or drop</span>
+          <span className="text-primary group-hover:underline">upload or drop</span>
         </span>
       )}
       <input
@@ -831,7 +831,7 @@ function ModeToggle({ value, onChange }: { value: ModeValue; onChange: (v: ModeV
           title={o.disabled ? "Needs an Anthropic key" : undefined}
           onClick={() => !o.disabled && onChange(o.v)}
           className={`px-3.5 py-2 text-sm transition ${
-            value === o.v ? "bg-emerald text-white" : "bg-surface text-muted hover:text-ink"
+            value === o.v ? "bg-primary text-white" : "bg-surface text-muted hover:text-ink"
           } ${o.disabled ? "cursor-not-allowed opacity-40" : ""}`}
         >
           {o.label}
@@ -858,10 +858,10 @@ function FocusToggle({ value, onChange }: { value: SkinGoal; onChange: (v: SkinG
           key={o.v}
           onClick={() => onChange(o.v)}
           aria-pressed={value === o.v}
-          className={`rounded-full border px-3 py-1.5 text-xs transition focus-visible:ring-2 focus-visible:ring-emerald ${
+          className={`rounded-full border px-3 py-1.5 text-xs transition focus-visible:ring-2 focus-visible:ring-primary ${
             value === o.v
-              ? "border-emerald bg-emerald text-white"
-              : "border-line text-muted hover:border-emerald hover:text-emerald"
+              ? "border-primary bg-primary text-white"
+              : "border-line text-muted hover:border-primary hover:text-primary"
           }`}
         >
           {o.label}
@@ -885,7 +885,7 @@ function TrackToggle({ value, onChange }: { value: StyleTrack; onChange: (v: Sty
           onClick={() => onChange(o.v)}
           aria-pressed={value === o.v}
           className={`px-3.5 py-2 text-sm transition ${
-            value === o.v ? "bg-emerald text-white" : "bg-surface text-muted hover:text-ink"
+            value === o.v ? "bg-primary text-white" : "bg-surface text-muted hover:text-ink"
           }`}
         >
           {o.label}
@@ -911,7 +911,7 @@ function CardSkeleton({ title, rows }: { title: string; rows: number }) {
 function Dot({ light }: { light?: boolean }) {
   return (
     <span
-      className={`inline-block h-2 w-2 animate-pulse rounded-full ${light ? "bg-white" : "bg-emerald"}`}
+      className={`inline-block h-2 w-2 animate-pulse rounded-full ${light ? "bg-white" : "bg-primary"}`}
     />
   );
 }

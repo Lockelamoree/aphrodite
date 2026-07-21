@@ -16,7 +16,7 @@ export function Palette({ profile }: { profile: ColorProfile }) {
       <div className="mb-1 flex flex-wrap items-baseline gap-x-3 gap-y-1">
         <h3 className="font-serif text-xl text-ink">Your colors</h3>
         {profile.season && (
-          <span className="text-sm font-medium text-emerald">{profile.season}</span>
+          <span className="text-sm font-medium text-primary">{profile.season}</span>
         )}
         {profile.undertone && (
           <span className="text-sm text-muted">
