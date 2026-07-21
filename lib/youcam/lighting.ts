@@ -18,7 +18,7 @@ interface LightingResults {
  * Used as the occasion "finishing" render on top of the apparel result.
  */
 export async function applyLighting(input: ImageInput): Promise<RenderedImage> {
-  if (env.youcamFixtures) return fixtureLighting();
+  if (env.youcamFixtures) return fixtureLighting(input);
   const { file, task } = endpointsFor("lighting");
   const source = await resolveImage(input, file, "src");
   const results = await runTaskAndWait<LightingResults>(task, { ...source });

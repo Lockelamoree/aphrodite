@@ -25,7 +25,7 @@ interface ColorResults {
 }
 
 export async function analyzeColorProfile(input: ImageInput): Promise<ColorProfile> {
-  if (env.youcamFixtures) return fixtureColor();
+  if (env.youcamFixtures) return fixtureColor(input);
   const { file, task } = endpointsFor("colorTone");
   const source = await resolveImage(input, file, "src");
   const results = await runTaskAndWait<ColorResults>(task, { ...source });

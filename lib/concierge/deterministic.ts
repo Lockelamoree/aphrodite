@@ -44,7 +44,7 @@ export async function* runDeterministic(
   const { type, daysUntil } = parseOccasion(req.occasion);
   const track = req.track ?? "style";
 
-  yield* say(`Hi, I'm Aphrodite ✨ For your ${req.occasion.trim()}, let's get you ready to shine. First, a look at your skin with YouCam.`);
+  yield* say(`Hi, I'm Aphrodite ✨ For your ${stripLeadingArticle(req.occasion)}, let's get you ready to shine. First, a look at your skin with YouCam.`);
 
   // --- skin (focus = LOWEST-health concerns) ---
   let focus: SkinConcern[] = [];
@@ -84,7 +84,7 @@ export async function* runDeterministic(
   const garment = pickGarment(type, color?.undertone, { avoidDress: track === "grooming" });
   const occ = type ?? "special occasion";
   if (garment && hasBody) {
-    yield* say(`I'd put you in the ${garment.name} — ${garment.formality} enough for ${articleFor(occ)} ${occ}, and matched to your coloring.`);
+    yield* say(`I'd put you in the ${garment.name} — ${fitPhrase(garment.formality, type, occ)}${garmentColorClause(garment, color?.undertone)}.`);
     try {
       yield step(TOOL.tryOnApparel);
       const img = await tryOnApparel(
@@ -153,8 +153,6 @@ export async function* runRefineDeterministic(
     undertone && !toneRefine ? { undertone, paletteHex: [] } : undefined;
   const currentId = refine.currentGarmentId;
 
-  yield* say(REFINE_LEAD[refine.adjust]);
-
   const garment = pickGarment(type, undertone, {
     adjust: refine.adjust,
     exclude: refine.adjust === "reroll" ? currentId : undefined,
@@ -163,10 +161,11 @@ export async function* runRefineDeterministic(
   const changed = Boolean(garment && garment.id !== currentId);
 
   if (garment && !changed) {
-    // The rules already had this as the best match — say so honestly and keep
-    // the current render instead of re-spending on an identical one.
-    yield* say(`That's already the strongest match for your ${type ?? "occasion"} — keeping this look.`);
+    // The rules already had this as the best match — say so honestly (don't
+    // promise a restyle we won't deliver) and keep the current render.
+    yield* say(`That's already the strongest match for your ${type ?? "occasion"} — I'll keep this look.`);
   } else if (garment && hasBody) {
+    yield* say(REFINE_LEAD[refine.adjust]);
     yield* say(`This time: the ${garment.name} (${garment.formality}).`);
     try {
       yield step(TOOL.tryOnApparel);
@@ -179,6 +178,7 @@ export async function* runRefineDeterministic(
       yield* say(`(The new outfit render didn't come through — the rest of your board is updated.)`);
     }
   } else if (garment) {
+    yield* say(REFINE_LEAD[refine.adjust]);
     yield* say(`I'd switch you to the ${garment.name} — add a full-body photo to see it on you.`);
   }
 
@@ -296,14 +296,16 @@ function pickGarment(
     if (filtered.length) candidates = filtered;
   }
 
-  // Score: undertone match (2) + neutral nudge (0.5) + formality preference by
-  // DISTANCE. When the user explicitly shifts formality we weight distance high
-  // (5) so it outranks the undertone bonus — the button can never invert.
+  // Score: formality-fit for the occasion DOMINATES, then undertone match is a
+  // tie-breaker. Occasion-appropriateness must win — a warm undertone can't put
+  // a formal gown on a casual date. Explicit formality shifts weight even higher
+  // (6) so the button can never invert.
   const wf = wantFormality ? FORMALITY_ORDER.indexOf(wantFormality) : -1;
   const scored = candidates.map((g) => {
     const undertoneScore = (flatters && g.flatters === flatters ? 2 : 0) + (g.flatters === "neutral" ? 0.5 : 0);
     const dist = wf < 0 ? 0 : Math.abs(FORMALITY_ORDER.indexOf(g.formality) - wf);
-    const formalityScore = wf < 0 ? 0 : (formalityAdjust ? 5 : 1.5) * Math.max(0, 1 - dist * 0.6);
+    const weight = formalityAdjust ? 6 : 4;
+    const formalityScore = wf < 0 ? 0 : weight * Math.max(0, 1 - dist * 0.9);
     return { g, score: undertoneScore + formalityScore };
   });
   scored.sort((a, b) => b.score - a.score);
@@ -335,7 +337,7 @@ type Horizon = "long" | "mid" | "near" | "imminent";
 function horizonBucket(daysUntil?: number): Horizon {
   const d = daysUntil ?? 21;
   if (d >= 15) return "long";
-  if (d >= 7) return "mid";
+  if (d >= 5) return "mid";
   if (d >= 3) return "near";
   return "imminent";
 }
@@ -343,6 +345,39 @@ function horizonBucket(daysUntil?: number): Horizon {
 /** "a"/"an" for the following word. */
 function articleFor(word: string): string {
   return /^[aeiou]/i.test(word.trim()) ? "an" : "a";
+}
+
+/** Drop a leading article so a raw occasion reads cleanly after "your"/"for". */
+function stripLeadingArticle(s: string): string {
+  return s.trim().replace(/^(an?|the)\s+/i, "");
+}
+
+/** An HONEST color clause: only claim an undertone match when the garment
+ * actually flatters it; a neutral piece gets a versatile framing; a mismatch
+ * says nothing about color (so we never tell a warm user a cool suit is "warm").
+ * Returns a leading-space fragment, or "" when nothing truthful can be said. */
+function garmentColorClause(g: CatalogGarment, undertone?: string): string {
+  if (!undertone) return "";
+  const u = undertone.toLowerCase();
+  if ((g.flatters === "warm" && u.includes("warm")) || (g.flatters === "cool" && u.includes("cool"))) {
+    return ` in ${undertone} tones that flatter you`;
+  }
+  if (g.flatters === "neutral") return ` in a versatile shade that works with your coloring`;
+  return "";
+}
+
+/** Describe how a garment's formality fits the occasion, without the old
+ * "formal enough for a date" contradiction (a gown is not "formal enough" for
+ * a date — it's a step up). */
+function fitPhrase(f: Formality, type: OccasionType | undefined, occ: string): string {
+  const art = articleFor(occ);
+  const want = type ? OCCASION_FORMALITY[type] : undefined;
+  if (!want) return `a fitting choice for ${art} ${occ}`;
+  const gi = FORMALITY_ORDER.indexOf(f);
+  const wi = FORMALITY_ORDER.indexOf(want);
+  if (gi > wi) return `an elevated, dressed-up choice for ${art} ${occ}`;
+  if (gi < wi) return `an easy, relaxed choice for ${art} ${occ}`;
+  return `right for ${art} ${occ}`;
 }
 
 /**
@@ -384,7 +419,7 @@ function buildNarrative(
 
   let skinBit: string;
   if (lowest && treatable) {
-    skinBit = `Your skin scores well overall — we'll use ${span} to focus on your lowest area, ${lowest}`;
+    skinBit = `Your skin scores well overall — we'll use ${span} to focus on your priority area, ${lowest}`;
   } else if (lowest) {
     const toGo =
       daysUntil !== undefined && daysUntil <= 0
@@ -392,13 +427,13 @@ function buildNarrative(
         : daysUntil === 1
           ? "with only a day to go"
           : `with only ${horizonLabel(daysUntil ?? 0)} to go`;
-    skinBit = `Your skin scores well overall — ${toGo}, we'll protect and camouflage your lowest area, ${lowest}, rather than start anything new`;
+    skinBit = `Your skin scores well overall — ${toGo}, we'll protect and support your priority area, ${lowest}, rather than start anything new`;
   } else {
     skinBit = `We'll keep your skin hydrated and calm over ${span}`;
   }
 
   const styleBit = garment
-    ? `, and dress you in the ${garment.name}${color?.undertone ? `, chosen for your ${color.undertone} undertone` : ""}`
+    ? `, and dress you in the ${garment.name}${garmentColorClause(garment, color?.undertone)}`
     : "";
   const close =
     track === "grooming"
@@ -423,7 +458,6 @@ function buildCountdown(
   daysUntil?: number,
   track: StyleTrack = "style",
 ): CountdownStep[] {
-  const steps: CountdownStep[] = [];
   const primary = focus[0] ? adviceFor(focus[0].name) : adviceFor("moisture");
   const secondary = focus[1] ? adviceFor(focus[1].name) : undefined;
   const focusLabel = focus[0]
@@ -431,59 +465,78 @@ function buildCountdown(
     : "hydration";
   const d = daysUntil ?? 21;
 
+  // Each step carries an `order` = roughly days-before-the-event, so the final
+  // list is sorted strictly chronologically regardless of what we push (the
+  // grooming step used to land out of order on short horizons).
+  const items: { order: number; step: CountdownStep }[] = [];
+  const push = (order: number, when: string, action: string, productCategory: string) =>
+    items.push({ order, step: { when, action, productCategory } });
+
   if (d >= 15) {
-    steps.push({
-      when: `${horizonLabel(d)} out`,
-      action: `Front-load your lowest area, ${focusLabel}: ${primary.action}${secondary ? `; also ${secondary.action}` : ""}.`,
-      productCategory: primary.category,
-    });
-    steps.push({
-      when: "1 week out",
-      action: "Keep the routine, add a hydrating mask twice this week, and stop any strong actives 3 days out.",
-      productCategory: "hydrating mask",
-    });
-  } else if (d >= 7) {
-    steps.push({
-      when: `${horizonLabel(d)} out`,
-      action: `Gently target ${focusLabel} — ${primary.action} — but introduce no brand-new actives this close.`,
-      productCategory: primary.category,
-    });
+    push(
+      d,
+      `${horizonLabel(d)} out`,
+      `Front-load your priority area, ${focusLabel}: ${primary.action}${secondary ? `; also ${secondary.action}` : ""}.`,
+      primary.category,
+    );
+    push(
+      7,
+      "1 week out",
+      "Keep the routine, add a hydrating mask twice this week, and stop any strong actives 3 days out.",
+      "hydrating mask",
+    );
+  } else if (d >= 5) {
+    push(
+      d,
+      `${horizonLabel(d)} out`,
+      `Gently target ${focusLabel} — ${primary.action} — lock your routine in now and add nothing brand-new in the final days.`,
+      primary.category,
+    );
   } else if (d >= 3) {
-    steps.push({
-      when: "Now",
-      action: `Too close to start new actives. Double down on hydration and calming so ${focusLabel} settles; no experiments.`,
-      productCategory: "soothing moisturizer",
-    });
+    push(
+      d,
+      "Now",
+      `Too close to start new actives. Double down on hydration and calming so ${focusLabel} settles; no experiments.`,
+      "soothing moisturizer",
+    );
   } else {
-    steps.push({
-      when: d <= 0 ? "Today" : "Tomorrow",
-      action: `No skincare changes this close — hydrate, de-puff, and we'll camouflage ${focusLabel} with your base and primer.`,
-      productCategory: "hydrating sheet mask",
-    });
+    push(
+      Math.max(d, 1.2),
+      d <= 0 ? "Today" : "The final day or two",
+      `No skincare changes this close — hydrate, de-puff, and we'll soften the look of ${focusLabel} on the day.`,
+      "hydrating sheet mask",
+    );
   }
 
   if (track === "grooming") {
-    steps.push({
-      when: "2 days before",
-      action:
+    if (d >= 3) {
+      push(
+        2,
+        "2 days before",
         "Sharpen up: trim and tidy your beard and hairline, and exfoliate so skin looks fresh, not shiny.",
-      productCategory: "grooming kit",
-    });
+        "grooming kit",
+      );
+    } else {
+      push(
+        0.8,
+        "The night before",
+        "Sharpen up: trim and tidy your beard and hairline so you look fresh, not shiny.",
+        "grooming kit",
+      );
+    }
   }
-  steps.push({
-    when: "Night before",
-    action: "Hydrate, get a full night's sleep, and don't try any new product.",
-    productCategory: "hydrating serum",
-  });
-  steps.push({
-    when: d <= 0 ? "A few hours before" : "Event morning",
-    action:
-      track === "grooming"
-        ? "Cleanse, moisturize, and apply SPF — a matte finish keeps skin looking fresh, not shiny."
-        : "Cleanse, moisturize, apply SPF, then a smoothing primer for a flawless base.",
-    productCategory: track === "grooming" ? "matte moisturizer" : "primer + SPF",
-  });
-  return steps;
+
+  push(0.5, "Night before", "Hydrate, get a full night's sleep, and don't try any new product.", "hydrating serum");
+  push(
+    0,
+    d <= 0 ? "A few hours before" : "Event morning",
+    track === "grooming"
+      ? "Cleanse, moisturize, and apply SPF — a matte finish keeps skin looking fresh, not shiny."
+      : "Cleanse, moisturize, apply SPF, then a smoothing primer for a smooth, even base.",
+    track === "grooming" ? "matte moisturizer" : "primer + SPF",
+  );
+
+  return items.sort((a, b) => b.order - a.order).map((i) => i.step);
 }
 
 function buildShopping(
@@ -520,7 +573,7 @@ function buildShopping(
     if (track === "grooming") {
       add("matte moisturizer", "Keeps skin looking fresh, not shiny, on the day.");
     } else {
-      add("camouflage concealer", "Covers what there isn't time to treat, for a flawless finish.");
+      add("camouflage concealer", "Evens things out for a smooth, photo-ready finish on the day.");
     }
   } else {
     for (const c of focus) {
@@ -531,19 +584,19 @@ function buildShopping(
   }
 
   if (garment) {
+    const clause = garmentColorClause(garment, color?.undertone).trim();
     items.push({
       category: garment.name,
-      why: color?.undertone
-        ? `In ${color.undertone} tones that flatter you, cut for the occasion.`
-        : "Cut and color chosen for the occasion.",
+      why: clause ? `${titleCase(clause)}, cut for the occasion.` : "Cut for the occasion.",
       price: garment.price,
       retailer: garment.retailer,
       url: garment.url,
       imageUrl: garment.imageUrl,
     });
-    // Complete the look: occasion-matched accessories, each a priced SKU —
-    // turns a single garment into a real cross-category basket.
-    for (const a of completeTheLook(garment.formality, track)) {
+    // Complete the look: accessories matched to the ACTUAL garment (a suit gets
+    // a watch + shoes, not earrings), each a priced SKU — turns a single garment
+    // into a coherent cross-category basket.
+    for (const a of completeTheLook(garment.formality, track, garment.category)) {
       items.push({ ...a });
     }
   }

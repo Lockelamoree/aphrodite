@@ -1,6 +1,7 @@
 import { runDeterministic, runRefineDeterministic } from "@/lib/concierge/deterministic";
 import { runConcierge } from "@/lib/concierge/orchestrator";
 import type { ConciergeEvent, ConciergeMode, ConciergeRequest } from "@/lib/concierge/types";
+import { env } from "@/lib/env";
 
 // The concierge does long, multi-step generation — keep it on the Node runtime
 // and allow a generous execution window.
@@ -43,7 +44,7 @@ export async function POST(req: Request): Promise<Response> {
         // preserves the client's current badge — so no mode event is re-sent.
         const isRefine = Boolean(body.refine);
         if (!isRefine) {
-          send(controller, { type: "mode", mode });
+          send(controller, { type: "mode", mode, demo: env.youcamFixtures });
           if (downgraded) {
             send(controller, {
               type: "narration",

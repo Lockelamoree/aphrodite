@@ -192,24 +192,29 @@ const NECKLACE = acc("Pearl Pendant Necklace", 48, "1515562141207-7a88fb7ce338",
 const HEELS = acc("Pointed Heels", 120, "1543163521-1bf539c55dd2", "Elongate the line of the outfit.");
 const BAG = acc("Structured Top-Handle Bag", 145, "1584917865442-de89df76afd3", "A polished carry for the day.");
 const MAKEUP = acc("Occasion Makeup Edit", 54, "1596462502278-27bfdc403348", "A curated palette matched to your season.");
+// Tailoring accessories for a suit look (no earrings/heels/makeup on a suit).
+const OXFORDS = acc("Leather Oxford Shoes", 130, "1449505278894-297fdb3edbc1", "Polished leather to finish a tailored look.");
+const POCKET_SQUARE = acc("Silk Pocket Square", 28, "1589363358751-ab05797e5629", "A refined pop of your palette at the chest.");
 // Grooming track (no makeup / jewelry): a grooming kit + a sharp watch.
 const GROOMING_KIT = acc("Beard & Skin Grooming Kit", 48, "1556228578-8c89e6adf883", "Trim, tidy, and freshen up for the day.");
-const WATCH: AccessorySku = {
-  category: "Classic Leather Watch",
-  why: "A sharp, understated finishing touch.",
-  price: 145,
-  retailer: "The Aphrodite Edit",
-  url: shopUrl("men's classic leather watch"),
-  imageUrl: "",
-};
+const WATCH = acc("Classic Leather Watch", 145, "1524592094714-0f0654e20314", "A sharp, understated finishing touch.");
 
 /**
- * Occasion-appropriate accessories that "complete the look" — each a priced SKU
- * that grows the shoppable basket beyond the single garment. The grooming track
- * swaps makeup/jewelry for a grooming kit + watch.
+ * Accessories that "complete the look" — each a priced SKU that grows the
+ * shoppable basket beyond the single garment. Keyed on the ACTUAL garment
+ * category (a suit gets watch/shoes/pocket-square, a dress gets earrings/heels/
+ * makeup) so the basket is always internally coherent; the grooming track swaps
+ * everything for a grooming kit + watch.
  */
-export function completeTheLook(formality: Formality, track: StyleTrack = "style"): AccessorySku[] {
+export function completeTheLook(
+  formality: Formality,
+  track: StyleTrack = "style",
+  category?: ApparelCategory,
+): AccessorySku[] {
   if (track === "grooming") return [GROOMING_KIT, WATCH];
+  // A tailored suit ("full") reads as menswear here — finish it with tailoring
+  // accessories, never earrings/heels/makeup.
+  if (category === "full") return [WATCH, OXFORDS, POCKET_SQUARE];
   if (formality === "formal") return [EARRINGS, HEELS, MAKEUP];
   if (formality === "smart") return [NECKLACE, MAKEUP];
   return [BAG, MAKEUP];

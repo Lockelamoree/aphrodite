@@ -17,6 +17,8 @@ export type Phase = "idle" | "running" | "done" | "error";
 export interface ConciergeState {
   phase: Phase;
   mode?: ConciergeMode;
+  /** Server told us this run used captured fixtures (demo) rather than live YouCam calls. */
+  demo?: boolean;
   narration: string;
   steps: { name: string; label: string }[];
   skin?: SkinAnalysis;
@@ -60,7 +62,7 @@ function reducer(state: ConciergeState, action: Action): ConciergeState {
       // overwrite the outfit + board when the new look arrives.
       return { ...state, phase: "running", error: undefined, narration: "", steps: [] };
     case "mode":
-      return { ...state, mode: action.mode };
+      return { ...state, mode: action.mode, demo: action.demo ?? state.demo };
     case "narration":
       return { ...state, narration: state.narration + action.text };
     case "tool_start":
