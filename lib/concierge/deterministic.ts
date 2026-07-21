@@ -1,0 +1,584 @@
+import "server-only";
+
+import {
+  completeTheLook,
+  GARMENT_CATALOG,
+  skincareSkuFor,
+  type CatalogGarment,
+  type Formality,
+} from "@/lib/concierge/catalog";
+import { prettyConcern } from "@/lib/concierge/format";
+import { imageInputFromString } from "@/lib/concierge/image";
+import { parseOccasion, type OccasionType } from "@/lib/concierge/occasion";
+import { TOOL, labelFor } from "@/lib/concierge/tools";
+import type {
+  ConciergeEvent,
+  ConciergeRequest,
+  CountdownStep,
+  LookBoard,
+  RefineAdjust,
+  ShoppingItem,
+  SkinGoal,
+  StyleTrack,
+} from "@/lib/concierge/types";
+import { analyzeColorProfile } from "@/lib/youcam/color";
+import { analyzeSkin } from "@/lib/youcam/skin";
+import { applyLighting } from "@/lib/youcam/lighting";
+import { tryOnApparel } from "@/lib/youcam/apparel";
+import type { ColorProfile, SkinConcern } from "@/lib/youcam/types";
+
+/**
+ * Deterministic, no-Claude concierge. Runs the same YouCam pipeline as the
+ * agentic engine and emits the identical ConciergeEvent stream, but decides
+ * everything with rules. Lets the app qualify and demo with only a YouCam key.
+ *
+ * Skin scores are 0–100 HEALTH (higher = healthier); the concerns needing
+ * attention are the LOWEST-scoring ones.
+ */
+export async function* runDeterministic(
+  req: ConciergeRequest,
+): AsyncGenerator<ConciergeEvent> {
+  const person = imageInputFromString(req.personImage);
+  const hasBody = Boolean(req.bodyImage);
+  const body = req.bodyImage ? imageInputFromString(req.bodyImage) : person;
+  const { type, daysUntil } = parseOccasion(req.occasion);
+  const track = req.track ?? "style";
+
+  yield* say(`Hi, I'm Aphrodite ✨ For your ${req.occasion.trim()}, let's get you ready to shine. First, a look at your skin with YouCam.`);
+
+  // --- skin (focus = LOWEST-health concerns) ---
+  let focus: SkinConcern[] = [];
+  try {
+    yield step(TOOL.analyzeSkin);
+    const skin = await analyzeSkin(person);
+    yield { type: "skin", analysis: skin };
+    if (skin.overlayUrl) yield { type: "image", slot: "skinOverlay", url: skin.overlayUrl };
+    focus = selectFocus(skin.concerns, req.skinGoal);
+    if (focus.length) {
+      yield* say(
+        `YouCam scores your skin health high overall; the most room is on ${listConcernsWithScores(focus)} — I'll focus your prep there.`,
+      );
+    }
+  } catch {
+    yield* say(`(I couldn't complete the skin scan this time — I'll plan from occasion and color.)`);
+  }
+
+  // --- color (grooming track swaps color-season framing for grooming) ---
+  let color: ColorProfile | undefined;
+  if (track !== "grooming") {
+    try {
+      yield step(TOOL.analyzeColor);
+      color = await analyzeColorProfile(person);
+      yield { type: "color", profile: color };
+      if (color.undertone) {
+        yield* say(
+          `YouCam's color analysis reads your undertone as ${color.undertone}${color.season ? ` (${color.season})` : ""} — best in the palette on the right.`,
+        );
+      }
+    } catch {
+      /* soft-skip */
+    }
+  }
+
+  // --- apparel ---
+  const garment = pickGarment(type, color?.undertone, { avoidDress: track === "grooming" });
+  const occ = type ?? "special occasion";
+  if (garment && hasBody) {
+    yield* say(`I'd put you in the ${garment.name} — ${garment.formality} enough for ${articleFor(occ)} ${occ}, and matched to your coloring.`);
+    try {
+      yield step(TOOL.tryOnApparel);
+      const img = await tryOnApparel(
+        {
+          person: body,
+          garment: { kind: "url", url: garment.imageUrl },
+          category: garment.category,
+        },
+        // Fail fast (interactive budget) so a slow render doesn't block the
+        // finish + board behind the full 120s poll timeout.
+        { timeoutMs: 60_000 },
+      );
+      yield { type: "image", slot: "apparel", url: img.url };
+    } catch {
+      yield* say(`(The outfit render didn't come through — the rest of your look board is ready.)`);
+    }
+  } else if (garment) {
+    yield* say(`For the outfit I'd choose the ${garment.name} — upload a full-body photo to see it rendered on you.`);
+  }
+
+  // --- occasion finishing pass: YouCam Photo-Lighting relight of the selfie ---
+  try {
+    yield { type: "tool_start", name: "finish", label: "YouCam Photo Lighting" };
+    const lit = await applyLighting(person);
+    yield { type: "image", slot: "finish", url: lit.url };
+    yield* say(`A final YouCam lighting pass, so you're camera-ready for the day.`);
+  } catch {
+    /* finishing render is optional */
+  }
+
+  // --- assemble board ---
+  yield step(TOOL.presentLookBoard);
+  yield { type: "board", board: buildBoard(req.occasion, type, daysUntil, focus, color, garment, track) };
+}
+
+const REFINE_LEAD: Record<RefineAdjust, string> = {
+  less_formal: "Dialing it back a notch — restyling your outfit.",
+  more_formal: "Taking it up a notch — restyling your outfit.",
+  cooler: "Shifting to cooler tones — restyling your outfit.",
+  warmer: "Shifting to warmer tones — restyling your outfit.",
+  reroll: "Trying a different direction — restyling your outfit.",
+};
+
+/**
+ * Refinement pass: re-style the OUTFIT only, reusing the prior skin/color that
+ * the client passes back — so it's fast and doesn't re-spend units on the
+ * unchanged reads. Emits no skin/color events (the client keeps them) and
+ * patches the board in place. Rule-based, so it runs identically in any mode.
+ */
+export async function* runRefineDeterministic(
+  req: ConciergeRequest,
+): AsyncGenerator<ConciergeEvent> {
+  const refine = req.refine;
+  if (!refine) return;
+  const person = imageInputFromString(req.personImage);
+  const hasBody = Boolean(req.bodyImage);
+  const body = req.bodyImage ? imageInputFromString(req.bodyImage) : person;
+  const { type, daysUntil } = parseOccasion(req.occasion);
+  const track = req.track ?? "style";
+  const undertone = refine.undertone;
+  const focus = refine.concerns ? selectFocus(refine.concerns, req.skinGoal) : [];
+  // On a tone refine, don't cite the user's original undertone (they asked to
+  // shift AWAY from it) — the requested direction is already narrated below.
+  const toneRefine = refine.adjust === "cooler" || refine.adjust === "warmer";
+  const color: ColorProfile | undefined =
+    undertone && !toneRefine ? { undertone, paletteHex: [] } : undefined;
+  const currentId = refine.currentGarmentId;
+
+  yield* say(REFINE_LEAD[refine.adjust]);
+
+  const garment = pickGarment(type, undertone, {
+    adjust: refine.adjust,
+    exclude: refine.adjust === "reroll" ? currentId : undefined,
+    avoidDress: track === "grooming",
+  });
+  const changed = Boolean(garment && garment.id !== currentId);
+
+  if (garment && !changed) {
+    // The rules already had this as the best match — say so honestly and keep
+    // the current render instead of re-spending on an identical one.
+    yield* say(`That's already the strongest match for your ${type ?? "occasion"} — keeping this look.`);
+  } else if (garment && hasBody) {
+    yield* say(`This time: the ${garment.name} (${garment.formality}).`);
+    try {
+      yield step(TOOL.tryOnApparel);
+      const img = await tryOnApparel(
+        { person: body, garment: { kind: "url", url: garment.imageUrl }, category: garment.category },
+        { timeoutMs: 60_000 },
+      );
+      yield { type: "image", slot: "apparel", url: img.url };
+    } catch {
+      yield* say(`(The new outfit render didn't come through — the rest of your board is updated.)`);
+    }
+  } else if (garment) {
+    yield* say(`I'd switch you to the ${garment.name} — add a full-body photo to see it on you.`);
+  }
+
+  // No relight on refine: the selfie is unchanged, so the prior "finish" render
+  // still applies (the client keeps it) — re-running would waste a unit.
+
+  yield step(TOOL.presentLookBoard);
+  yield { type: "board", board: buildBoard(req.occasion, type, daysUntil, focus, color, garment, track) };
+}
+
+/* ---------------- rule tables ---------------- */
+
+interface Advice {
+  action: string;
+  category: string;
+  why: string;
+}
+
+const CONCERN_ADVICE: Record<string, Advice> = {
+  acne: { action: "spot-treat blemishes nightly and avoid picking", category: "spot treatment", why: "Clears active breakouts before the day." },
+  wrinkle: { action: "layer a peptide serum at night", category: "peptide serum", why: "Softens fine lines over the run-up." },
+  dark_circle_v2: { action: "pat on a caffeine eye cream morning and night", category: "caffeine eye cream", why: "Brightens and de-puffs the under-eye." },
+  age_spot: { action: "use a vitamin C serum each morning", category: "vitamin C serum", why: "Evens tone and adds glow." },
+  redness: { action: "calm flushing with a centella/cica moisturizer", category: "soothing moisturizer", why: "Keeps skin even and camera-ready." },
+  oiliness: { action: "balance oil with a niacinamide serum", category: "niacinamide serum", why: "Controls shine for photos." },
+  pore: { action: "refine pores with a BHA exfoliant twice a week", category: "BHA exfoliant", why: "Smooths the surface for makeup." },
+  texture: { action: "smooth texture with a gentle AHA exfoliant twice a week", category: "AHA exfoliant", why: "Gives an even makeup base." },
+  firmness: { action: "support firmness with a peptide moisturizer", category: "firming moisturizer", why: "Adds bounce and lift." },
+  moisture: { action: "boost hydration with a hyaluronic acid serum twice daily", category: "hydrating serum", why: "Plumps and preps the skin." },
+  radiance: { action: "bring back glow with vitamin C daily", category: "brightening serum", why: "Delivers lit-from-within radiance." },
+  eye_bag: { action: "de-puff with a chilled roller and caffeine eye cream", category: "caffeine eye cream", why: "Reduces morning puffiness." },
+};
+
+function adviceFor(name: string): Advice {
+  return (
+    CONCERN_ADVICE[name] ?? {
+      action: `care for ${prettyConcern(name)} with a targeted serum`,
+      category: `${prettyConcern(name)} treatment`,
+      why: "Improves this area before the day.",
+    }
+  );
+}
+
+/* ---------------- selection + builders ---------------- */
+
+const OCCASION_FORMALITY: Record<string, Formality> = {
+  wedding: "formal",
+  gala: "formal",
+  interview: "formal",
+  work: "smart",
+  date: "smart",
+  party: "smart",
+  brunch: "casual",
+};
+
+const FORMALITY_ORDER: Formality[] = ["casual", "smart", "formal"];
+function shiftFormality(f: Formality | undefined, dir: -1 | 1): Formality | undefined {
+  if (!f) return f;
+  const i = FORMALITY_ORDER.indexOf(f);
+  return FORMALITY_ORDER[Math.max(0, Math.min(FORMALITY_ORDER.length - 1, i + dir))];
+}
+
+interface PickHint {
+  adjust?: RefineAdjust;
+  exclude?: string;
+  /** Grooming track: never suggest a dress. */
+  avoidDress?: boolean;
+}
+
+function pickGarment(
+  type: OccasionType | undefined,
+  undertone?: string,
+  hint?: PickHint,
+): CatalogGarment | undefined {
+  let flatters = undertone?.toLowerCase().includes("warm")
+    ? "warm"
+    : undertone?.toLowerCase().includes("cool")
+      ? "cool"
+      : undefined;
+  let wantFormality = type ? OCCASION_FORMALITY[type] : undefined;
+
+  // Refinement adjustments override the natural preference.
+  const typePool = type ? GARMENT_CATALOG.filter((g) => g.occasions.includes(type)) : GARMENT_CATALOG;
+  let broaden = typePool.length === 0;
+  const formalityAdjust = hint?.adjust === "less_formal" || hint?.adjust === "more_formal";
+  switch (hint?.adjust) {
+    case "cooler":
+    case "warmer":
+      flatters = hint.adjust === "cooler" ? "cool" : "warm";
+      // Broaden only if the occasion pool can't honor the requested tone.
+      if (!typePool.some((g) => g.flatters === flatters)) broaden = true;
+      break;
+    case "less_formal":
+      wantFormality = shiftFormality(wantFormality, -1);
+      broaden = true; // catalog-wide so a different-formality piece can surface
+      break;
+    case "more_formal":
+      wantFormality = shiftFormality(wantFormality, 1);
+      broaden = true;
+      break;
+    case "reroll":
+      broaden = true; // "try another" needs the whole catalog to have options
+      break;
+  }
+
+  let candidates = broaden ? GARMENT_CATALOG : typePool;
+  if (hint?.avoidDress) {
+    // Never suggest a dress on the grooming track; if the pool is all dresses,
+    // fall back to the catalog's non-dress pieces rather than keep the dresses.
+    const noDress = candidates.filter((g) => g.category !== "dress");
+    candidates = noDress.length ? noDress : GARMENT_CATALOG.filter((g) => g.category !== "dress");
+  }
+  if (hint?.exclude) {
+    const filtered = candidates.filter((g) => g.id !== hint.exclude);
+    if (filtered.length) candidates = filtered;
+  }
+
+  // Score: undertone match (2) + neutral nudge (0.5) + formality preference by
+  // DISTANCE. When the user explicitly shifts formality we weight distance high
+  // (5) so it outranks the undertone bonus — the button can never invert.
+  const wf = wantFormality ? FORMALITY_ORDER.indexOf(wantFormality) : -1;
+  const scored = candidates.map((g) => {
+    const undertoneScore = (flatters && g.flatters === flatters ? 2 : 0) + (g.flatters === "neutral" ? 0.5 : 0);
+    const dist = wf < 0 ? 0 : Math.abs(FORMALITY_ORDER.indexOf(g.formality) - wf);
+    const formalityScore = wf < 0 ? 0 : (formalityAdjust ? 5 : 1.5) * Math.max(0, 1 - dist * 0.6);
+    return { g, score: undertoneScore + formalityScore };
+  });
+  scored.sort((a, b) => b.score - a.score);
+  return scored[0]?.g;
+}
+
+function buildBoard(
+  occasion: string,
+  type: OccasionType | undefined,
+  daysUntil: number | undefined,
+  focus: SkinConcern[],
+  color: ColorProfile | undefined,
+  garment: CatalogGarment | undefined,
+  track: StyleTrack = "style",
+): LookBoard {
+  return {
+    occasion: occasion.trim(),
+    daysUntil,
+    headline: type ? `Your ${titleCase(type)} Look` : "Your Occasion Look",
+    narrative: buildNarrative(type, daysUntil, focus, color, garment, track),
+    countdown: buildCountdown(focus, daysUntil, track),
+    shopping: buildShopping(focus, garment, color, daysUntil, track),
+    garmentId: garment?.id,
+  };
+}
+
+/** How far away the event is — governs countdown KIND, narrative, and shopping. */
+type Horizon = "long" | "mid" | "near" | "imminent";
+function horizonBucket(daysUntil?: number): Horizon {
+  const d = daysUntil ?? 21;
+  if (d >= 15) return "long";
+  if (d >= 7) return "mid";
+  if (d >= 3) return "near";
+  return "imminent";
+}
+
+/** "a"/"an" for the following word. */
+function articleFor(word: string): string {
+  return /^[aeiou]/i.test(word.trim()) ? "an" : "a";
+}
+
+/**
+ * Choose the 2–3 concerns to focus on. By default that's the lowest-health
+ * (most room) concerns; a skin GOAL reweights "room" so the same scores can
+ * prioritize e.g. firmness for "smooth & firm" or breakouts for "clear".
+ */
+const GOAL_WEIGHTS: Record<Exclude<SkinGoal, "balanced">, Record<string, number>> = {
+  glow: { moisture: 1.7, radiance: 1.8, oiliness: 1.4, redness: 1.3, texture: 1.2 },
+  firm: { firmness: 1.8, wrinkle: 1.6, texture: 1.3, pore: 1.2 },
+  clear: { acne: 1.8, oiliness: 1.5, pore: 1.4, redness: 1.3 },
+  even: { age_spot: 1.8, redness: 1.5, texture: 1.2, dark_circle_v2: 1.2 },
+};
+
+function selectFocus(concerns: SkinConcern[], goal?: SkinGoal): SkinConcern[] {
+  const weights = goal && goal !== "balanced" ? GOAL_WEIGHTS[goal] : undefined;
+  return [...concerns]
+    .map((c) => ({ c, room: (100 - c.score) * (weights?.[c.name] ?? 1) }))
+    .sort((a, b) => b.room - a.room)
+    .slice(0, 3)
+    .map((x) => x.c);
+}
+
+function buildNarrative(
+  type: OccasionType | undefined,
+  daysUntil: number | undefined,
+  focus: SkinConcern[],
+  color: ColorProfile | undefined,
+  garment: CatalogGarment | undefined,
+  track: StyleTrack = "style",
+): string {
+  const bucket = horizonBucket(daysUntil);
+  const treatable = bucket === "long" || bucket === "mid";
+  const lowest = focus[0]
+    ? `${prettyConcern(focus[0].name)} (${Math.round(focus[0].score)}/100)`
+    : undefined;
+  const span =
+    daysUntil === undefined ? "the next few weeks" : `the next ${horizonLabel(daysUntil)}`;
+
+  let skinBit: string;
+  if (lowest && treatable) {
+    skinBit = `Your skin scores well overall — we'll use ${span} to focus on your lowest area, ${lowest}`;
+  } else if (lowest) {
+    const toGo =
+      daysUntil !== undefined && daysUntil <= 0
+        ? "with the event today"
+        : daysUntil === 1
+          ? "with only a day to go"
+          : `with only ${horizonLabel(daysUntil ?? 0)} to go`;
+    skinBit = `Your skin scores well overall — ${toGo}, we'll protect and camouflage your lowest area, ${lowest}, rather than start anything new`;
+  } else {
+    skinBit = `We'll keep your skin hydrated and calm over ${span}`;
+  }
+
+  const styleBit = garment
+    ? `, and dress you in the ${garment.name}${color?.undertone ? `, chosen for your ${color.undertone} undertone` : ""}`
+    : "";
+  const close =
+    track === "grooming"
+      ? "groomed, sharp, and put-together"
+      : treatable
+        ? "rested, refreshed, and put-together"
+        : "rested, even, and camera-ready";
+  const assumed =
+    daysUntil === undefined
+      ? " (I planned for about three weeks — tell me the date for a tighter countdown.)"
+      : "";
+  return `${skinBit}${styleBit}. Follow the plan below and you'll walk into your ${type ?? "occasion"} looking ${close}.${assumed}`;
+}
+
+/**
+ * Countdown that differs in KIND by how far away the event is — the whole point
+ * of the "occasion" framing. Short horizons forbid new actives and pivot to
+ * hydration + camouflage; long horizons front-load the lowest-health concern.
+ */
+function buildCountdown(
+  focus: SkinConcern[],
+  daysUntil?: number,
+  track: StyleTrack = "style",
+): CountdownStep[] {
+  const steps: CountdownStep[] = [];
+  const primary = focus[0] ? adviceFor(focus[0].name) : adviceFor("moisture");
+  const secondary = focus[1] ? adviceFor(focus[1].name) : undefined;
+  const focusLabel = focus[0]
+    ? `${prettyConcern(focus[0].name)} (${Math.round(focus[0].score)}/100)`
+    : "hydration";
+  const d = daysUntil ?? 21;
+
+  if (d >= 15) {
+    steps.push({
+      when: `${horizonLabel(d)} out`,
+      action: `Front-load your lowest area, ${focusLabel}: ${primary.action}${secondary ? `; also ${secondary.action}` : ""}.`,
+      productCategory: primary.category,
+    });
+    steps.push({
+      when: "1 week out",
+      action: "Keep the routine, add a hydrating mask twice this week, and stop any strong actives 3 days out.",
+      productCategory: "hydrating mask",
+    });
+  } else if (d >= 7) {
+    steps.push({
+      when: `${horizonLabel(d)} out`,
+      action: `Gently target ${focusLabel} — ${primary.action} — but introduce no brand-new actives this close.`,
+      productCategory: primary.category,
+    });
+  } else if (d >= 3) {
+    steps.push({
+      when: "Now",
+      action: `Too close to start new actives. Double down on hydration and calming so ${focusLabel} settles; no experiments.`,
+      productCategory: "soothing moisturizer",
+    });
+  } else {
+    steps.push({
+      when: d <= 0 ? "Today" : "Tomorrow",
+      action: `No skincare changes this close — hydrate, de-puff, and we'll camouflage ${focusLabel} with your base and primer.`,
+      productCategory: "hydrating sheet mask",
+    });
+  }
+
+  if (track === "grooming") {
+    steps.push({
+      when: "2 days before",
+      action:
+        "Sharpen up: trim and tidy your beard and hairline, and exfoliate so skin looks fresh, not shiny.",
+      productCategory: "grooming kit",
+    });
+  }
+  steps.push({
+    when: "Night before",
+    action: "Hydrate, get a full night's sleep, and don't try any new product.",
+    productCategory: "hydrating serum",
+  });
+  steps.push({
+    when: d <= 0 ? "A few hours before" : "Event morning",
+    action:
+      track === "grooming"
+        ? "Cleanse, moisturize, and apply SPF — a matte finish keeps skin looking fresh, not shiny."
+        : "Cleanse, moisturize, apply SPF, then a smoothing primer for a flawless base.",
+    productCategory: track === "grooming" ? "matte moisturizer" : "primer + SPF",
+  });
+  return steps;
+}
+
+function buildShopping(
+  focus: SkinConcern[],
+  garment: CatalogGarment | undefined,
+  color: ColorProfile | undefined,
+  daysUntil: number | undefined,
+  track: StyleTrack = "style",
+): ShoppingItem[] {
+  const items: ShoppingItem[] = [];
+  const seen = new Set<string>();
+  // Each skincare row resolves to a priced SKU so the retail basket is legible.
+  const add = (category: string, why: string) => {
+    if (seen.has(category)) return;
+    seen.add(category);
+    const sku = skincareSkuFor(category);
+    items.push({
+      category: sku.category,
+      why,
+      price: sku.price,
+      retailer: sku.retailer,
+      url: sku.url,
+      imageUrl: sku.imageUrl,
+    });
+  };
+
+  const bucket = horizonBucket(daysUntil);
+  if (bucket === "near" || bucket === "imminent") {
+    // Too close for new actives — recommend only the day-of kit the countdown
+    // actually endorses, never the active treatments it tells you not to start.
+    add("hydrating sheet mask", "Plumps and preps skin the night before.");
+    add("de-puff roller", "Chilled — de-puffs the under-eye fast.");
+    add("primer + SPF", "A smooth, protected base for the day.");
+    if (track === "grooming") {
+      add("matte moisturizer", "Keeps skin looking fresh, not shiny, on the day.");
+    } else {
+      add("camouflage concealer", "Covers what there isn't time to treat, for a flawless finish.");
+    }
+  } else {
+    for (const c of focus) {
+      const a = adviceFor(c.name);
+      add(a.category, a.why);
+    }
+    add("primer + SPF", "A smooth base and protection for the day.");
+  }
+
+  if (garment) {
+    items.push({
+      category: garment.name,
+      why: color?.undertone
+        ? `In ${color.undertone} tones that flatter you, cut for the occasion.`
+        : "Cut and color chosen for the occasion.",
+      price: garment.price,
+      retailer: garment.retailer,
+      url: garment.url,
+      imageUrl: garment.imageUrl,
+    });
+    // Complete the look: occasion-matched accessories, each a priced SKU —
+    // turns a single garment into a real cross-category basket.
+    for (const a of completeTheLook(garment.formality, track)) {
+      items.push({ ...a });
+    }
+  }
+  return items;
+}
+
+/* ---------------- small helpers ---------------- */
+
+function step(name: string): ConciergeEvent {
+  return { type: "tool_start", name, label: labelFor(name) };
+}
+
+async function* say(text: string): AsyncGenerator<ConciergeEvent> {
+  yield { type: "narration", text: `${text}\n\n` };
+  await sleep(140);
+}
+
+function listConcernsWithScores(items: SkinConcern[]): string {
+  const parts = items.map((c) => `${prettyConcern(c.name)} (${Math.round(c.score)}/100)`);
+  if (parts.length <= 1) return parts[0] ?? "hydration";
+  return `${parts.slice(0, -1).join(", ")} and ${parts[parts.length - 1]}`;
+}
+
+function horizonLabel(days: number): string {
+  if (days <= 0) return "today";
+  if (days === 1) return "1 day";
+  if (days < 7) return `${days} days`;
+  const weeks = Math.round(days / 7);
+  return weeks <= 1 ? "1 week" : `${weeks} weeks`;
+}
+
+function titleCase(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise((r) => setTimeout(r, ms));
+}
