@@ -33,7 +33,6 @@ export const env = {
   youcamClientSecret: optional("YOUCAM_CLIENT_SECRET"),
 
   youcamApiBase: optional("YOUCAM_API_BASE", "https://yce-api-01.perfectcorp.com"),
-  youcamMcpUrl: optional("YOUCAM_MCP_URL", "https://mcp-api-01.makeupar.com/mcp"),
 
   /**
    * Replay mode: serve captured fixture renders instead of calling the YouCam

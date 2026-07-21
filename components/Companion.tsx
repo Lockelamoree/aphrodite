@@ -31,7 +31,7 @@ export function CompanionBubble({
   children,
   tone = "default",
 }: {
-  children: React.ReactNode;
+  children: ReactNode;
   tone?: "default" | "soft";
 }) {
   return (
@@ -63,38 +63,132 @@ const NEXT: { key: string; label: string; api: string; reply: string }[] = [
 ];
 
 export function NextWithAphrodite() {
-  const [picked, setPicked] = useState<string | null>(null);
-  const chosen = NEXT.find((n) => n.key === picked);
+  const [selected, setSelected] = useState<string[]>([]);
+  const [lastAdded, setLastAdded] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const toggle = (key: string) => {
+    setCopied(false);
+    setSelected((cur) => {
+      const has = cur.includes(key);
+      if (!has) setLastAdded(key);
+      else if (lastAdded === key) setLastAdded(null);
+      return has ? cur.filter((k) => k !== key) : [...cur, key];
+    });
+  };
+
+  const chosen = NEXT.filter((n) => selected.includes(n.key));
+  const reply = NEXT.find((n) => n.key === lastAdded)?.reply;
+
+  const copyPlan = async () => {
+    const text =
+      "My next session with Aphrodite ✨\n" +
+      chosen.map((n) => `• ${n.label} — powered by ${n.api}`).join("\n");
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      return;
+    } catch {
+      // Clipboard API can be unavailable (older browsers, non-focused tab) — fall back.
+    }
+    try {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      document.execCommand("copy");
+      document.body.removeChild(ta);
+      setCopied(true);
+    } catch {
+      setCopied(false);
+    }
+  };
+
+  const clear = () => {
+    setSelected([]);
+    setLastAdded(null);
+    setCopied(false);
+  };
+
   return (
     <div className="aura-no-print rounded-[var(--radius-card)] border border-line bg-surface p-5">
       <h3 className="font-serif text-xl text-ink">What&apos;s next with Aphrodite</h3>
       <p className="mb-3 mt-1 text-xs text-muted">
-        More YouCam experiences I can guide you through — pick one to line up for next time.
+        Tap the experiences you want next and I&apos;ll line them up for your next visit — each is a
+        real YouCam product I can guide you through.
       </p>
       <div className="flex flex-wrap gap-2">
-        {NEXT.map((n) => (
-          <button
-            key={n.key}
-            onClick={() => setPicked(n.key)}
-            aria-pressed={picked === n.key}
-            title={n.api}
-            className={`rounded-full border px-3 py-1.5 text-xs transition focus-visible:ring-2 focus-visible:ring-primary ${
-              picked === n.key
-                ? "border-primary bg-primary text-white"
-                : "border-line text-ink hover:border-primary hover:text-primary"
-            }`}
-          >
-            {n.label}
-          </button>
-        ))}
+        {NEXT.map((n) => {
+          const on = selected.includes(n.key);
+          return (
+            <button
+              key={n.key}
+              onClick={() => toggle(n.key)}
+              aria-pressed={on}
+              title={n.api}
+              className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+                on
+                  ? "border-primary bg-primary text-white"
+                  : "border-line text-ink hover:border-primary hover:text-primary"
+              }`}
+            >
+              <span aria-hidden className={on ? "opacity-100" : "opacity-0"}>
+                &#10003;
+              </span>
+              {n.label}
+            </button>
+          );
+        })}
       </div>
-      {chosen && (
+
+      {reply && (
         <div className="mt-4">
-          <CompanionBubble tone="soft">
-            {chosen.reply}
-            <span className="mt-1 block text-xs text-muted">Powered by {chosen.api}</span>
-          </CompanionBubble>
+          <CompanionBubble tone="soft">{reply}</CompanionBubble>
         </div>
+      )}
+
+      {chosen.length > 0 ? (
+        <div className="mt-4 rounded-xl border border-line bg-paper p-4">
+          <div className="flex items-center justify-between gap-2">
+            <p className="text-sm font-medium text-ink">
+              Lined up for next time
+              <span className="ml-1.5 rounded-full bg-primary/15 px-1.5 py-0.5 text-xs text-primary">
+                {chosen.length}
+              </span>
+            </p>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={copyPlan}
+                className="rounded-full border border-primary px-3 py-1 text-xs font-medium text-primary transition hover:bg-primary hover:text-white"
+              >
+                {copied ? "Copied ✓" : "Copy my plan"}
+              </button>
+              <button
+                onClick={clear}
+                className="rounded-full border border-line px-3 py-1 text-xs text-muted transition hover:text-ink"
+              >
+                Clear
+              </button>
+            </div>
+          </div>
+          <ul className="mt-3 space-y-1.5">
+            {chosen.map((n) => (
+              <li
+                key={n.key}
+                className="flex items-center justify-between gap-3 border-t border-line pt-1.5 text-sm text-ink first:border-t-0 first:pt-0"
+              >
+                <span>{n.label}</span>
+                <span className="text-xs text-muted">{n.api}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ) : (
+        <p className="mt-4 text-xs text-muted">
+          Nothing lined up yet — tap an experience above to add it to your next session.
+        </p>
       )}
     </div>
   );

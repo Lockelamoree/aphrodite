@@ -37,7 +37,7 @@ export async function analyzeSkin(
   input: ImageInput,
   concerns: readonly string[] = DEFAULT_SKIN_CONCERNS,
 ): Promise<SkinAnalysis> {
-  if (env.youcamFixtures) return fixtureSkin();
+  if (env.youcamFixtures) return fixtureSkin(input);
   const { file, task } = endpointsFor("skinAnalysis");
   const source = await resolveImage(input, file, "src");
   const results = await runTaskAndWait<SkinResults>(task, {

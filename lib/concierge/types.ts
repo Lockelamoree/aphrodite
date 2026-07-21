@@ -83,7 +83,7 @@ export interface ConciergeRequest {
 
 /** Server-Sent-Event payloads streamed to the client during a run. */
 export type ConciergeEvent =
-  | { type: "mode"; mode: ConciergeMode }
+  | { type: "mode"; mode: ConciergeMode; demo?: boolean }
   | { type: "narration"; text: string }
   | { type: "tool_start"; name: string; label: string }
   | { type: "skin"; analysis: SkinAnalysis }
