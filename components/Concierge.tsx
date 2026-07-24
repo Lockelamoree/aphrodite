@@ -596,17 +596,32 @@ function StreamPanel({ state }: { state: ConciergeState }) {
             state.phase === "done" &&
             state.hasBody &&
             !state.images.apparel;
+          // The optional lighting pass can be skipped (e.g. no captured relight
+          // for this sample). Show it as skipped, not a success ✓, so the chip
+          // agrees with the empty finish tile + the API ledger.
+          const skipped =
+            s.name === "finish" && state.phase === "done" && !state.images.finish;
           const cls = failed
             ? "bg-rose/10 text-rose"
-            : active
-              ? "bg-primary text-white"
-              : "bg-primary-soft text-primary";
+            : skipped
+              ? "bg-line/50 text-muted"
+              : active
+                ? "bg-primary text-white"
+                : "bg-primary-soft text-primary";
           return (
             <span
               key={`${s.name}-${i}`}
               className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium ${cls}`}
             >
-              {failed ? <span aria-hidden>✗</span> : active ? <Dot light /> : <span aria-hidden>✓</span>}
+              {failed ? (
+                <span aria-hidden>✗</span>
+              ) : skipped ? (
+                <span aria-hidden>–</span>
+              ) : active ? (
+                <Dot light />
+              ) : (
+                <span aria-hidden>✓</span>
+              )}
               {s.label}
             </span>
           );
@@ -964,7 +979,8 @@ function ProgressPanel({ baseline, skin }: { baseline: SavedPlan; skin: SkinAnal
     <div className="rounded-[var(--radius-card)] border border-primary/25 bg-surface p-5">
       <h3 className="font-serif text-xl text-ink">Your glow check-in</h3>
       <p className="mb-3 mt-1 text-xs text-muted">
-        Change in YouCam skin-health scores since {new Date(baseline.savedAt).toLocaleDateString()}.
+        Compared with your saved run from {new Date(baseline.savedAt).toLocaleDateString()} — for a
+        meaningful read, use a like-for-like selfie (same person, similar lighting).
       </p>
       <ul className="space-y-2 text-sm">
         {rows.map((r) => {
@@ -999,8 +1015,17 @@ function Uploader({
   required?: boolean;
 }) {
   const [drag, setDrag] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
   const take = async (f?: File | null) => {
-    if (f && f.type.startsWith("image/")) onChange(await fileToDataUrl(f));
+    if (!f) return;
+    // The pipeline accepts JPEG/PNG/WebP; reject others up front with a friendly
+    // message instead of a raw 400 from the API.
+    if (!/^image\/(jpeg|png|webp)$/.test(f.type)) {
+      setErr("Please use a JPEG, PNG, or WebP image.");
+      return;
+    }
+    setErr(null);
+    onChange(await fileToDataUrl(f));
   };
   return (
     <label
@@ -1032,11 +1057,17 @@ function Uploader({
           {required && <span className="text-rose"> *</span>}
           <br />
           <span className="text-primary group-hover:underline">upload or drop</span>
+          {err && (
+            <>
+              <br />
+              <span className="text-rose">{err}</span>
+            </>
+          )}
         </span>
       )}
       <input
         type="file"
-        accept="image/*"
+        accept="image/jpeg,image/png,image/webp"
         className="hidden"
         onChange={(e) => void take(e.target.files?.[0])}
       />

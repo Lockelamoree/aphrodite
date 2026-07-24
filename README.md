@@ -55,8 +55,10 @@ npm run dev                    # http://localhost:3000
 | `YOUCAM_API_KEY` | Perfect Corp / YouCam AI API key (required) |
 | `ANTHROPIC_API_KEY` | Agentic engine, Claude brain (optional; preferred when both LLM keys are set) |
 | `OPENAI_API_KEY` | Agentic engine, GPT brain (optional; `OPENAI_MODEL` overrides the default `gpt-4o`) |
-| `NEXT_PUBLIC_HAS_AGENTIC` | Set `1` when an LLM key is present to enable the Agentic toggle |
 | `YOUCAM_FIXTURES` | Set `1` to serve captured sample renders and spend **zero** API units (great for dev/rehearsal); unset/`0` for live renders |
+
+The **Agentic** engine unlocks automatically when `ANTHROPIC_API_KEY` or `OPENAI_API_KEY` is set — the
+toggle is derived server‑side from key presence (see `app/page.tsx`), so there is no separate flag to set.
 
 ### Zero‑cost demo mode
 With `YOUCAM_FIXTURES=1`, the four YouCam calls return captured sample outputs — the whole flow (plan,
