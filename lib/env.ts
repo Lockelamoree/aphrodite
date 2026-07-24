@@ -24,6 +24,14 @@ export const env = {
   get anthropicApiKey(): string {
     return required("ANTHROPIC_API_KEY");
   },
+  /** OpenAI key for the alternative agentic brain (GPT function calling). */
+  get openaiApiKey(): string {
+    return required("OPENAI_API_KEY");
+  },
+  /** OpenAI model for the GPT engine (any function-calling chat model works). */
+  openaiModel: optional("OPENAI_MODEL", "gpt-4o"),
+  /** OpenAI-compatible base URL (Azure/OpenRouter/local mocks). */
+  openaiBaseUrl: optional("OPENAI_BASE_URL", "https://api.openai.com/v1"),
   /** YouCam / Perfect Corp API key (Bearer). */
   get youcamApiKey(): string {
     return required("YOUCAM_API_KEY");

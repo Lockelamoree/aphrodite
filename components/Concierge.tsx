@@ -1,17 +1,20 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { Copy, Download, RefreshCw, Save, Share2, Trash2 } from "lucide-react";
 
 import { BeforeAfter } from "@/components/BeforeAfter";
 import { AphroditeMark, CompanionBubble, NextWithAphrodite } from "@/components/Companion";
 import { Palette } from "@/components/Palette";
+import { RetailBasket } from "@/components/RetailBasket";
 import { useConcierge, type ConciergeState, type Phase } from "@/hooks/useConcierge";
+import { useSavedPlan, type SavedPlan } from "@/hooks/useSavedPlan";
 import { prettyConcern } from "@/lib/concierge/format";
 import type {
   ConciergeRequest,
+  GarmentPreference,
   LookBoard,
   RefineAdjust,
-  ShoppingItem,
   SkinGoal,
   StyleTrack,
 } from "@/lib/concierge/types";
@@ -24,9 +27,12 @@ const PRESETS: { occasion: string; label: string; descriptor: string }[] = [
   { occasion: "A gala next month", label: "Gala", descriptor: "Black-tie polish" },
 ];
 
-/** The agentic (Claude) engine only works when the server has an Anthropic key.
- * Expose that to the client so we never steer a judge into a broken toggle. */
-const AGENTIC_ENABLED = process.env.NEXT_PUBLIC_HAS_ANTHROPIC === "1";
+/** The agentic engine works when the server has an LLM key (Anthropic → Claude,
+ * or OpenAI → GPT). Expose that to the client so we never steer a judge into a
+ * broken toggle. NEXT_PUBLIC_HAS_ANTHROPIC kept for backward compatibility. */
+const AGENTIC_ENABLED =
+  process.env.NEXT_PUBLIC_HAS_AGENTIC === "1" ||
+  process.env.NEXT_PUBLIC_HAS_ANTHROPIC === "1";
 
 export function Concierge() {
   const { state, run, refine, reset } = useConcierge();
@@ -38,12 +44,18 @@ export function Concierge() {
   );
   const [skinGoal, setSkinGoal] = useState<SkinGoal>("balanced");
   const [track, setTrack] = useState<StyleTrack>("style");
+  const [garmentPreference, setGarmentPreference] = useState<GarmentPreference>("surprise");
+  const [consent, setConsent] = useState(false);
+  const { plan: savedPlan, save: savePlan, clear: clearPlan } = useSavedPlan();
+  // When set, the finished board is compared against this saved baseline (a
+  // returning-user "glow check-in"); cleared once consumed.
+  const [baseline, setBaseline] = useState<SavedPlan | null>(null);
 
-  const canSubmit = occasion.trim().length > 2 && !!selfie && state.phase !== "running";
+  const canSubmit = occasion.trim().length > 2 && !!selfie && consent && state.phase !== "running";
 
   function submit() {
-    if (!selfie) return;
-    run({ occasion: occasion.trim(), personImage: selfie, bodyImage: body, mode, skinGoal, track });
+    if (!selfie || !consent) return;
+    run({ occasion: occasion.trim(), personImage: selfie, bodyImage: body, mode, skinGoal, track, garmentPreference });
   }
 
   function startOver() {
@@ -51,6 +63,18 @@ export function Concierge() {
     setOccasion("");
     setSelfie(undefined);
     setBody(undefined);
+    setBaseline(null);
+  }
+
+  // Resume a saved runway: prefill its settings (the plan is image-free, so the
+  // user re-adds a photo). `checkIn` also arms the score-delta comparison.
+  function resumeSaved(checkIn: boolean) {
+    if (!savedPlan) return;
+    setOccasion(savedPlan.occasion);
+    setSkinGoal(savedPlan.skinGoal);
+    setTrack(savedPlan.track);
+    setGarmentPreference(savedPlan.garmentPreference);
+    setBaseline(checkIn ? savedPlan : null);
   }
 
   // Load a bundled sample (as data URLs, so it behaves exactly like a real
@@ -66,11 +90,13 @@ export function Concierge() {
         ]);
         setSelfie(s);
         setBody(b);
+        setGarmentPreference("surprise");
         if (!occasion.trim()) setOccasion("An evening wedding in 3 weeks");
       } else {
         const s = await fetch("/samples/selfie-2.jpg").then((r) => r.blob()).then(fileToDataUrl);
         setSelfie(s);
         setBody(undefined);
+        setGarmentPreference("dresses");
         if (!occasion.trim()) setOccasion("A first date on Friday");
       }
     } catch {
@@ -103,6 +129,17 @@ export function Concierge() {
 
       {state.phase === "idle" ? (
         <section className="aura-fade-up">
+          {savedPlan && (
+            <SavedRunwayBand
+              plan={savedPlan}
+              onResume={() => resumeSaved(false)}
+              onCheckIn={() => resumeSaved(true)}
+              onClear={() => {
+                clearPlan();
+                setBaseline(null);
+              }}
+            />
+          )}
           <h1 className="max-w-2xl font-serif text-4xl leading-tight text-ink sm:text-5xl">
             Tell me the occasion.
             <br />
@@ -165,8 +202,9 @@ export function Concierge() {
                 <Uploader label="Full-body (optional)" value={body} onChange={setBody} />
               </div>
               <p className="mt-3 text-xs text-muted">
-                For the skin read, use a clear, front-facing close-up. Photos are processed to
-                generate your look and are not stored by Aphrodite.
+                For the skin read, use a clear, front-facing close-up. Your photo is sent to YouCam
+                (Perfect Corp) for analysis and try-on rendering, used only to generate this look,
+                and not stored by Aphrodite. Cosmetic guidance only — not medical advice.
               </p>
               <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1">
                 <span className="text-xs text-muted">No photo handy? Try a sample:</span>
@@ -201,6 +239,14 @@ export function Concierge() {
                 <TrackToggle value={track} onChange={setTrack} />
               </div>
             </div>
+            {track === "style" && (
+              <div>
+                <span className="text-sm text-muted">Wardrobe</span>
+                <div className="mt-2">
+                  <WardrobeToggle value={garmentPreference} onChange={setGarmentPreference} />
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="mt-6 flex flex-wrap items-center gap-3">
@@ -209,16 +255,48 @@ export function Concierge() {
           </div>
           <p className="mt-2 text-xs text-muted">{modeHint(mode)}</p>
 
+          <label className="mt-6 flex max-w-xl items-start gap-2 text-sm text-ink">
+            <input
+              type="checkbox"
+              checked={consent}
+              onChange={(e) => setConsent(e.target.checked)}
+              className="mt-0.5 h-4 w-4 shrink-0 accent-primary"
+            />
+            <span>
+              I agree to my photo being processed by <span className="font-medium text-primary">YouCam</span>{" "}
+              (Perfect Corp) to generate my look. It isn&apos;t stored by Aphrodite.
+            </span>
+          </label>
+
           <button
             onClick={submit}
             disabled={!canSubmit}
+            title={!consent ? "Please agree to photo processing to continue" : undefined}
             className="mt-6 rounded-full bg-primary px-7 py-3 text-base font-medium text-white shadow-sm transition enabled:hover:bg-[#8c3556] focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-40"
           >
             Build my look
           </button>
         </section>
       ) : (
-        <Results state={state} occasion={occasion} refine={refine} />
+        <Results
+          state={state}
+          occasion={occasion}
+          refine={refine}
+          baseline={baseline}
+          onSave={() => {
+            if (!state.board || !state.skin) return false;
+            savePlan({
+              occasion: occasion.trim(),
+              board: state.board,
+              skin: state.skin,
+              color: state.color,
+              skinGoal,
+              track,
+              garmentPreference,
+            });
+            return true;
+          }}
+        />
       )}
     </main>
   );
@@ -230,13 +308,18 @@ function Results({
   state,
   occasion,
   refine,
+  baseline,
+  onSave,
 }: {
   state: ConciergeState;
   occasion: string;
   refine: (adjust: RefineAdjust) => void;
+  baseline: SavedPlan | null;
+  onSave: () => boolean;
 }) {
   const board = state.board;
   const boardRef = useRef<HTMLDivElement>(null);
+  const outfitRendered = Boolean(state.images.apparel);
 
   // Reveal: when the finished board arrives, scroll it into view.
   useEffect(() => {
@@ -259,7 +342,7 @@ function Results({
   // camera-ready pass. (It re-lights; it doesn't re-crop into a headshot, so we
   // don't claim one.)
   const finishTitle = "Occasion lighting";
-  const finishCaption = "YouCam AI Photo Lighting · warm relight";
+  const finishCaption = "YouCam AI Photo Lighting · relight";
 
   return (
     <section className="aura-fade-up space-y-8">
@@ -272,13 +355,15 @@ function Results({
                 state.mode === "agentic" ? "bg-primary text-white" : "border border-line text-muted"
               }`}
             >
-              {state.mode === "agentic" ? "YouCam AI · orchestrated by Claude" : "YouCam AI · guided"}
+              {state.mode === "agentic"
+                ? `YouCam AI · orchestrated by ${state.brain === "gpt" ? "GPT" : "Claude"}`
+                : "YouCam AI · guided"}
             </span>
           )}
         </div>
         <h2 className="mt-1 font-serif text-3xl text-ink">{headline}</h2>
         <StatStrip state={state} />
-        {board && <BoardActions board={board} occasion={occasion} />}
+        {board && <BoardActions board={board} occasion={occasion} onSave={onSave} />}
       </div>
 
       <StreamPanel state={state} />
@@ -296,7 +381,7 @@ function Results({
             Here&apos;s your look for {board.occasion || occasion || "the day"} — I&apos;m rather proud of
             this one ✨ Tweak the outfit below if you like, and save it to come back to.
           </CompanionBubble>
-          <LookBoardPanel board={board} demo={state.demo} />
+          <LookBoardPanel board={board} demo={state.demo} outfitRendered={outfitRendered} />
           <RefineBar refine={refine} disabled={state.phase === "running"} hasColor={!!state.color} />
         </div>
       )}
@@ -307,9 +392,10 @@ function Results({
           The details, seen &amp; rendered by YouCam
         </h3>
         <ApiLedger state={state} />
-        <div className="grid gap-6 lg:grid-cols-2">
+        <div className="grid gap-6 lg:grid-cols-2 [&>*]:min-w-0">
           {/* skin track */}
           <div className="space-y-6">
+            {baseline && state.skin && <ProgressPanel baseline={baseline} skin={state.skin} />}
             {state.selfie && (
               <BeforeAfter before={state.selfie} after={state.images.skinOverlay} phase={state.phase} />
             )}
@@ -322,7 +408,7 @@ function Results({
 
           {/* style track */}
           <div className="space-y-6">
-            <div className="grid grid-cols-2 gap-4 lg:grid-cols-1 lg:gap-6">
+            <div className="grid grid-cols-2 gap-4 lg:grid-cols-1 lg:gap-6 [&>*]:min-w-0">
               <RenderSlot
                 title="Your outfit"
                 url={state.images.apparel}
@@ -360,12 +446,22 @@ function Results({
   );
 }
 
-function BoardActions({ board, occasion }: { board: LookBoard; occasion: string }) {
-  const [canShare, setCanShare] = useState(false);
+function BoardActions({
+  board,
+  occasion,
+  onSave,
+}: {
+  board: LookBoard;
+  occasion: string;
+  onSave: () => boolean;
+}) {
+  // Derive share availability once at mount (no setState-in-effect) — a lazy
+  // initializer is SSR-safe because it only runs on the client's first render.
+  const [canShare] = useState(
+    () => typeof navigator !== "undefined" && typeof navigator.share === "function",
+  );
   const [copied, setCopied] = useState(false);
-  useEffect(() => {
-    setCanShare(typeof navigator !== "undefined" && typeof navigator.share === "function");
-  }, []);
+  const [saved, setSaved] = useState(false);
 
   const summary = boardSummary(board, occasion);
   const copy = async () => {
@@ -380,19 +476,32 @@ function BoardActions({ board, occasion }: { board: LookBoard; occasion: string 
   const share = () => {
     navigator.share?.({ title: `Aphrodite — ${board.headline}`, text: summary }).catch(() => {});
   };
+  const save = () => {
+    if (onSave()) {
+      setSaved(true);
+      setTimeout(() => setSaved(false), 2200);
+    }
+  };
 
   const btn =
-    "rounded-full border border-line px-4 py-1.5 text-sm text-ink transition hover:border-primary hover:text-primary focus-visible:ring-2 focus-visible:ring-primary";
+    "inline-flex items-center gap-1.5 rounded-full border border-line px-4 py-1.5 text-sm text-ink transition hover:border-primary hover:text-primary focus-visible:ring-2 focus-visible:ring-primary";
   return (
     <div className="aura-no-print mt-3 flex flex-wrap gap-2">
+      <button onClick={save} className={btn} title="Save this look (no photo stored) to return for a check-in">
+        <Save size={15} aria-hidden />
+        {saved ? "Saved ✓" : "Save my runway"}
+      </button>
       <button onClick={() => window.print()} className={btn}>
+        <Download size={15} aria-hidden />
         Save as PDF
       </button>
       <button onClick={copy} className={btn}>
+        <Copy size={15} aria-hidden />
         {copied ? "Copied ✓" : "Copy summary"}
       </button>
       {canShare && (
         <button onClick={share} className={btn}>
+          <Share2 size={15} aria-hidden />
           Share
         </button>
       )}
@@ -671,7 +780,15 @@ function RenderSlot({
   );
 }
 
-function LookBoardPanel({ board, demo }: { board: LookBoard; demo?: boolean }) {
+function LookBoardPanel({
+  board,
+  demo,
+  outfitRendered,
+}: {
+  board: LookBoard;
+  demo?: boolean;
+  outfitRendered?: boolean;
+}) {
   const products = board.shopping.filter((s) => typeof s.price === "number");
   const total = products.reduce((sum, p) => sum + (p.price ?? 0), 0);
   return (
@@ -680,7 +797,7 @@ function LookBoardPanel({ board, demo }: { board: LookBoard; demo?: boolean }) {
         <p className="max-w-3xl font-serif text-lg leading-relaxed text-ink">{board.narrative}</p>
       )}
 
-      <div className="grid gap-8 md:grid-cols-2">
+      <div className="grid gap-8 md:grid-cols-2 [&>*]:min-w-0">
         {board.countdown.length > 0 && (
           <div>
             <h3 className="mb-4 font-serif text-xl text-ink">Skin-prep countdown</h3>
@@ -689,7 +806,7 @@ function LookBoardPanel({ board, demo }: { board: LookBoard; demo?: boolean }) {
                 <li key={i} className="relative">
                   <span className="absolute -left-[26px] top-1 h-3 w-3 rounded-full bg-primary ring-4 ring-primary-soft" />
                   <p className="text-sm font-medium text-primary">{s.when}</p>
-                  <p className="text-[15px] text-ink">{s.action}</p>
+                  <p className="text-[15px] break-words text-ink">{s.action}</p>
                   {s.productCategory && <p className="text-xs text-muted">→ {s.productCategory}</p>}
                 </li>
               ))}
@@ -708,14 +825,11 @@ function LookBoardPanel({ board, demo }: { board: LookBoard; demo?: boolean }) {
               )}
             </div>
             <p className="mb-4 text-xs text-muted">
-              Skincare, outfit &amp; accessories in one basket · your outfit is rendered on you with
-              YouCam AI; the rest are curated to match.
+              {outfitRendered
+                ? "Skincare, outfit & accessories in one basket · your outfit is rendered on you with YouCam AI; the rest are curated to match."
+                : "Skincare, outfit & accessories in one basket · add a full-body photo to render the outfit on you with YouCam AI; the rest are curated to match."}
             </p>
-            <ul className="space-y-3">
-              {board.shopping.map((item, i) => (
-                <ShopItem key={i} item={item} />
-              ))}
-            </ul>
+            <RetailBasket key={board.garmentId ?? board.headline} items={board.shopping} />
           </div>
         )}
       </div>
@@ -728,11 +842,17 @@ function LookBoardPanel({ board, demo }: { board: LookBoard; demo?: boolean }) {
               <span className="font-medium text-primary">YouCam AI</span> renders. Add your own photo
               with live keys and Aphrodite generates them on you.
             </>
-          ) : (
+          ) : outfitRendered ? (
             <>
               Your outfit and lighting are rendered on you by{" "}
               <span className="font-medium text-primary">YouCam AI</span>; your skin scores and colors
               read straight from YouCam&apos;s analysis.
+            </>
+          ) : (
+            <>
+              Your skin scores and colors read straight from{" "}
+              <span className="font-medium text-primary">YouCam AI</span>; add a full-body photo to
+              render the outfit on you too.
             </>
           )}
         </p>
@@ -759,35 +879,108 @@ function LookBoardPanel({ board, demo }: { board: LookBoard; demo?: boolean }) {
   );
 }
 
-function ShopItem({ item }: { item: ShoppingItem }) {
-  const isSku = typeof item.price === "number";
+const WARDROBE_OPTIONS: { v: GarmentPreference; label: string }[] = [
+  { v: "surprise", label: "Surprise me" },
+  { v: "dresses", label: "Dresses" },
+  { v: "suits", label: "Suits" },
+  { v: "separates", label: "Separates" },
+];
+
+function WardrobeToggle({
+  value,
+  onChange,
+}: {
+  value: GarmentPreference;
+  onChange: (v: GarmentPreference) => void;
+}) {
   return (
-    <li className="flex items-center gap-3 rounded-lg border border-line bg-paper p-3">
-      {item.imageUrl && (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img src={item.imageUrl} alt={item.category} className="h-14 w-14 rounded-md object-cover" />
-      )}
-      <div className="min-w-0 flex-1">
-        <p className="truncate text-sm font-medium text-ink">{item.category}</p>
-        <p className="truncate text-sm text-muted">{item.why}</p>
-        {item.retailer && (
-          <p className="text-xs text-muted">
-            {item.retailer}
-            {isSku && <span className="text-ink"> · ${item.price}</span>}
-          </p>
-        )}
-      </div>
-      {isSku && item.url && (
-        <a
-          href={item.url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="shrink-0 rounded-full bg-primary px-3 py-1.5 text-xs font-medium text-white transition hover:bg-[#8c3556]"
+    <div className="inline-flex flex-wrap gap-1.5">
+      {WARDROBE_OPTIONS.map((o) => (
+        <button
+          key={o.v}
+          onClick={() => onChange(o.v)}
+          aria-pressed={value === o.v}
+          className={`rounded-full border px-3 py-1.5 text-xs transition focus-visible:ring-2 focus-visible:ring-primary ${
+            value === o.v ? "border-primary bg-primary text-white" : "border-line text-ink hover:border-primary hover:text-primary"
+          }`}
         >
-          Shop
-        </a>
-      )}
-    </li>
+          {o.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
+/** Returning-user banner: a saved, image-free runway can be resumed or used as
+ * a check-in baseline. Never stores a photo — only the plan + scores. */
+function SavedRunwayBand({
+  plan,
+  onResume,
+  onCheckIn,
+  onClear,
+}: {
+  plan: SavedPlan;
+  onResume: () => void;
+  onCheckIn: () => void;
+  onClear: () => void;
+}) {
+  const when = new Date(plan.savedAt).toLocaleDateString();
+  const btn =
+    "inline-flex items-center gap-1.5 rounded-full border border-line px-3 py-1.5 text-xs font-medium text-ink transition hover:border-primary hover:text-primary focus-visible:ring-2 focus-visible:ring-primary";
+  return (
+    <div className="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-[var(--radius-card)] border border-primary/30 bg-primary-soft/50 p-4">
+      <p className="text-sm text-ink">
+        <span className="font-medium">Welcome back ✨</span> — you saved a runway for{" "}
+        <span className="font-medium">{plan.occasion}</span> on {when} (no photo stored).
+      </p>
+      <div className="flex flex-wrap gap-2">
+        <button onClick={onCheckIn} className={btn}>
+          <RefreshCw size={14} aria-hidden />
+          Start a glow check-in
+        </button>
+        <button onClick={onResume} className={btn}>
+          Resume settings
+        </button>
+        <button onClick={onClear} className={`${btn} text-muted`} title="Delete saved runway">
+          <Trash2 size={14} aria-hidden />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/** Score-delta panel for a returning check-in: compares this run's skin scores
+ * against the saved baseline so progress is visible. */
+function ProgressPanel({ baseline, skin }: { baseline: SavedPlan; skin: SkinAnalysis }) {
+  const prev = new Map(baseline.skin.concerns.map((c) => [c.name, c.score]));
+  const rows = skin.concerns
+    .map((c) => ({ name: c.name, now: c.score, delta: c.score - (prev.get(c.name) ?? c.score) }))
+    .filter((r) => prev.has(r.name))
+    .sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta))
+    .slice(0, 4);
+  if (rows.length === 0) return null;
+  return (
+    <div className="rounded-[var(--radius-card)] border border-primary/25 bg-surface p-5">
+      <h3 className="font-serif text-xl text-ink">Your glow check-in</h3>
+      <p className="mb-3 mt-1 text-xs text-muted">
+        Change in YouCam skin-health scores since {new Date(baseline.savedAt).toLocaleDateString()}.
+      </p>
+      <ul className="space-y-2 text-sm">
+        {rows.map((r) => {
+          const up = r.delta > 0;
+          const flat = r.delta === 0;
+          return (
+            <li key={r.name} className="flex items-center justify-between gap-3">
+              <span className="capitalize text-ink">{prettyConcern(r.name)}</span>
+              <span className={flat ? "text-muted" : up ? "text-leaf" : "text-rose"}>
+                {flat ? "no change" : `${up ? "▲ +" : "▼ "}${Math.round(r.delta)}`}
+                <span className="ml-1 text-xs text-muted">({Math.round(r.now)}/100)</span>
+              </span>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
   );
 }
 
@@ -854,11 +1047,11 @@ type ModeValue = NonNullable<ConciergeRequest["mode"]>;
 
 function modeHint(mode: ModeValue): string {
   if (!AGENTIC_ENABLED && (mode === "agentic" || mode === "auto")) {
-    return "Agentic (Claude) needs an Anthropic key — this build runs the guided engine.";
+    return "Agentic needs an LLM key (Anthropic or OpenAI) — this build runs the guided engine.";
   }
-  if (mode === "agentic") return "Claude reasons over YouCam's outputs and drives each API.";
-  if (mode === "auto") return "Uses Claude when a key is configured, otherwise the guided engine.";
-  return "Rule-based — runs on the YouCam key alone, no Anthropic key needed.";
+  if (mode === "agentic") return "An LLM reasons over YouCam's outputs and drives each API live.";
+  if (mode === "auto") return "Agentic when an LLM key is configured, otherwise the guided engine.";
+  return "Rule-based — runs on the YouCam key alone, no LLM key needed.";
 }
 
 function ModeToggle({ value, onChange }: { value: ModeValue; onChange: (v: ModeValue) => void }) {
@@ -873,7 +1066,7 @@ function ModeToggle({ value, onChange }: { value: ModeValue; onChange: (v: ModeV
         <button
           key={o.v}
           disabled={o.disabled}
-          title={o.disabled ? "Needs an Anthropic key" : undefined}
+          title={o.disabled ? "Needs an Anthropic or OpenAI key" : undefined}
           onClick={() => !o.disabled && onChange(o.v)}
           className={`px-3.5 py-2 text-sm transition ${
             value === o.v ? "bg-primary text-white" : "bg-surface text-muted hover:text-ink"

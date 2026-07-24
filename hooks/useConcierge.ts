@@ -3,6 +3,7 @@
 import { useCallback, useReducer, useRef } from "react";
 
 import type {
+  AgenticBrain,
   ConciergeEvent,
   ConciergeMode,
   ConciergeRequest,
@@ -17,6 +18,8 @@ export type Phase = "idle" | "running" | "done" | "error";
 export interface ConciergeState {
   phase: Phase;
   mode?: ConciergeMode;
+  /** Which LLM drove an agentic run (claude | gpt). */
+  brain?: AgenticBrain;
   /** Server told us this run used captured fixtures (demo) rather than live YouCam calls. */
   demo?: boolean;
   narration: string;
@@ -62,7 +65,12 @@ function reducer(state: ConciergeState, action: Action): ConciergeState {
       // overwrite the outfit + board when the new look arrives.
       return { ...state, phase: "running", error: undefined, narration: "", steps: [] };
     case "mode":
-      return { ...state, mode: action.mode, demo: action.demo ?? state.demo };
+      return {
+        ...state,
+        mode: action.mode,
+        brain: action.brain ?? state.brain,
+        demo: action.demo ?? state.demo,
+      };
     case "narration":
       return { ...state, narration: state.narration + action.text };
     case "tool_start":
@@ -166,6 +174,7 @@ export function useConcierge() {
         mode: base.mode,
         skinGoal: base.skinGoal,
         track: base.track,
+        garmentPreference: base.garmentPreference,
         refine: {
           adjust,
           currentGarmentId: s.board?.garmentId,

@@ -3,6 +3,7 @@ import "server-only";
 import {
   completeTheLook,
   GARMENT_CATALOG,
+  garmentMatchesPreference,
   skincareSkuFor,
   type CatalogGarment,
   type Formality,
@@ -14,6 +15,7 @@ import { TOOL, labelFor } from "@/lib/concierge/tools";
 import type {
   ConciergeEvent,
   ConciergeRequest,
+  GarmentPreference,
   CountdownStep,
   LookBoard,
   RefineAdjust,
@@ -55,9 +57,7 @@ export async function* runDeterministic(
     if (skin.overlayUrl) yield { type: "image", slot: "skinOverlay", url: skin.overlayUrl };
     focus = selectFocus(skin.concerns, req.skinGoal);
     if (focus.length) {
-      yield* say(
-        `YouCam scores your skin health high overall; the most room is on ${listConcernsWithScores(focus)} — I'll focus your prep there.`,
-      );
+      yield* say(`${skinReadLead(focus)}; ${focusIntro(req.skinGoal, focus)}`);
     }
   } catch {
     yield* say(`(I couldn't complete the skin scan this time — I'll plan from occasion and color.)`);
@@ -81,7 +81,9 @@ export async function* runDeterministic(
   }
 
   // --- apparel ---
-  const garment = pickGarment(type, color?.undertone, { avoidDress: track === "grooming" });
+  const garment = pickGarment(type, color?.undertone, {
+    preference: track === "grooming" ? "suits" : (req.garmentPreference ?? "surprise"),
+  });
   const occ = type ?? "special occasion";
   if (garment && hasBody) {
     yield* say(`I'd put you in the ${garment.name} — ${fitPhrase(garment.formality, type, occ)}${garmentColorClause(garment, color?.undertone)}.`);
@@ -117,7 +119,7 @@ export async function* runDeterministic(
 
   // --- assemble board ---
   yield step(TOOL.presentLookBoard);
-  yield { type: "board", board: buildBoard(req.occasion, type, daysUntil, focus, color, garment, track) };
+  yield { type: "board", board: buildBoard(req.occasion, type, daysUntil, focus, color, garment, track, req.skinGoal) };
 }
 
 const REFINE_LEAD: Record<RefineAdjust, string> = {
@@ -156,7 +158,7 @@ export async function* runRefineDeterministic(
   const garment = pickGarment(type, undertone, {
     adjust: refine.adjust,
     exclude: refine.adjust === "reroll" ? currentId : undefined,
-    avoidDress: track === "grooming",
+    preference: track === "grooming" ? "suits" : (req.garmentPreference ?? "surprise"),
   });
   const changed = Boolean(garment && garment.id !== currentId);
 
@@ -186,7 +188,7 @@ export async function* runRefineDeterministic(
   // still applies (the client keeps it) — re-running would waste a unit.
 
   yield step(TOOL.presentLookBoard);
-  yield { type: "board", board: buildBoard(req.occasion, type, daysUntil, focus, color, garment, track) };
+  yield { type: "board", board: buildBoard(req.occasion, type, daysUntil, focus, color, garment, track, req.skinGoal) };
 }
 
 /* ---------------- rule tables ---------------- */
@@ -244,8 +246,7 @@ function shiftFormality(f: Formality | undefined, dir: -1 | 1): Formality | unde
 interface PickHint {
   adjust?: RefineAdjust;
   exclude?: string;
-  /** Grooming track: never suggest a dress. */
-  avoidDress?: boolean;
+  preference?: GarmentPreference;
 }
 
 function pickGarment(
@@ -285,11 +286,12 @@ function pickGarment(
   }
 
   let candidates = broaden ? GARMENT_CATALOG : typePool;
-  if (hint?.avoidDress) {
-    // Never suggest a dress on the grooming track; if the pool is all dresses,
-    // fall back to the catalog's non-dress pieces rather than keep the dresses.
-    const noDress = candidates.filter((g) => g.category !== "dress");
-    candidates = noDress.length ? noDress : GARMENT_CATALOG.filter((g) => g.category !== "dress");
+  const preference = hint?.preference ?? "surprise";
+  if (preference !== "surprise") {
+    const preferred = candidates.filter((g) => garmentMatchesPreference(g, preference));
+    candidates = preferred.length
+      ? preferred
+      : GARMENT_CATALOG.filter((g) => garmentMatchesPreference(g, preference));
   }
   if (hint?.exclude) {
     const filtered = candidates.filter((g) => g.id !== hint.exclude);
@@ -320,14 +322,18 @@ function buildBoard(
   color: ColorProfile | undefined,
   garment: CatalogGarment | undefined,
   track: StyleTrack = "style",
+  goal?: SkinGoal,
 ): LookBoard {
+  // Build the countdown once and hand it to buildShopping so every "→ category"
+  // pointer the countdown shows resolves to a real basket row (no orphan chips).
+  const countdown = buildCountdown(focus, daysUntil, track);
   return {
     occasion: occasion.trim(),
     daysUntil,
     headline: type ? `Your ${titleCase(type)} Look` : "Your Occasion Look",
-    narrative: buildNarrative(type, daysUntil, focus, color, garment, track),
-    countdown: buildCountdown(focus, daysUntil, track),
-    shopping: buildShopping(focus, garment, color, daysUntil, track),
+    narrative: buildNarrative(type, daysUntil, focus, color, garment, track, goal),
+    countdown,
+    shopping: buildShopping(focus, garment, color, daysUntil, track, countdown),
     garmentId: garment?.id,
   };
 }
@@ -408,6 +414,7 @@ function buildNarrative(
   color: ColorProfile | undefined,
   garment: CatalogGarment | undefined,
   track: StyleTrack = "style",
+  goal?: SkinGoal,
 ): string {
   const bucket = horizonBucket(daysUntil);
   const treatable = bucket === "long" || bucket === "mid";
@@ -419,7 +426,7 @@ function buildNarrative(
 
   let skinBit: string;
   if (lowest && treatable) {
-    skinBit = `Your skin scores well overall — we'll use ${span} to focus on your priority area, ${lowest}`;
+    skinBit = `${skinReadLead(focus)} — we'll use ${span} to support your priority area, ${lowest}`;
   } else if (lowest) {
     const toGo =
       daysUntil !== undefined && daysUntil <= 0
@@ -427,7 +434,7 @@ function buildNarrative(
         : daysUntil === 1
           ? "with only a day to go"
           : `with only ${horizonLabel(daysUntil ?? 0)} to go`;
-    skinBit = `Your skin scores well overall — ${toGo}, we'll protect and support your priority area, ${lowest}, rather than start anything new`;
+    skinBit = `${skinReadLead(focus)} — ${toGo}, we'll protect and support your priority area, ${lowest}, rather than start anything new`;
   } else {
     skinBit = `We'll keep your skin hydrated and calm over ${span}`;
   }
@@ -436,16 +443,12 @@ function buildNarrative(
     ? `, and dress you in the ${garment.name}${garmentColorClause(garment, color?.undertone)}`
     : "";
   const close =
-    track === "grooming"
-      ? "groomed, sharp, and put-together"
-      : treatable
-        ? "rested, refreshed, and put-together"
-        : "rested, even, and camera-ready";
+    track === "grooming" ? "groomed, sharp, and put-together" : goalClose(goal, treatable);
   const assumed =
     daysUntil === undefined
       ? " (I planned for about three weeks — tell me the date for a tighter countdown.)"
       : "";
-  return `${skinBit}${styleBit}. Follow the plan below and you'll walk into your ${type ?? "occasion"} looking ${close}.${assumed}`;
+  return `${skinBit}${styleBit}. Follow the plan below and you'll walk in looking ${close}.${assumed}`;
 }
 
 /**
@@ -468,9 +471,14 @@ function buildCountdown(
   // Each step carries an `order` = roughly days-before-the-event, so the final
   // list is sorted strictly chronologically regardless of what we push (the
   // grooming step used to land out of order on short horizons).
+  // Each step carries an `order` = roughly days-before-the-event so the final
+  // list sorts strictly chronologically. `productCategory` is set ONLY on steps
+  // that point at something the basket actually sells (buildShopping unions
+  // these in); behaviour steps ("get a full night's sleep", "trim your beard")
+  // carry no chip, so no "→ product" pointer ever dangles.
   const items: { order: number; step: CountdownStep }[] = [];
-  const push = (order: number, when: string, action: string, productCategory: string) =>
-    items.push({ order, step: { when, action, productCategory } });
+  const push = (order: number, when: string, action: string, productCategory?: string) =>
+    items.push({ order, step: { when, action, ...(productCategory ? { productCategory } : {}) } });
 
   if (d >= 15) {
     push(
@@ -489,14 +497,19 @@ function buildCountdown(
     push(
       d,
       `${horizonLabel(d)} out`,
-      `Gently target ${focusLabel} — ${primary.action} — lock your routine in now and add nothing brand-new in the final days.`,
+      `Gently target ${focusLabel} — ${primary.action} — and lock your routine in now.`,
       primary.category,
+    );
+    push(
+      2.5,
+      "A few days out",
+      "Keep it consistent and stop any strong actives 2 days before, so skin is calm on the day.",
     );
   } else if (d >= 3) {
     push(
       d,
       "Now",
-      `Too close to start new actives. Double down on hydration and calming so ${focusLabel} settles; no experiments.`,
+      `Too close to start new actives — double down on hydration and calming to soothe ${focusLabel}; no experiments.`,
       "soothing moisturizer",
     );
   } else {
@@ -509,30 +522,28 @@ function buildCountdown(
   }
 
   if (track === "grooming") {
+    // Behaviour step (the kit itself is already in the basket) — no chip.
     if (d >= 3) {
-      push(
-        2,
-        "2 days before",
-        "Sharpen up: trim and tidy your beard and hairline, and exfoliate so skin looks fresh, not shiny.",
-        "grooming kit",
-      );
+      push(2, "2 days before", "Sharpen up: trim and tidy your beard and hairline, and exfoliate so skin looks fresh, not shiny.");
     } else {
-      push(
-        0.8,
-        "The night before",
-        "Sharpen up: trim and tidy your beard and hairline so you look fresh, not shiny.",
-        "grooming kit",
-      );
+      push(0.8, "The night before", "Sharpen up: trim and tidy your beard and hairline so you look fresh, not shiny.");
     }
   }
 
-  push(0.5, "Night before", "Hydrate, get a full night's sleep, and don't try any new product.", "hydrating serum");
+  // A distinct "Night before" step only when the event isn't already imminent:
+  // for d<3 the final-day step covers tonight, so a second night-before would
+  // duplicate it (and tell someone with an event *today* to get a full night's
+  // sleep). Behaviour step — no chip.
+  if (d >= 3) {
+    push(0.5, "Night before", "Hydrate, get a full night's sleep, and don't try any new product.");
+  }
+
   push(
     0,
-    d <= 0 ? "A few hours before" : "Event morning",
+    d <= 0 ? "A few hours before" : "Event day",
     track === "grooming"
       ? "Cleanse, moisturize, and apply SPF — a matte finish keeps skin looking fresh, not shiny."
-      : "Cleanse, moisturize, apply SPF, then a smoothing primer for a smooth, even base.",
+      : "Cleanse, moisturize, apply SPF, then a smoothing primer for an even, camera-ready base.",
     track === "grooming" ? "matte moisturizer" : "primer + SPF",
   );
 
@@ -545,6 +556,7 @@ function buildShopping(
   color: ColorProfile | undefined,
   daysUntil: number | undefined,
   track: StyleTrack = "style",
+  countdown: CountdownStep[] = [],
 ): ShoppingItem[] {
   const items: ShoppingItem[] = [];
   const seen = new Set<string>();
@@ -554,12 +566,15 @@ function buildShopping(
     seen.add(category);
     const sku = skincareSkuFor(category);
     items.push({
+      id: itemId("beauty", sku.category),
+      kind: "beauty",
       category: sku.category,
       why,
       price: sku.price,
       retailer: sku.retailer,
       url: sku.url,
       imageUrl: sku.imageUrl,
+      inStock: true,
     });
   };
 
@@ -583,21 +598,36 @@ function buildShopping(
     add("primer + SPF", "A smooth base and protection for the day.");
   }
 
+  // Coherence: make sure every product the countdown points at is buyable here,
+  // so no "→ category" chip dangles without a matching basket row.
+  for (const s of countdown) {
+    if (s.productCategory) add(s.productCategory, "Called for in your countdown plan.");
+  }
+
   if (garment) {
     const clause = garmentColorClause(garment, color?.undertone).trim();
     items.push({
+      id: garment.id,
+      kind: "apparel",
       category: garment.name,
       why: clause ? `${titleCase(clause)}, cut for the occasion.` : "Cut for the occasion.",
       price: garment.price,
       retailer: garment.retailer,
       url: garment.url,
       imageUrl: garment.imageUrl,
+      sizes: garment.sizes,
+      inStock: garment.inStock,
     });
     // Complete the look: accessories matched to the ACTUAL garment (a suit gets
     // a watch + shoes, not earrings), each a priced SKU — turns a single garment
     // into a coherent cross-category basket.
-    for (const a of completeTheLook(garment.formality, track, garment.category)) {
-      items.push({ ...a });
+    for (const a of completeTheLook(garment, track)) {
+      items.push({
+        ...a,
+        id: itemId("accessory", a.category),
+        kind: "accessory",
+        inStock: true,
+      });
     }
   }
   return items;
@@ -612,6 +642,58 @@ function step(name: string): ConciergeEvent {
 async function* say(text: string): AsyncGenerator<ConciergeEvent> {
   yield { type: "narration", text: `${text}\n\n` };
   await sleep(140);
+}
+
+function skinReadLead(items: SkinConcern[]): string {
+  const lowest = Math.min(...items.map((item) => item.score));
+  if (lowest >= 75) return "YouCam found a strong-looking baseline";
+  if (lowest >= 55) return "YouCam found a steady baseline with a few areas to support";
+  return "YouCam found a few areas that may benefit from extra cosmetic support";
+}
+
+/** Introduce the focus concerns. When a skin GOAL is set, name it so the
+ * goal-weighted selection doesn't read as a mis-ordered "most room" list. */
+function focusIntro(goal: SkinGoal | undefined, focus: SkinConcern[]): string {
+  if (goal && goal !== "balanced") {
+    return `for your ${goalLabel(goal)} goal I'll focus on ${listConcernsWithScores(focus)}.`;
+  }
+  return `the most room is on ${listConcernsWithScores(focus)} — I'll focus your cosmetic prep there.`;
+}
+
+function goalLabel(goal: SkinGoal): string {
+  switch (goal) {
+    case "glow":
+      return "glow";
+    case "firm":
+      return "smooth-and-firm";
+    case "clear":
+      return "clear-skin";
+    case "even":
+      return "even-tone";
+    default:
+      return "balanced";
+  }
+}
+
+/** Goal-specific narrative close so the chosen skin goal is acknowledged (not
+ * silently applied). Falls back to the horizon-appropriate generic close. */
+function goalClose(goal: SkinGoal | undefined, treatable: boolean): string {
+  switch (goal) {
+    case "glow":
+      return "lit-from-within and camera-ready";
+    case "firm":
+      return "smooth, firm, and camera-ready";
+    case "clear":
+      return "clear, fresh, and camera-ready";
+    case "even":
+      return "even-toned and camera-ready";
+    default:
+      return treatable ? "rested, refreshed, and put-together" : "rested, even, and camera-ready";
+  }
+}
+
+function itemId(kind: string, name: string): string {
+  return `${kind}-${name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "")}`;
 }
 
 function listConcernsWithScores(items: SkinConcern[]): string {

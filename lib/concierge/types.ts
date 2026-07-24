@@ -29,17 +29,25 @@ export interface LookBoard {
 
 /** A "shop the look" line — a product category or a specific catalog SKU. */
 export interface ShoppingItem {
+  /** Stable catalog key used by the interactive basket. */
+  id?: string;
   category: string;
   why: string;
-  /** Present for a concrete garment SKU (the retail loop). */
+  kind?: "beauty" | "apparel" | "accessory";
+  /** Present for a concrete catalog SKU (the retail loop). */
   price?: number;
   retailer?: string;
   url?: string;
   imageUrl?: string;
+  sizes?: string[];
+  inStock?: boolean;
 }
 
 /** Which engine drives the run. */
 export type ConciergeMode = "agentic" | "deterministic";
+
+/** Which LLM drives an agentic run (claude = Anthropic, gpt = OpenAI). */
+export type AgenticBrain = "claude" | "gpt";
 
 /** Which skin outcome the user cares about most; reweights the concern focus. */
 export type SkinGoal = "balanced" | "glow" | "firm" | "clear" | "even";
@@ -47,6 +55,9 @@ export type SkinGoal = "balanced" | "glow" | "firm" | "clear" | "even";
 /** Self-selected styling track (never inferred from the face). "grooming" swaps
  * makeup + color-season framing for beard/hair/skin grooming with a suit. */
 export type StyleTrack = "style" | "grooming";
+
+/** The silhouette the shopper explicitly wants to try. */
+export type GarmentPreference = "surprise" | "dresses" | "suits" | "separates";
 
 /** A one-tap refinement of an existing look (re-styles the outfit in place). */
 export type RefineAdjust = "less_formal" | "more_formal" | "cooler" | "warmer" | "reroll";
@@ -64,6 +75,8 @@ export interface ConciergeRequest {
   skinGoal?: SkinGoal;
   /** Self-selected styling track (default "style"). */
   track?: StyleTrack;
+  /** Explicit wardrobe preference; never inferred from the user's photo. */
+  garmentPreference?: GarmentPreference;
   /**
    * When present, this is a refinement of a prior look: re-style the outfit only,
    * reusing the prior skin/color (passed here) instead of re-analyzing — so it's
@@ -83,7 +96,7 @@ export interface ConciergeRequest {
 
 /** Server-Sent-Event payloads streamed to the client during a run. */
 export type ConciergeEvent =
-  | { type: "mode"; mode: ConciergeMode; demo?: boolean }
+  | { type: "mode"; mode: ConciergeMode; demo?: boolean; brain?: AgenticBrain }
   | { type: "narration"; text: string }
   | { type: "tool_start"; name: string; label: string }
   | { type: "skin"; analysis: SkinAnalysis }
