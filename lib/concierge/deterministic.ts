@@ -2,6 +2,7 @@ import "server-only";
 
 import {
   completeTheLook,
+  findGarment,
   GARMENT_CATALOG,
   garmentMatchesPreference,
   skincareSkuFor,
@@ -94,6 +95,7 @@ export async function* runDeterministic(
           person: body,
           garment: { kind: "url", url: garment.imageUrl },
           category: garment.category,
+          renderHint: garment.wardrobe,
         },
         // Fail fast (interactive budget) so a slow render doesn't block the
         // finish + board behind the full 120s poll timeout.
@@ -155,10 +157,14 @@ export async function* runRefineDeterministic(
     undertone && !toneRefine ? { undertone, paletteHex: [] } : undefined;
   const currentId = refine.currentGarmentId;
 
+  const toneAdjust = refine.adjust === "cooler" || refine.adjust === "warmer";
+  const currentGarment = currentId ? findGarment(currentId) : undefined;
   const garment = pickGarment(type, undertone, {
     adjust: refine.adjust,
     exclude: refine.adjust === "reroll" ? currentId : undefined,
     preference: track === "grooming" ? "suits" : (req.garmentPreference ?? "surprise"),
+    // A tone shift shouldn't change the KIND of garment — keep dresses as dresses.
+    keepWardrobe: toneAdjust ? currentGarment?.wardrobe : undefined,
   });
   const changed = Boolean(garment && garment.id !== currentId);
 
@@ -172,7 +178,7 @@ export async function* runRefineDeterministic(
     try {
       yield step(TOOL.tryOnApparel);
       const img = await tryOnApparel(
-        { person: body, garment: { kind: "url", url: garment.imageUrl }, category: garment.category },
+        { person: body, garment: { kind: "url", url: garment.imageUrl }, category: garment.category, renderHint: garment.wardrobe },
         { timeoutMs: 60_000 },
       );
       yield { type: "image", slot: "apparel", url: img.url };
@@ -247,9 +253,11 @@ interface PickHint {
   adjust?: RefineAdjust;
   exclude?: string;
   preference?: GarmentPreference;
+  /** Tone refines keep the current garment's wardrobe (a gown stays a gown). */
+  keepWardrobe?: string;
 }
 
-function pickGarment(
+export function pickGarment(
   type: OccasionType | undefined,
   undertone?: string,
   hint?: PickHint,
@@ -304,11 +312,23 @@ function pickGarment(
   // (6) so the button can never invert.
   const wf = wantFormality ? FORMALITY_ORDER.indexOf(wantFormality) : -1;
   const scored = candidates.map((g) => {
-    const undertoneScore = (flatters && g.flatters === flatters ? 2 : 0) + (g.flatters === "neutral" ? 0.5 : 0);
+    // Undertone match; the neutral "versatile" nudge only applies when we
+    // actually read an undertone — otherwise (e.g. the grooming track, which
+    // skips color) it wrongly lets a neutral piece outrank an undertone-matched
+    // one purely on the bonus (a women's neutral pantsuit beating the men's suit).
+    const undertoneScore =
+      (flatters && g.flatters === flatters ? 2 : 0) + (flatters && g.flatters === "neutral" ? 0.5 : 0);
     const dist = wf < 0 ? 0 : Math.abs(FORMALITY_ORDER.indexOf(g.formality) - wf);
     const weight = formalityAdjust ? 6 : 4;
     const formalityScore = wf < 0 ? 0 : weight * Math.max(0, 1 - dist * 0.9);
-    return { g, score: undertoneScore + formalityScore };
+    // On the "Surprise me" default, break exact ties toward a dress/separates, so
+    // an ambiguous tie never defaults a shopper into a men's suit (suit-wearers
+    // pick the Suits preference or the grooming track). Explicit prefs skip this.
+    const defaultLean = preference === "surprise" && g.wardrobe !== "suits" ? 0.1 : 0;
+    // Tone-only refines (cooler/warmer) keep the same KIND of garment, so a gown
+    // stays a gown instead of flipping into a suit on a score tie.
+    const continuity = hint?.keepWardrobe && g.wardrobe === hint.keepWardrobe ? 3 : 0;
+    return { g, score: undertoneScore + formalityScore + defaultLean + continuity };
   });
   scored.sort((a, b) => b.score - a.score);
   return scored[0]?.g;

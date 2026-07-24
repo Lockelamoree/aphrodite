@@ -39,10 +39,13 @@ export async function tryOnApparel(
     person: ImageInput;
     garment: ImageInput;
     category?: ApparelCategory;
+    /** Demo-only: which captured fixture render to serve (by wardrobe kind).
+     * Ignored by the live API. */
+    renderHint?: string;
   },
   opts?: { intervalMs?: number; timeoutMs?: number },
 ): Promise<RenderedImage> {
-  if (env.youcamFixtures) return fixtureApparel(args.category);
+  if (env.youcamFixtures) return fixtureApparel(args.category, args.renderHint);
   const { file, task } = endpointsFor("apparelVto");
   const [src, ref] = await Promise.all([
     resolveImage(args.person, file, "src"),

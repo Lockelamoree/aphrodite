@@ -122,6 +122,7 @@ export async function executeTool(
             person: ctx.body,
             garment: { kind: "url", url: garment.imageUrl },
             category: garment.category,
+            renderHint: garment.wardrobe,
           },
           { timeoutMs: 60_000 },
         );

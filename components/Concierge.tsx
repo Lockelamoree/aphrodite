@@ -27,20 +27,16 @@ const PRESETS: { occasion: string; label: string; descriptor: string }[] = [
   { occasion: "A gala next month", label: "Gala", descriptor: "Black-tie polish" },
 ];
 
-/** The agentic engine works when the server has an LLM key (Anthropic → Claude,
- * or OpenAI → GPT). Expose that to the client so we never steer a judge into a
- * broken toggle. NEXT_PUBLIC_HAS_ANTHROPIC kept for backward compatibility. */
-const AGENTIC_ENABLED =
-  process.env.NEXT_PUBLIC_HAS_AGENTIC === "1" ||
-  process.env.NEXT_PUBLIC_HAS_ANTHROPIC === "1";
-
-export function Concierge() {
+/** Whether the agentic engine is actually runnable — derived server-side from
+ * real LLM-key presence (see app/page.tsx) and passed in, so the client toggle
+ * can never drift from the deployed config. */
+export function Concierge({ agenticAvailable = false }: { agenticAvailable?: boolean }) {
   const { state, run, refine, reset } = useConcierge();
   const [occasion, setOccasion] = useState("");
   const [selfie, setSelfie] = useState<string>();
   const [body, setBody] = useState<string>();
   const [mode, setMode] = useState<NonNullable<ConciergeRequest["mode"]>>(
-    AGENTIC_ENABLED ? "auto" : "deterministic",
+    agenticAvailable ? "auto" : "deterministic",
   );
   const [skinGoal, setSkinGoal] = useState<SkinGoal>("balanced");
   const [track, setTrack] = useState<StyleTrack>("style");
@@ -251,9 +247,9 @@ export function Concierge() {
 
           <div className="mt-6 flex flex-wrap items-center gap-3">
             <span className="text-sm text-muted">Engine</span>
-            <ModeToggle value={mode} onChange={setMode} />
+            <ModeToggle value={mode} onChange={setMode} enabled={agenticAvailable} />
           </div>
-          <p className="mt-2 text-xs text-muted">{modeHint(mode)}</p>
+          <p className="mt-2 text-xs text-muted">{modeHint(mode, agenticAvailable)}</p>
 
           <label className="mt-6 flex max-w-xl items-start gap-2 text-sm text-ink">
             <input
@@ -593,8 +589,13 @@ function StreamPanel({ state }: { state: ConciergeState }) {
       <div className="mb-3 flex flex-wrap gap-2">
         {state.steps.map((s, i) => {
           const active = state.phase === "running" && i === last;
+          // Only a FAILED render is an error — a deliberate no-full-body skip
+          // (hasBody === false) is expected, not a failure. Mirrors apparelEmpty.
           const failed =
-            s.name === "try_on_apparel" && state.phase === "done" && !state.images.apparel;
+            s.name === "try_on_apparel" &&
+            state.phase === "done" &&
+            state.hasBody &&
+            !state.images.apparel;
           const cls = failed
             ? "bg-rose/10 text-rose"
             : active
@@ -1045,8 +1046,8 @@ function Uploader({
 
 type ModeValue = NonNullable<ConciergeRequest["mode"]>;
 
-function modeHint(mode: ModeValue): string {
-  if (!AGENTIC_ENABLED && (mode === "agentic" || mode === "auto")) {
+function modeHint(mode: ModeValue, enabled: boolean): string {
+  if (!enabled && (mode === "agentic" || mode === "auto")) {
     return "Agentic needs an LLM key (Anthropic or OpenAI) — this build runs the guided engine.";
   }
   if (mode === "agentic") return "An LLM reasons over YouCam's outputs and drives each API live.";
@@ -1054,10 +1055,18 @@ function modeHint(mode: ModeValue): string {
   return "Rule-based — runs on the YouCam key alone, no LLM key needed.";
 }
 
-function ModeToggle({ value, onChange }: { value: ModeValue; onChange: (v: ModeValue) => void }) {
+function ModeToggle({
+  value,
+  onChange,
+  enabled,
+}: {
+  value: ModeValue;
+  onChange: (v: ModeValue) => void;
+  enabled: boolean;
+}) {
   const opts: { v: ModeValue; label: string; disabled?: boolean }[] = [
     { v: "auto", label: "Auto" },
-    { v: "agentic", label: "Agentic", disabled: !AGENTIC_ENABLED },
+    { v: "agentic", label: "Agentic", disabled: !enabled },
     { v: "deterministic", label: "Guided" },
   ];
   return (
@@ -1073,7 +1082,7 @@ function ModeToggle({ value, onChange }: { value: ModeValue; onChange: (v: ModeV
           } ${o.disabled ? "cursor-not-allowed opacity-40" : ""}`}
         >
           {o.label}
-          {o.v === "agentic" && !AGENTIC_ENABLED && <span className="ml-1 text-[10px]">· needs key</span>}
+          {o.v === "agentic" && !enabled && <span className="ml-1 text-[10px]">· needs key</span>}
         </button>
       ))}
     </div>

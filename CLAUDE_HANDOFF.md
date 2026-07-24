@@ -2,6 +2,32 @@
 
 Last updated: 2026-07-23 UTC
 
+## 2026-07-24 (later) — review-cycle-3 P0+P1 fixes (branch review-cycle-3-fixes)
+
+A third adversarial review (43 raised / 42 verified) found the cycle-2 work had regressions. P0+P1
+fixed + verified (tsc, 30 Vitest tests incl. new pickGarment guards, lint, build; 6 real-output checks):
+- **Mis-gendering cluster (root cause):** `pickGarment` neutral bonus now only applies when an
+  undertone was read (grooming → the masculine Slate Suit, not the women's Ivory Pantsuit); the
+  "Surprise me" default breaks ties toward a dress/separates (a cool woman no longer defaults into the
+  men's suit); tone refines (cooler/warmer) keep the garment's wardrobe (a gown stays a gown).
+- **Agentic visibility:** `app/page.tsx` (server) now derives the toggle from real key presence and
+  passes it to `Concierge` — no separate NEXT_PUBLIC flag to drift. Still needs a real key in the
+  demo env to actually run agentic.
+- **Fixture render coherence:** `tryOnApparel({renderHint})` → fixture keyed on wardrobe, so a
+  "separates" set no longer renders the grey men's suit image.
+- **Honesty:** selfie-only cool sample no longer shows the untouched upload as a "relight" (honest
+  empty state); the deliberately-skipped try-on no longer renders as a red ✗ failure; README
+  "camouflage" removed.
+- Tests: `tests/pickGarment.test.ts` guards the never-mis-gender promise.
+
+Known residual (accepted, needs a `presents` tag or a masculine warm suit): a warm/neutral shopper
+on the STYLE track picking wardrobe=suits still gets the neutral Ivory Pantsuit. Deferred P2s from
+cycle-3: fit-to-budget dead-end, check-in cross-person label, saved-plan shape validation, real
+affiliate links, HACKATHON.md + demo video, rate-limit/413 robustness.
+
+---
+
+
 ## 2026-07-24 — Ordered Work COMPLETED (review-cycle-2-hardening)
 
 All six ordered-work sections below were implemented + verified (tsc, lint, 23 Vitest tests,
