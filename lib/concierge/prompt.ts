@@ -15,7 +15,7 @@ You work in two tracks and narrate what you are doing as you go, warmly and conc
 SKIN TRACK
 - Call analyze_skin. It returns a 0–100 HEALTH score per concern where HIGHER = HEALTHIER skin (≈100 is excellent). The concerns that need attention are the LOWEST-scoring ones — never treat a high score as a problem.
 - Interpret like an informed skincare advisor: cite the exact score when you name a concern (e.g. "your skin scores 68/100 on texture — the area with the most room"). Name the 2–3 LOWEST-scoring concerns and ground every recommendation in the actual numbers. Map concerns to product CATEGORIES only (e.g. "hydrating serum", "gentle exfoliant") — never invent brand names.
-- Build a skin-prep countdown timed to the occasion (present_look_board.countdown). The plan must differ in KIND by how far away the event is: with weeks, front-load treatment for the lowest-scoring concern and taper; with only a day or two, do NOT start new actives — pivot to hydration, calming, and same-day camouflage.
+- Build a skin-prep countdown timed to the occasion (present_look_board.countdown). The plan must differ in KIND by how far away the event is: with weeks, front-load treatment for the lowest-scoring concern and taper; with only a day or two, do NOT start new actives — pivot to hydration, calming, and same-day complexion prep. Never use the words "flaw" or "camouflage"; frame everything as helping the user look their best.
 
 STYLE TRACK
 - Call analyze_color for the user's detected colors + undertone + palette.
@@ -28,6 +28,7 @@ FINISH
 Rules:
 - Infer days until the event from the user's phrasing; if unknowable, plan for "the next few weeks".
 - Be decisive: pick one outfit. Do not ask the user questions — act on reasonable defaults and note them.
+- Honor the wardrobe preference in the user message. Never infer a dress/suit preference from the photo.
 - Keep spoken narration to a few sentences per step; structured detail goes in present_look_board.
 
 Garment catalog:
@@ -35,7 +36,12 @@ ${catalogForPrompt()}`;
 
 /** The opening user turn: the occasion. (The selfie is handled server-side and
  * referenced by the tools, so it is not embedded in the message text.) */
-export function buildUserMessage(occasion: string, skinGoal?: string, track?: string): string {
+export function buildUserMessage(
+  occasion: string,
+  skinGoal?: string,
+  track?: string,
+  garmentPreference?: string,
+): string {
   const goal =
     skinGoal && skinGoal !== "balanced"
       ? `\nSkin goal: "${skinGoal}" — weight the countdown and the concern you front-load toward this.`
@@ -44,5 +50,9 @@ export function buildUserMessage(occasion: string, skinGoal?: string, track?: st
     track === "grooming"
       ? `\nStyling track: grooming — recommend a suit plus beard/hair/skin grooming; do NOT recommend makeup or color-season framing.`
       : "";
-  return `Occasion: ${occasion}${goal}${grooming}\n\nMy selfie is ready for analysis. Please build my plan.`;
+  const wardrobe =
+    track !== "grooming" && garmentPreference && garmentPreference !== "surprise"
+      ? `\nWardrobe preference: "${garmentPreference}" — only choose a catalog garment in this group.`
+      : "";
+  return `Occasion: ${occasion}${goal}${grooming}${wardrobe}\n\nMy selfie is ready for analysis. Please build my plan.`;
 }

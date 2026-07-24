@@ -1,4 +1,4 @@
-import type { StyleTrack } from "@/lib/concierge/types";
+import type { GarmentPreference, StyleTrack } from "@/lib/concierge/types";
 import type { ApparelCategory } from "@/lib/youcam/apparel";
 
 /**
@@ -26,12 +26,16 @@ export interface CatalogGarment {
   flatters: "warm" | "cool" | "neutral";
   /** Dominant color as hex, for palette matching. */
   colorHex: string;
+  /** Shopper-facing silhouette group. */
+  wardrobe: Exclude<GarmentPreference, "surprise">;
   /** Reference image for the VTO render (public, front-facing). */
   imageUrl: string;
   /** Retail-loop fields. */
   price: number;
   retailer: string;
   url: string;
+  sizes: string[];
+  inStock: boolean;
 }
 
 /** Full-size VTO reference URL. */
@@ -53,10 +57,13 @@ export const GARMENT_CATALOG: CatalogGarment[] = [
     occasions: ["wedding", "gala", "party", "date"],
     flatters: "warm",
     colorHex: "#C0392B",
+    wardrobe: "dresses",
     imageUrl: U("1595777457583-95e059d581b8"),
     price: 189,
     retailer: "The Aphrodite Edit",
     url: shopUrl("scarlet red a-line evening gown"),
+    sizes: ["XS", "S", "M", "L", "XL"],
+    inStock: true,
   },
   {
     id: "sky-wrap-maxi",
@@ -66,10 +73,13 @@ export const GARMENT_CATALOG: CatalogGarment[] = [
     occasions: ["date", "brunch", "party"],
     flatters: "cool",
     colorHex: "#A9C1D9",
+    wardrobe: "dresses",
     imageUrl: U("1539008835657-9e8e9680c956"),
     price: 124,
     retailer: "The Aphrodite Edit",
     url: shopUrl("light blue wrap maxi dress"),
+    sizes: ["XS", "S", "M", "L"],
+    inStock: true,
   },
   {
     id: "slate-suit",
@@ -79,10 +89,13 @@ export const GARMENT_CATALOG: CatalogGarment[] = [
     occasions: ["interview", "work", "wedding", "gala"],
     flatters: "cool",
     colorHex: "#46587C",
+    wardrobe: "suits",
     imageUrl: U("1594938298603-c8148c4dae35"),
     price: 245,
     retailer: "The Aphrodite Edit",
     url: shopUrl("slate blue three piece suit"),
+    sizes: ["36", "38", "40", "42", "44"],
+    inStock: true,
   },
   {
     id: "crisp-white-tee",
@@ -92,10 +105,113 @@ export const GARMENT_CATALOG: CatalogGarment[] = [
     occasions: ["brunch", "date", "work"],
     flatters: "neutral",
     colorHex: "#F2F2F0",
+    wardrobe: "separates",
     imageUrl: U("1521572163474-6864f9cf17ab"),
     price: 42,
     retailer: "The Aphrodite Edit",
     url: shopUrl("crisp white cotton crew t-shirt"),
+    sizes: ["XS", "S", "M", "L", "XL", "XXL"],
+    inStock: true,
+  },
+  // --- expanded catalog: gives every occasion a cool/warm/neutral option and
+  // enough variety that reroll changes the look. Reference images are clean,
+  // front-facing demo shots; live-VTO render quality on these is UNVERIFIED
+  // (fixtures make the demo safe — confirm on a units-on pass before going live).
+  {
+    id: "emerald-gown",
+    name: "Emerald Silk Gown",
+    category: "dress",
+    formality: "formal",
+    occasions: ["wedding", "gala", "party"],
+    flatters: "cool",
+    colorHex: "#1F6F5C",
+    wardrobe: "dresses",
+    imageUrl: U("1566174053879-31528523f8ae"),
+    price: 198,
+    retailer: "The Aphrodite Edit",
+    url: shopUrl("emerald green silk evening gown"),
+    sizes: ["XS", "S", "M", "L", "XL"],
+    inStock: true,
+  },
+  {
+    id: "champagne-slip",
+    name: "Champagne Slip Gown",
+    category: "dress",
+    formality: "formal",
+    occasions: ["wedding", "gala", "party", "date"],
+    flatters: "neutral",
+    colorHex: "#E7D3B3",
+    wardrobe: "dresses",
+    imageUrl: U("1572804013309-59a88b7e92f1"),
+    price: 176,
+    retailer: "The Aphrodite Edit",
+    url: shopUrl("champagne satin slip gown"),
+    sizes: ["XS", "S", "M", "L", "XL"],
+    inStock: true,
+  },
+  {
+    id: "tailored-sheath",
+    name: "Tailored Sheath Dress",
+    category: "dress",
+    formality: "smart",
+    occasions: ["interview", "work", "gala", "party"],
+    flatters: "neutral",
+    colorHex: "#2E3A46",
+    wardrobe: "dresses",
+    imageUrl: U("1583496661160-fb5886a0aaaa"),
+    price: 132,
+    retailer: "The Aphrodite Edit",
+    url: shopUrl("tailored sheath dress work"),
+    sizes: ["XS", "S", "M", "L", "XL"],
+    inStock: true,
+  },
+  {
+    id: "ivory-pantsuit",
+    name: "Ivory Tailored Pantsuit",
+    category: "full",
+    formality: "formal",
+    occasions: ["interview", "work", "wedding", "gala"],
+    flatters: "neutral",
+    colorHex: "#EDE7DA",
+    wardrobe: "suits",
+    imageUrl: U("1594633312681-425c7b97ccd1"),
+    price: 228,
+    retailer: "The Aphrodite Edit",
+    url: shopUrl("ivory tailored pantsuit"),
+    sizes: ["0", "2", "4", "6", "8", "10", "12"],
+    inStock: true,
+  },
+  {
+    id: "blush-blazer-set",
+    name: "Blush Blazer & Trouser Set",
+    category: "full",
+    formality: "smart",
+    occasions: ["interview", "work", "date", "party"],
+    flatters: "warm",
+    colorHex: "#D9A6A0",
+    wardrobe: "separates",
+    imageUrl: U("1591369822096-ffd140ec948f"),
+    price: 164,
+    retailer: "The Aphrodite Edit",
+    url: shopUrl("blush blazer and trouser set"),
+    sizes: ["XS", "S", "M", "L", "XL"],
+    inStock: true,
+  },
+  {
+    id: "camel-knit-set",
+    name: "Camel Knit Top & Skirt",
+    category: "top",
+    formality: "smart",
+    occasions: ["date", "brunch", "work", "party"],
+    flatters: "warm",
+    colorHex: "#C19A6B",
+    wardrobe: "separates",
+    imageUrl: U("1515372039744-b8f02a3ae446"),
+    price: 118,
+    retailer: "The Aphrodite Edit",
+    url: shopUrl("camel knit top and midi skirt set"),
+    sizes: ["XS", "S", "M", "L", "XL"],
+    inStock: true,
   },
 ];
 
@@ -103,11 +219,18 @@ export function findGarment(id: string): CatalogGarment | undefined {
   return GARMENT_CATALOG.find((g) => g.id === id);
 }
 
+export function garmentMatchesPreference(
+  garment: CatalogGarment,
+  preference: GarmentPreference = "surprise",
+): boolean {
+  return preference === "surprise" || garment.wardrobe === preference;
+}
+
 /** Compact catalog view for the model's prompt/tool description. */
 export function catalogForPrompt(): string {
   return GARMENT_CATALOG.map(
     (g) =>
-      `- ${g.id}: ${g.name} (${g.category}, ${g.formality}, flatters ${g.flatters} undertones, occasions: ${g.occasions.join("/")})`,
+      `- ${g.id}: ${g.name} (${g.wardrobe}, ${g.category}, ${g.formality}, flatters ${g.flatters} undertones, occasions: ${g.occasions.join("/")})`,
   ).join("\n");
 }
 
@@ -143,7 +266,7 @@ export const SKINCARE_SKUS: Record<string, SkincareSku> = {
   "hydrating sheet mask": { name: "Hydrating Sheet Mask (5-pack)", price: 20, imageUrl: T("1596755389378-c31d21fd1273") },
   "hydrating mask": { name: "Overnight Hydrating Mask", price: 26, imageUrl: T("1556228578-8c89e6adf883") },
   "de-puff roller": { name: "Cooling De-Puff Roller", price: 22, imageUrl: T("1631730359585-38a4935cbec4") },
-  "camouflage concealer": { name: "Camouflage Concealer", price: 26, imageUrl: T("1596755389378-c31d21fd1273") },
+  "camouflage concealer": { name: "Perfecting Concealer", price: 26, imageUrl: T("1487412720507-e7ab37603c6f") },
   "matte moisturizer": { name: "Matte Finish Moisturizer", price: 28, imageUrl: T("1608248543803-ba4f8c70ae0b") },
 };
 
@@ -188,34 +311,37 @@ function acc(name: string, price: number, imageId: string, why: string): Accesso
 }
 
 const EARRINGS = acc("Crystal Statement Earrings", 65, "1535632066927-ab7c9ab60908", "Catch the light and frame your face.");
-const NECKLACE = acc("Pearl Pendant Necklace", 48, "1515562141207-7a88fb7ce338", "A classic finish that flatters your coloring.");
+const NECKLACE = acc("Pearl Pendant Necklace", 48, "1515562141207-7a88fb7ce338", "A classic finishing touch.");
 const HEELS = acc("Pointed Heels", 120, "1543163521-1bf539c55dd2", "Elongate the line of the outfit.");
 const BAG = acc("Structured Top-Handle Bag", 145, "1584917865442-de89df76afd3", "A polished carry for the day.");
-const MAKEUP = acc("Occasion Makeup Edit", 54, "1596462502278-27bfdc403348", "A curated palette matched to your season.");
-// Tailoring accessories for a suit look (no earrings/heels/makeup on a suit).
-const OXFORDS = acc("Leather Oxford Shoes", 130, "1449505278894-297fdb3edbc1", "Polished leather to finish a tailored look.");
-const POCKET_SQUARE = acc("Silk Pocket Square", 28, "1589363358751-ab05797e5629", "A refined pop of your palette at the chest.");
+const MAKEUP = acc("Occasion Makeup Edit", 54, "1596462502278-27bfdc403348", "A polished palette to finish the look.");
+// Gender-neutral tailoring accessories for a suit look (never earrings/heels).
+const LOAFERS = acc("Leather Loafers", 120, "1449505278894-297fdb3edbc1", "Polished, gender-neutral leather to finish a tailored look.");
 // Grooming track (no makeup / jewelry): a grooming kit + a sharp watch.
 const GROOMING_KIT = acc("Beard & Skin Grooming Kit", 48, "1556228578-8c89e6adf883", "Trim, tidy, and freshen up for the day.");
 const WATCH = acc("Classic Leather Watch", 145, "1524592094714-0f0654e20314", "A sharp, understated finishing touch.");
 
 /**
  * Accessories that "complete the look" — each a priced SKU that grows the
- * shoppable basket beyond the single garment. Keyed on the ACTUAL garment
- * category (a suit gets watch/shoes/pocket-square, a dress gets earrings/heels/
- * makeup) so the basket is always internally coherent; the grooming track swaps
- * everything for a grooming kit + watch.
+ * shoppable basket beyond the single garment. Keyed on the garment's WARDROBE
+ * type (not its VTO category), so a suit — worn by anyone — gets gender-neutral
+ * tailoring + makeup rather than earrings/heels, and a dress gets jewellery.
+ * The grooming track (self-selected) swaps everything for a grooming kit + watch.
  */
 export function completeTheLook(
-  formality: Formality,
+  garment: CatalogGarment,
   track: StyleTrack = "style",
-  category?: ApparelCategory,
 ): AccessorySku[] {
   if (track === "grooming") return [GROOMING_KIT, WATCH];
-  // A tailored suit ("full") reads as menswear here — finish it with tailoring
-  // accessories, never earrings/heels/makeup.
-  if (category === "full") return [WATCH, OXFORDS, POCKET_SQUARE];
-  if (formality === "formal") return [EARRINGS, HEELS, MAKEUP];
-  if (formality === "smart") return [NECKLACE, MAKEUP];
-  return [BAG, MAKEUP];
+  switch (garment.wardrobe) {
+    case "suits":
+      return [WATCH, LOAFERS, MAKEUP];
+    case "separates":
+      return garment.formality === "casual" ? [BAG] : [BAG, MAKEUP];
+    case "dresses":
+    default:
+      if (garment.formality === "formal") return [EARRINGS, HEELS, MAKEUP];
+      if (garment.formality === "smart") return [NECKLACE, MAKEUP];
+      return [MAKEUP];
+  }
 }

@@ -20,16 +20,23 @@ across future occasions.
   and a self‑select **grooming track** (beard/hair/skin + suit instead of makeup).
 - **Refines in place** — *Less/More formal · Cooler/Warmer · Try another* re‑style the board without
   re‑reading your skin.
-- **Retains** — save/share the board, and a "What's next with Aphrodite" surface for more YouCam
-  experiences (hair color, makeup, nails, jewelry, glow tracking).
+- **Shops** — an interactive demo basket (select items, pick sizes, set a budget, fit-to-budget,
+  retailer handoff) built from the priced look, honestly labelled demo inventory.
+- **Respects the shopper** — a wardrobe preference (dresses / suits / separates / surprise), an
+  explicit image-processing consent gate, and cosmetic-only (never medical) language.
+- **Retains** — save an **image-free** runway (no photo, mask, or raw response stored) and return
+  for a **glow check-in** that shows score deltas vs. your saved baseline; plus save/share/PDF and a
+  "What's next with Aphrodite" cross-product surface.
 
 ## Architecture
 Two engines emit the **same** `ConciergeEvent` SSE stream, so the app qualifies and demos with only a
 YouCam key, and the agentic layer is a pure upgrade:
 
-- **Agentic** (`lib/concierge/orchestrator.ts`) — Claude (Opus 4.8) orchestrates the YouCam APIs by
-  reasoning over the scores and calling them through **typed REST function-calling tools** (not an MCP
-  server at runtime — the same `lib/youcam/` client the guided engine uses). Requires `ANTHROPIC_API_KEY`.
+- **Agentic** — an LLM orchestrates the YouCam APIs by reasoning over the scores and calling them
+  through **typed REST function-calling tools** (not an MCP server at runtime — the same `lib/youcam/`
+  client the guided engine uses). Two interchangeable brains share one tool-execution core
+  (`lib/concierge/agent-tools.ts`): **Claude** (`orchestrator.ts`, needs `ANTHROPIC_API_KEY`, preferred)
+  or **GPT** (`openai.ts`, needs `OPENAI_API_KEY`) — the board badge names whichever drove the run.
 - **Guided** (`lib/concierge/deterministic.ts`) — a rule engine that runs on the YouCam key alone.
 
 `app/api/concierge/route.ts` streams the run; `components/Concierge.tsx` renders the live Look Board;
@@ -46,8 +53,9 @@ npm run dev                    # http://localhost:3000
 | Var | Purpose |
 |---|---|
 | `YOUCAM_API_KEY` | Perfect Corp / YouCam AI API key (required) |
-| `ANTHROPIC_API_KEY` | Enables the agentic (Claude) engine (optional) |
-| `NEXT_PUBLIC_HAS_ANTHROPIC` | Set `1` when the Anthropic key is present to show the Agentic toggle |
+| `ANTHROPIC_API_KEY` | Agentic engine, Claude brain (optional; preferred when both LLM keys are set) |
+| `OPENAI_API_KEY` | Agentic engine, GPT brain (optional; `OPENAI_MODEL` overrides the default `gpt-4o`) |
+| `NEXT_PUBLIC_HAS_AGENTIC` | Set `1` when an LLM key is present to enable the Agentic toggle |
 | `YOUCAM_FIXTURES` | Set `1` to serve captured sample renders and spend **zero** API units (great for dev/rehearsal); unset/`0` for live renders |
 
 ### Zero‑cost demo mode
@@ -73,8 +81,14 @@ Aphrodite is built to drop into a beauty or fashion retailer's own funnel:
 - **YouCam‑key‑only mode** — the guided engine needs no LLM key, so a retailer can ship the whole
   concierge on their existing YouCam plan and add the agentic upgrade later.
 
+## Testing
+`npm test` (Vitest) covers occasion parsing, catalog preference/coherence (no mis-gendered styling),
+request-schema validation, and raw-field stripping. The API route validates the request body (zod),
+caps payload size (413), rate-limits per IP (429), and strips raw provider fields from the SSE stream.
+
 ## Stack
-Next.js 16 · React 19 · TypeScript · Tailwind v4 · Anthropic SDK · YouCam (Perfect Corp) AI API.
+Next.js 16 · React 19 · TypeScript · Tailwind v4 · Anthropic SDK · OpenAI (fetch) · Vitest · Zod ·
+lucide-react · YouCam (Perfect Corp) AI API.
 
 ## Notes
 This is a hackathon entry. Product/skincare guidance is cosmetic, not medical. Secrets live only in

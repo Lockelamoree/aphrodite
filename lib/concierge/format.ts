@@ -12,6 +12,8 @@ const CONCERN_LABELS: Record<string, string> = {
   droopy_upper_eyelid: "upper-eyelid droop",
   droopy_lower_eyelid: "lower-eyelid droop",
   skin_type: "skin type",
+  pore: "pores",
+  wrinkle: "fine lines",
 };
 
 /** Human-readable name for a YouCam skin concern (handles HD prefix + aliases). */
