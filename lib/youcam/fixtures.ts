@@ -143,3 +143,32 @@ export async function fixtureLighting(input?: ImageInput): Promise<RenderedImage
   }
   return { url: "/fixtures/finish.jpg", raw: { fixture: true } };
 }
+
+/**
+ * Studio-experience fixtures (hair color / hairstyle / makeup). Each needs a
+ * REAL captured render of the warm sample selfie — none are captured yet (the
+ * demo YouCam key 401s, so we can't generate them here). Until then these return
+ * an EMPTY url so the studio flow shows an honest "connect YouCam to try this"
+ * state — never a fabricated render, and never the warm person's render pasted
+ * onto another face. Once public/fixtures/studio-*.jpg exist (captured with a
+ * valid key), flip HAS_STUDIO_RENDERS to true to light them up in demo mode.
+ */
+const HAS_STUDIO_RENDERS = false;
+
+async function studioFixture(input: ImageInput | undefined, file: string): Promise<RenderedImage> {
+  await delay(1400);
+  if (!HAS_STUDIO_RENDERS || profileFor(input) !== "warm") return { url: "", raw: { fixture: true } };
+  return { url: file, raw: { fixture: true } };
+}
+
+export function fixtureHairColor(input?: ImageInput): Promise<RenderedImage> {
+  return studioFixture(input, "/fixtures/studio-hair-color.jpg");
+}
+
+export function fixtureHairstyle(input?: ImageInput): Promise<RenderedImage> {
+  return studioFixture(input, "/fixtures/studio-hairstyle.jpg");
+}
+
+export function fixtureMakeup(input?: ImageInput): Promise<RenderedImage> {
+  return studioFixture(input, "/fixtures/studio-makeup.jpg");
+}

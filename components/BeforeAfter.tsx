@@ -15,10 +15,21 @@ export function BeforeAfter({
   before,
   after,
   phase,
+  title = "Your skin, seen by YouCam",
+  caption = "YouCam Skin Analysis · AR overlay",
+  beforeLabel = "Your photo",
+  afterLabel = "What YouCam sees",
+  busyLabel = "Analyzing with YouCam Skin AI…",
 }: {
   before: string;
   after?: string;
   phase: Phase;
+  /** Header + labels; default to the skin-analysis wording. */
+  title?: string;
+  caption?: string;
+  beforeLabel?: string;
+  afterLabel?: string;
+  busyLabel?: string;
 }) {
   const [pos, setPos] = useState(55);
   const [touched, setTouched] = useState(false);
@@ -27,8 +38,8 @@ export function BeforeAfter({
   return (
     <div className="relative w-full overflow-hidden rounded-[var(--radius-card)] border border-line bg-surface">
       <div className="flex items-center justify-between border-b border-line px-4 py-2.5">
-        <h3 className="font-serif text-lg text-ink">Your skin, seen by YouCam</h3>
-        <span className="text-[11px] text-muted">YouCam Skin Analysis · AR overlay</span>
+        <h3 className="font-serif text-lg text-ink">{title}</h3>
+        <span className="text-[11px] text-muted">{caption}</span>
       </div>
       <div className="relative aspect-[4/5] w-full select-none">
         {/* base selfie */}
@@ -42,7 +53,7 @@ export function BeforeAfter({
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={after}
-              alt="YouCam skin-analysis overlay"
+              alt={afterLabel}
               className="absolute inset-0 h-full w-full object-cover"
               style={{ clipPath: `inset(0 ${100 - pos}% 0 0)` }}
             />
@@ -71,10 +82,10 @@ export function BeforeAfter({
               <span className="text-sm leading-none">⇔</span>
             </div>
             <span className="absolute left-3 top-3 rounded-full bg-ink/70 px-2.5 py-1 text-xs font-medium text-white">
-              Your photo
+              {beforeLabel}
             </span>
             <span className="absolute right-3 top-3 rounded-full bg-primary/85 px-2.5 py-1 text-xs font-medium text-white">
-              What YouCam sees
+              {afterLabel}
             </span>
             {!touched && (
               <span className="pointer-events-none absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-ink/70 px-3 py-1 text-xs text-white">
@@ -86,7 +97,7 @@ export function BeforeAfter({
 
         {analyzing && (
           <span className="absolute bottom-3 left-1/2 -translate-x-1/2 rounded-full bg-surface/85 px-3 py-1 text-xs text-muted">
-            Analyzing with YouCam Skin AI…
+            {busyLabel}
           </span>
         )}
       </div>

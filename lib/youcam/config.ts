@@ -16,6 +16,12 @@ export const youcamConfig = {
     apparelVto: "/s2s/v2.0/file/cloth-v3",
     lookVto: "/s2s/v2.0/file/look-vto",
     lighting: "/s2s/v2.0/file/lighting",
+    // Studio experiences. hairColor confirmed via Get-Upload-API-Info (2026-07-24);
+    // makeup/hairstyle slugs are UNVERIFIED (the demo key 401s on those features) —
+    // confirm each via Get-Upload-API-Info with a valid key before a units-on run.
+    hairColor: "/s2s/v2.0/file/hair-color",
+    makeup: "/s2s/v2.0/file/makeup",
+    hairstyle: "/s2s/v2.0/file/hairstyle-generator",
   },
 
   poll: { intervalMs: 1500, timeoutMs: 120_000 },
