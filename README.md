@@ -13,7 +13,7 @@ across future occasions.
   Tones (undertone + depth‑aware palette), Apparel Try‑On (garment rendered on you), AI Photo
   Lighting (a camera‑ready finish).
 - **Plans the occasion** — a skincare countdown whose *kind* adapts to how far away the event is
-  (weeks → front‑load actives; a day out → protect & camouflage, no new actives).
+  (weeks → front‑load actives; a day out → protect & soften, no new actives).
 - **Completes the look** — a cross‑category, priced "shop the look" basket (skincare + fashion +
   accessories), with an on‑screen provenance ledger of exactly which YouCam APIs produced each result.
 - **Personalizes** — occasion presets, a skin‑goal focus (Glow / Smooth & firm / Clear / Even tone),
@@ -82,7 +82,8 @@ Aphrodite is built to drop into a beauty or fashion retailer's own funnel:
   concierge on their existing YouCam plan and add the agentic upgrade later.
 
 ## Testing
-`npm test` (Vitest) covers occasion parsing, catalog preference/coherence (no mis-gendered styling),
+`npm test` (Vitest) covers occasion parsing, catalog preference/coherence + garment selection
+(guards against mis-gendered styling on the default path),
 request-schema validation, and raw-field stripping. The API route validates the request body (zod),
 caps payload size (413), rate-limits per IP (429), and strips raw provider fields from the SSE stream.
 

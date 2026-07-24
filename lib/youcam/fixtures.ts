@@ -107,24 +107,39 @@ export async function fixtureColor(input?: ImageInput): Promise<ColorProfile> {
   return COLOR_PROFILE[profileFor(input)];
 }
 
-export async function fixtureApparel(category?: ApparelCategory): Promise<RenderedImage> {
+export async function fixtureApparel(
+  category?: ApparelCategory,
+  renderHint?: string,
+): Promise<RenderedImage> {
   await delay(1500);
-  // Show a captured render matching the garment category so the label matches
-  // the image (a "Crisp White Tee" must not show a suit).
-  const url =
+  // Prefer the WARDROBE render hint so the fixture matches what the garment
+  // actually is (a "separates" blazer set must not show the grey men's suit,
+  // even though its VTO category is "full"); fall back to category.
+  const byWardrobe =
+    renderHint === "dresses"
+      ? "/fixtures/apparel-gown.jpg"
+      : renderHint === "separates"
+        ? "/fixtures/apparel-top.jpg"
+        : renderHint === "suits"
+          ? "/fixtures/apparel-suit.jpg"
+          : undefined;
+  const byCategory =
     category === "dress"
       ? "/fixtures/apparel-gown.jpg"
       : category === "top"
         ? "/fixtures/apparel-top.jpg"
         : "/fixtures/apparel-suit.jpg";
-  return { url, raw: { fixture: true } };
+  return { url: byWardrobe ?? byCategory, raw: { fixture: true } };
 }
 
 export async function fixtureLighting(input?: ImageInput): Promise<RenderedImage> {
   await delay(900);
-  // The finish is a relit version of the person's selfie. The cool sample has
-  // no captured relight, so we show its own selfie (a representative sample in
-  // demo mode) rather than the warm person's face.
-  const url = profileFor(input) === "cool" ? "/samples/selfie-2.jpg" : "/fixtures/finish.jpg";
-  return { url, raw: { fixture: true } };
+  // The finish is a relit version of the selfie. The cool sample has no captured
+  // relight — so rather than pass off the untouched upload as a "relight" (which
+  // would undercut the honesty story on the very journey that showcases it), we
+  // signal "no lighting pass this run" and let the UI show its honest empty state.
+  if (profileFor(input) === "cool") {
+    throw new Error("fixture: no captured relight for this sample");
+  }
+  return { url: "/fixtures/finish.jpg", raw: { fixture: true } };
 }
