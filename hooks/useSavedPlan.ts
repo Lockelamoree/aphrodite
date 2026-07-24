@@ -43,7 +43,13 @@ function clientSnapshot(): SavedPlan | null {
   cachedRaw = raw;
   if (!raw) return (cachedPlan = null);
   try {
-    return (cachedPlan = JSON.parse(raw) as SavedPlan);
+    const parsed = JSON.parse(raw) as SavedPlan;
+    // Drop version-skewed / corrupt entries rather than let a missing shape
+    // (e.g. plan.skin.concerns) crash the results view on a check-in.
+    if (!parsed || typeof parsed !== "object" || !parsed.board || !Array.isArray(parsed.skin?.concerns)) {
+      return (cachedPlan = null);
+    }
+    return (cachedPlan = parsed);
   } catch {
     return (cachedPlan = null);
   }

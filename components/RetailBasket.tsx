@@ -64,6 +64,10 @@ export function RetailBasket({ items }: { items: ShoppingItem[] }) {
       }
     }
     setSelected(next);
+    // If the one mandatory item alone exceeds the slider budget, lift the budget
+    // to cover it — "fit to budget" must never strand checkout in an
+    // over-budget, permanently-disabled state.
+    if (running > budget) setBudget(running);
     setHandoffReady(false);
     recordRetailEvent("basket_fit_to_budget", { budget, total: running, items: next.size });
   }
@@ -190,6 +194,11 @@ export function RetailBasket({ items }: { items: ShoppingItem[] }) {
         <ShoppingBag size={17} aria-hidden />
         Prepare retailer checkout · ${total}
       </button>
+      {overBudget > 0 && (
+        <p className="mt-2 text-xs text-rose">
+          ${overBudget} over budget — remove an item or raise the budget to check out.
+        </p>
+      )}
       {handoffReady && (
         <p role="status" className="mt-3 border-l-2 border-leaf pl-3 text-sm text-ink">
           Basket handoff ready: {chosen.length} items, selected sizes, and a ${total} total are packaged for checkout.
