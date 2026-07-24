@@ -5,6 +5,7 @@ import {
   findGarment,
   GARMENT_CATALOG,
   garmentMatchesPreference,
+  garmentSuitsTrack,
   skincareSkuFor,
   type CatalogGarment,
   type Formality,
@@ -83,7 +84,8 @@ export async function* runDeterministic(
 
   // --- apparel ---
   const garment = pickGarment(type, color?.undertone, {
-    preference: track === "grooming" ? "suits" : (req.garmentPreference ?? "surprise"),
+    preference: req.garmentPreference ?? "surprise",
+    track,
   });
   const occ = type ?? "special occasion";
   if (garment && hasBody) {
@@ -162,7 +164,8 @@ export async function* runRefineDeterministic(
   const garment = pickGarment(type, undertone, {
     adjust: refine.adjust,
     exclude: refine.adjust === "reroll" ? currentId : undefined,
-    preference: track === "grooming" ? "suits" : (req.garmentPreference ?? "surprise"),
+    preference: req.garmentPreference ?? "surprise",
+    track,
     // A tone shift shouldn't change the KIND of garment — keep dresses as dresses.
     keepWardrobe: toneAdjust ? currentGarment?.wardrobe : undefined,
   });
@@ -255,6 +258,8 @@ interface PickHint {
   preference?: GarmentPreference;
   /** Tone refines keep the current garment's wardrobe (a gown stays a gown). */
   keepWardrobe?: string;
+  /** Self-selected styling track; "grooming" forces a masculine-cut suit. */
+  track?: StyleTrack;
 }
 
 export function pickGarment(
@@ -294,12 +299,23 @@ export function pickGarment(
   }
 
   let candidates = broaden ? GARMENT_CATALOG : typePool;
-  const preference = hint?.preference ?? "surprise";
+  // Grooming is a masculine-presenting track: always a suit, and never a
+  // women's cut. It overrides any wardrobe preference the shopper set.
+  const grooming = hint?.track === "grooming";
+  const preference = grooming ? "suits" : (hint?.preference ?? "surprise");
   if (preference !== "surprise") {
     const preferred = candidates.filter((g) => garmentMatchesPreference(g, preference));
     candidates = preferred.length
       ? preferred
       : GARMENT_CATALOG.filter((g) => garmentMatchesPreference(g, preference));
+  }
+  if (grooming) {
+    // Grooming skips color analysis, so `undertone` is undefined and the +0.5
+    // neutral-undertone bonus below would otherwise float a women's neutral
+    // piece (the ivory pantsuit) above the menswear suit. Restrict to
+    // masculine/neutral cuts so only a menswear suit can win.
+    const masc = candidates.filter((g) => garmentSuitsTrack(g, "grooming"));
+    candidates = masc.length ? masc : GARMENT_CATALOG.filter((g) => g.cut === "masculine");
   }
   if (hint?.exclude) {
     const filtered = candidates.filter((g) => g.id !== hint.exclude);

@@ -48,7 +48,7 @@ export function buildUserMessage(
       : "";
   const grooming =
     track === "grooming"
-      ? `\nStyling track: grooming — recommend a suit plus beard/hair/skin grooming; do NOT recommend makeup or color-season framing.`
+      ? `\nStyling track: grooming — recommend a masculine-cut suit (a menswear suit, NOT a women's-cut pantsuit; choose a catalog garment whose cut is "masculine") plus beard/hair/skin grooming; do NOT recommend makeup or color-season framing.`
       : "";
   const wardrobe =
     track !== "grooming" && garmentPreference && garmentPreference !== "surprise"
