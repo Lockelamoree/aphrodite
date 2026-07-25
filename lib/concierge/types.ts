@@ -1,7 +1,8 @@
 import type { ColorProfile, SkinAnalysis } from "@/lib/youcam/types";
 
-/** Which rendered-image slot a generated image belongs to on the Look Board. */
-export type ImageSlot = "skinOverlay" | "apparel" | "finish";
+/** Which rendered-image slot a generated image belongs to on the Look Board.
+ * "studio" is a follow-on try-on (hair/makeup/skin re-check) shown after the plan. */
+export type ImageSlot = "skinOverlay" | "apparel" | "finish" | "studio";
 
 /** A single step in the day-by-day skin-prep countdown. */
 export interface CountdownStep {
@@ -92,6 +93,20 @@ export interface ConciergeRequest {
     /** Prior skin concerns, so we don't re-run skin analysis. */
     concerns?: { name: string; score: number }[];
   };
+}
+
+/** A follow-on "studio" experience the user can try after their plan is built —
+ * each maps to one YouCam feature rendered on the same selfie. */
+export type StudioKind = "hair_color" | "hairstyle" | "makeup" | "skin_recheck";
+
+/** Input to a single studio-experience render (reuses the selfie, no re-upload
+ * of a full-body photo). Streams the same ConciergeEvent shapes as a run. */
+export interface StudioRequest {
+  kind: StudioKind;
+  /** Selfie (base64 data URL or https URL). */
+  personImage: string;
+  /** Prior undertone, so hair-color / makeup pick a flattering shade (optional). */
+  undertone?: string;
 }
 
 /** Server-Sent-Event payloads streamed to the client during a run. */

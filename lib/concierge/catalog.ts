@@ -28,6 +28,14 @@ export interface CatalogGarment {
   colorHex: string;
   /** Shopper-facing silhouette group. */
   wardrobe: Exclude<GarmentPreference, "surprise">;
+  /**
+   * Tailoring cut / presentation. The masculine-presenting "grooming" track is
+   * styled only into "masculine" (or "neutral") cuts — never "feminine" — so a
+   * women's-cut piece (e.g. the ivory pantsuit) is never handed to someone who
+   * self-selected grooming. Independent of `wardrobe`: two "suits" can differ in
+   * cut (the menswear slate suit vs. the women's pantsuit).
+   */
+  cut: "feminine" | "masculine" | "neutral";
   /** Reference image for the VTO render (public, front-facing). */
   imageUrl: string;
   /** Retail-loop fields. */
@@ -58,6 +66,7 @@ export const GARMENT_CATALOG: CatalogGarment[] = [
     flatters: "warm",
     colorHex: "#C0392B",
     wardrobe: "dresses",
+    cut: "feminine",
     imageUrl: U("1595777457583-95e059d581b8"),
     price: 189,
     retailer: "The Aphrodite Edit",
@@ -74,6 +83,7 @@ export const GARMENT_CATALOG: CatalogGarment[] = [
     flatters: "cool",
     colorHex: "#A9C1D9",
     wardrobe: "dresses",
+    cut: "feminine",
     imageUrl: U("1539008835657-9e8e9680c956"),
     price: 124,
     retailer: "The Aphrodite Edit",
@@ -90,6 +100,7 @@ export const GARMENT_CATALOG: CatalogGarment[] = [
     flatters: "cool",
     colorHex: "#46587C",
     wardrobe: "suits",
+    cut: "masculine",
     imageUrl: U("1594938298603-c8148c4dae35"),
     price: 245,
     retailer: "The Aphrodite Edit",
@@ -106,6 +117,7 @@ export const GARMENT_CATALOG: CatalogGarment[] = [
     flatters: "neutral",
     colorHex: "#F2F2F0",
     wardrobe: "separates",
+    cut: "neutral",
     imageUrl: U("1521572163474-6864f9cf17ab"),
     price: 42,
     retailer: "The Aphrodite Edit",
@@ -126,6 +138,7 @@ export const GARMENT_CATALOG: CatalogGarment[] = [
     flatters: "cool",
     colorHex: "#1F6F5C",
     wardrobe: "dresses",
+    cut: "feminine",
     imageUrl: U("1566174053879-31528523f8ae"),
     price: 198,
     retailer: "The Aphrodite Edit",
@@ -142,6 +155,7 @@ export const GARMENT_CATALOG: CatalogGarment[] = [
     flatters: "neutral",
     colorHex: "#E7D3B3",
     wardrobe: "dresses",
+    cut: "feminine",
     imageUrl: U("1572804013309-59a88b7e92f1"),
     price: 176,
     retailer: "The Aphrodite Edit",
@@ -158,6 +172,7 @@ export const GARMENT_CATALOG: CatalogGarment[] = [
     flatters: "neutral",
     colorHex: "#2E3A46",
     wardrobe: "dresses",
+    cut: "feminine",
     imageUrl: U("1583496661160-fb5886a0aaaa"),
     price: 132,
     retailer: "The Aphrodite Edit",
@@ -174,6 +189,7 @@ export const GARMENT_CATALOG: CatalogGarment[] = [
     flatters: "neutral",
     colorHex: "#EDE7DA",
     wardrobe: "suits",
+    cut: "feminine",
     imageUrl: U("1594633312681-425c7b97ccd1"),
     price: 228,
     retailer: "The Aphrodite Edit",
@@ -190,6 +206,7 @@ export const GARMENT_CATALOG: CatalogGarment[] = [
     flatters: "warm",
     colorHex: "#D9A6A0",
     wardrobe: "separates",
+    cut: "feminine",
     imageUrl: U("1591369822096-ffd140ec948f"),
     price: 164,
     retailer: "The Aphrodite Edit",
@@ -206,6 +223,7 @@ export const GARMENT_CATALOG: CatalogGarment[] = [
     flatters: "warm",
     colorHex: "#C19A6B",
     wardrobe: "separates",
+    cut: "feminine",
     imageUrl: U("1515372039744-b8f02a3ae446"),
     price: 118,
     retailer: "The Aphrodite Edit",
@@ -226,11 +244,25 @@ export function garmentMatchesPreference(
   return preference === "surprise" || garment.wardrobe === preference;
 }
 
+/**
+ * Whether a garment is appropriate for a styling track. The "grooming" track is
+ * masculine-presenting, so it excludes feminine-cut pieces (e.g. the women's
+ * ivory pantsuit) and keeps only masculine/neutral cuts; the default "style"
+ * track accepts anything. Shared by the deterministic selector and the agentic
+ * try-on guard so both engines refuse to style grooming into a women's cut.
+ */
+export function garmentSuitsTrack(
+  garment: CatalogGarment,
+  track: StyleTrack = "style",
+): boolean {
+  return track !== "grooming" || garment.cut !== "feminine";
+}
+
 /** Compact catalog view for the model's prompt/tool description. */
 export function catalogForPrompt(): string {
   return GARMENT_CATALOG.map(
     (g) =>
-      `- ${g.id}: ${g.name} (${g.wardrobe}, ${g.category}, ${g.formality}, flatters ${g.flatters} undertones, occasions: ${g.occasions.join("/")})`,
+      `- ${g.id}: ${g.name} (${g.wardrobe}, ${g.cut}-cut, ${g.category}, ${g.formality}, flatters ${g.flatters} undertones, occasions: ${g.occasions.join("/")})`,
   ).join("\n");
 }
 

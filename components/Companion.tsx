@@ -1,6 +1,11 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { type ReactNode } from "react";
+
+import { BeforeAfter } from "@/components/BeforeAfter";
+import { prettyConcern } from "@/lib/concierge/format";
+import type { StudioKind } from "@/lib/concierge/types";
+import { useStudio, type StudioResult } from "@/hooks/useStudio";
 
 /** Aphrodite's emblem — a five-petal cherry blossom, theme-tinted, no image asset. */
 export function AphroditeMark({ size = 28 }: { size?: number }) {
@@ -50,146 +55,145 @@ export function CompanionBubble({
   );
 }
 
-/** More YouCam experiences Aphrodite can guide the user through next — the
- * cross-product + retention surface. Framed honestly as "next time" invitations
- * (each names the real YouCam product); tapping gives a warm companion reply. */
-const NEXT: { key: string; label: string; api: string; reply: string }[] = [
-  { key: "hair-color", label: "New hair color", api: "YouCam AI Hair Color", reply: "A fresh shade — love it. Next time we'll find the color that lights you up ✨" },
-  { key: "hairstyle", label: "Try a hairstyle", api: "YouCam AI Hairstyle Generator", reply: "Let's play with a new cut next — I'll pull the shapes that flatter your face." },
-  { key: "makeup", label: "Makeup look", api: "YouCam AI Makeup Try-On", reply: "A makeup look in your palette? Say the word and I'll paint it on you." },
-  { key: "nails", label: "Nails", api: "YouCam AI Nail Try-On", reply: "Nails to finish the whole look — noted for next time 💅" },
-  { key: "jewelry", label: "Jewelry", api: "YouCam AI Jewelry Try-On", reply: "Earrings and a necklace, rendered on you — let's make it sparkle next." },
-  { key: "track", label: "Track my glow", api: "YouCam AI Skin Analysis", reply: "Come back in a week and I'll re-read your skin so you can watch your progress." },
+/** The follow-on YouCam experiences Aphrodite can render on the same selfie —
+ * the cross-product + retention surface. Each tap runs a real YouCam feature. */
+interface Experience {
+  key: StudioKind;
+  label: string;
+  api: string;
+  /** Labels for the before/after compare of the render. */
+  title: string;
+  beforeLabel: string;
+  afterLabel: string;
+}
+
+const EXPERIENCES: Experience[] = [
+  { key: "hair_color", label: "New hair color", api: "YouCam AI Hair Color", title: "Your new hair color", beforeLabel: "Your shade", afterLabel: "New color" },
+  { key: "hairstyle", label: "Try a hairstyle", api: "YouCam AI Hairstyle Generator", title: "Your new hairstyle", beforeLabel: "Your hair", afterLabel: "New style" },
+  { key: "makeup", label: "Makeup look", api: "YouCam AI Makeup Try-On", title: "Your occasion makeup", beforeLabel: "Bare face", afterLabel: "With makeup" },
+  { key: "skin_recheck", label: "Track my glow", api: "YouCam AI Skin Analysis", title: "Your skin, re-read by YouCam", beforeLabel: "Your photo", afterLabel: "What YouCam sees" },
 ];
 
-export function NextWithAphrodite() {
-  const [selected, setSelected] = useState<string[]>([]);
-  const [lastAdded, setLastAdded] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
-
-  const toggle = (key: string) => {
-    setCopied(false);
-    setSelected((cur) => {
-      const has = cur.includes(key);
-      if (!has) setLastAdded(key);
-      else if (lastAdded === key) setLastAdded(null);
-      return has ? cur.filter((k) => k !== key) : [...cur, key];
-    });
-  };
-
-  const chosen = NEXT.filter((n) => selected.includes(n.key));
-  const reply = NEXT.find((n) => n.key === lastAdded)?.reply;
-
-  const copyPlan = async () => {
-    const text =
-      "My next session with Aphrodite ✨\n" +
-      chosen.map((n) => `• ${n.label} — powered by ${n.api}`).join("\n");
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopied(true);
-      return;
-    } catch {
-      // Clipboard API can be unavailable (older browsers, non-focused tab) — fall back.
-    }
-    try {
-      const ta = document.createElement("textarea");
-      ta.value = text;
-      ta.style.position = "fixed";
-      ta.style.opacity = "0";
-      document.body.appendChild(ta);
-      ta.select();
-      document.execCommand("copy");
-      document.body.removeChild(ta);
-      setCopied(true);
-    } catch {
-      setCopied(false);
-    }
-  };
-
-  const clear = () => {
-    setSelected([]);
-    setLastAdded(null);
-    setCopied(false);
-  };
+export function NextWithAphrodite({
+  selfie,
+  undertone,
+}: {
+  selfie?: string;
+  undertone?: string;
+}) {
+  const { active, render } = useStudio(selfie, undertone);
 
   return (
     <div className="aura-no-print rounded-[var(--radius-card)] border border-line bg-surface p-5">
       <h3 className="font-serif text-xl text-ink">What&apos;s next with Aphrodite</h3>
       <p className="mb-3 mt-1 text-xs text-muted">
-        Tap the experiences you want next and I&apos;ll line them up for your next visit — each is a
-        real YouCam product I can guide you through.
+        Tap an experience and I&apos;ll render it on your selfie — each is a real YouCam product,
+        rendered on you the same way as your outfit.
       </p>
+
       <div className="flex flex-wrap gap-2">
-        {NEXT.map((n) => {
-          const on = selected.includes(n.key);
+        {EXPERIENCES.map((x) => {
+          const on = active?.kind === x.key;
+          const running = on && active?.phase === "running";
           return (
             <button
-              key={n.key}
-              onClick={() => toggle(n.key)}
+              key={x.key}
+              onClick={() => render(x.key)}
+              disabled={!selfie || running}
               aria-pressed={on}
-              title={n.api}
-              className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+              title={x.api}
+              className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-60 ${
                 on
                   ? "border-primary bg-primary text-white"
                   : "border-line text-ink hover:border-primary hover:text-primary"
               }`}
             >
-              <span aria-hidden className={on ? "opacity-100" : "opacity-0"}>
-                &#10003;
-              </span>
-              {n.label}
+              {running && (
+                <span
+                  aria-hidden
+                  className="h-3 w-3 animate-spin rounded-full border border-white/70 border-t-transparent"
+                />
+              )}
+              {x.label}
             </button>
           );
         })}
       </div>
 
-      {reply && (
-        <div className="mt-4">
-          <CompanionBubble tone="soft">{reply}</CompanionBubble>
-        </div>
-      )}
-
-      {chosen.length > 0 ? (
-        <div className="mt-4 rounded-xl border border-line bg-paper p-4">
-          <div className="flex items-center justify-between gap-2">
-            <p className="text-sm font-medium text-ink">
-              Lined up for next time
-              <span className="ml-1.5 rounded-full bg-primary/15 px-1.5 py-0.5 text-xs text-primary">
-                {chosen.length}
-              </span>
-            </p>
-            <div className="flex items-center gap-2">
-              <button
-                onClick={copyPlan}
-                className="rounded-full border border-primary px-3 py-1 text-xs font-medium text-primary transition hover:bg-primary hover:text-white"
-              >
-                {copied ? "Copied ✓" : "Copy my plan"}
-              </button>
-              <button
-                onClick={clear}
-                className="rounded-full border border-line px-3 py-1 text-xs text-muted transition hover:text-ink"
-              >
-                Clear
-              </button>
-            </div>
-          </div>
-          <ul className="mt-3 space-y-1.5">
-            {chosen.map((n) => (
-              <li
-                key={n.key}
-                className="flex items-center justify-between gap-3 border-t border-line pt-1.5 text-sm text-ink first:border-t-0 first:pt-0"
-              >
-                <span>{n.label}</span>
-                <span className="text-xs text-muted">{n.api}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
+      {!selfie ? (
+        <p className="mt-4 text-xs text-muted">
+          Build your look first, then try any of these on your selfie.
+        </p>
+      ) : active ? (
+        <StudioPanel active={active} selfie={selfie} />
       ) : (
         <p className="mt-4 text-xs text-muted">
-          Nothing lined up yet — tap an experience above to add it to your next session.
+          Nothing tried yet — tap an experience above to see it rendered on you.
         </p>
       )}
     </div>
+  );
+}
+
+function StudioPanel({ active, selfie }: { active: StudioResult; selfie: string }) {
+  const exp = EXPERIENCES.find((x) => x.key === active.kind)!;
+  const reply = active.narration.trim();
+  const hasRender = Boolean(active.imageUrl);
+
+  return (
+    <div className="mt-4 space-y-3">
+      {reply && <CompanionBubble tone="soft">{reply}</CompanionBubble>}
+
+      {active.phase === "error" ? (
+        <p className="text-sm text-primary">
+          {active.error ?? "That didn't come through — try again in a moment."}
+        </p>
+      ) : hasRender ? (
+        <>
+          <BeforeAfter
+            before={selfie}
+            after={active.imageUrl}
+            phase={active.phase === "running" ? "running" : "done"}
+            title={exp.title}
+            caption={`${exp.api}${active.demo ? " · sample render" : " · rendered on you"}`}
+            beforeLabel={exp.beforeLabel}
+            afterLabel={exp.afterLabel}
+            busyLabel={`Rendering with ${exp.api}…`}
+          />
+          {active.kind === "skin_recheck" && active.skin && <GlowSummary skin={active.skin} />}
+        </>
+      ) : active.phase === "running" ? (
+        <div className="flex items-center gap-2 text-sm text-muted">
+          <span
+            aria-hidden
+            className="h-4 w-4 animate-spin rounded-full border-2 border-primary/60 border-t-transparent"
+          />
+          Rendering with {exp.api}…
+        </div>
+      ) : (
+        // Done, but no render (honest demo/degrade state — the narration explains why).
+        active.kind === "skin_recheck" && active.skin ? (
+          <GlowSummary skin={active.skin} />
+        ) : null
+      )}
+    </div>
+  );
+}
+
+/** The 2 lowest-health areas from a re-check, so "track my glow" is concrete. */
+function GlowSummary({ skin }: { skin: { concerns: { name: string; score: number }[] } }) {
+  const lowest = [...skin.concerns].sort((a, b) => a.score - b.score).slice(0, 2);
+  if (!lowest.length) return null;
+  return (
+    <p className="text-xs text-muted">
+      Lowest right now:{" "}
+      {lowest.map((c, i) => (
+        <span key={c.name}>
+          {i > 0 ? ", " : ""}
+          <span className="text-ink">{prettyConcern(c.name)}</span> ({Math.round(c.score)}/100)
+        </span>
+      ))}
+      . Re-check after a week on your plan to watch it move.
+    </p>
   );
 }

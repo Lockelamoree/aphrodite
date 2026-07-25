@@ -4,6 +4,7 @@ import {
   completeTheLook,
   findGarment,
   garmentMatchesPreference,
+  garmentSuitsTrack,
   SKINCARE_SKUS,
   skincareSkuFor,
   type CatalogGarment,
@@ -100,6 +101,15 @@ export async function executeTool(
           return {
             events: [],
             resultForModel: `Garment "${garment.id}" does not match the shopper wardrobe preference "${ctx.garmentPreference}". Pick a matching catalog item.`,
+            isError: true,
+          };
+        }
+        if (!garmentSuitsTrack(garment, ctx.track)) {
+          // The grooming track is masculine-presenting — reject a women's cut
+          // (e.g. the ivory pantsuit) so the model must pick the menswear suit.
+          return {
+            events: [],
+            resultForModel: `Garment "${garment.id}" is a ${garment.cut}-cut piece, but the grooming track needs a masculine-cut menswear suit. Pick a catalog garment whose cut is "masculine".`,
             isError: true,
           };
         }
