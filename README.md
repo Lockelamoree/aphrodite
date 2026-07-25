@@ -1,98 +1,82 @@
-# Aphrodite — your occasion concierge
+# Aphrodite
 
-**One selfie → a complete, occasion‑timed plan to look and feel your best on the day.**
-Built for the **YouCam API Skin AI & Apparel VTO Hackathon** (Perfect Corp).
+I built Aphrodite for Perfect Corp's [YouCam API Skin AI & Apparel VTO Hackathon](https://youcam-api.devpost.com/). The idea is simple: you tell it the occasion, share one selfie, and it reads your skin and coloring, plans a prep countdown timed to the day, renders the outfit onto you, and hands you one shoppable look board.
 
-Aphrodite is a warm AI beauty companion. You tell her the occasion and share a selfie; she reads your
-skin and your colors with **YouCam AI**, plans a skincare countdown timed to the event, renders an
-outfit onto you, and assembles it into one shoppable **Occasion Look Board** — then keeps styling you
-across future occasions.
+Most virtual try-on demos stop at "here's a garment on you." I wanted the thing I actually want before a wedding or an interview — *what do I do with my skin between now and the day, what should I wear for my coloring, and where do I buy all of it* — answered in one place, from a single photo.
 
 ## What it does
-- **Reads you with YouCam** — Skin Analysis (0–100 *health* scores, focus the lowest), Facial Color
-  Tones (undertone + depth‑aware palette), Apparel Try‑On (garment rendered on you), AI Photo
-  Lighting (a camera‑ready finish).
-- **Plans the occasion** — a skincare countdown whose *kind* adapts to how far away the event is
-  (weeks → front‑load actives; a day out → protect & soften, no new actives).
-- **Completes the look** — a cross‑category, priced "shop the look" basket (skincare + fashion +
-  accessories), with an on‑screen provenance ledger of exactly which YouCam APIs produced each result.
-- **Personalizes** — occasion presets, a skin‑goal focus (Glow / Smooth & firm / Clear / Even tone),
-  and a self‑select **grooming track** (beard/hair/skin + suit instead of makeup).
-- **Refines in place** — *Less/More formal · Cooler/Warmer · Try another* re‑style the board without
-  re‑reading your skin.
-- **Shops** — an interactive demo basket (select items, pick sizes, set a budget, fit-to-budget,
-  retailer handoff) built from the priced look, honestly labelled demo inventory.
-- **Respects the shopper** — a wardrobe preference (dresses / suits / separates / surprise), an
-  explicit image-processing consent gate, and cosmetic-only (never medical) language.
-- **Retains** — save an **image-free** runway (no photo, mask, or raw response stored) and return
-  for a **glow check-in** that shows score deltas vs. your saved baseline; plus save/share/PDF and a
-  "What's next with Aphrodite" cross-product surface.
 
-## Architecture
-Two engines emit the **same** `ConciergeEvent` SSE stream, so the app qualifies and demos with only a
-YouCam key, and the agentic layer is a pure upgrade:
+- **Reads you with YouCam AI.** Skin Analysis (0–100 health scores — I focus the lowest ones), Facial Color / Skin Tone (I derive your undertone and a palette from the colors it detects), Apparel Try-On (the outfit rendered onto your photo), and AI Photo Lighting (a camera-ready finish on the selfie).
+- **Plans the occasion.** A skincare countdown that changes in *kind* with how far off the event is — weeks out it front-loads active ingredients and tapers them; a day out it stops new actives and switches to hydration and de-puffing, so nothing flares on the day.
+- **Dresses you for your coloring.** Your undertone actually drives the outfit pick — a cool read leans to cool-flattering pieces — and the garment is rendered on you, not just described.
+- **Completes the look.** One cross-category, priced basket — skincare + the garment + matched accessories — with an on-screen ledger of exactly which YouCam APIs produced each result.
+- **Keeps going.** Save an image-free plan (no photo, mask, or raw API response is stored) and come back for a glow check-in that compares your scores to your saved run. There's also a studio to try a new hair color, hairstyle, or makeup look on the same selfie (live with a YouCam key).
 
-- **Agentic** — an LLM orchestrates the YouCam APIs by reasoning over the scores and calling them
-  through **typed REST function-calling tools** (not an MCP server at runtime — the same `lib/youcam/`
-  client the guided engine uses). Two interchangeable brains share one tool-execution core
-  (`lib/concierge/agent-tools.ts`): **Claude** (`orchestrator.ts`, needs `ANTHROPIC_API_KEY`, preferred)
-  or **GPT** (`openai.ts`, needs `OPENAI_API_KEY`) — the board badge names whichever drove the run.
-- **Guided** (`lib/concierge/deterministic.ts`) — a rule engine that runs on the YouCam key alone.
+## Two engines, one stream
 
-`app/api/concierge/route.ts` streams the run; `components/Concierge.tsx` renders the live Look Board;
-`lib/youcam/` is a thin, typed REST client for the Perfect Corp AI API.
+There are two ways to run the concierge, and they emit the *same* event stream, so the interface doesn't care which one drove the run:
+
+- **Agentic** — Claude (or GPT) orchestrates the YouCam APIs by reasoning over your scores and calling them through typed REST function-calling tools. Needs an LLM key.
+- **Guided** — a rule engine that produces the same board with no LLM at all. Runs on the YouCam key alone.
+
+I did it this way on purpose: the app works with just a YouCam key, and the agentic engine is a pure upgrade on top of it.
 
 ## Getting started
+
+The quickest way to see it is **demo mode** — captured sample renders, no keys, and zero API units spent:
+
 ```bash
-cp .env.example .env.local     # fill in your keys
+git clone https://github.com/Lockelamoree/aphrodite
+cd aphrodite
 npm install
+cp .env.example .env.local     # demo mode (YOUCAM_FIXTURES=1) is already set
 npm run dev                    # http://localhost:3000
 ```
 
-### Environment (`.env.local`)
+That runs the whole flow — plan, try-on, refinement, save and check-in — against pre-recorded YouCam outputs, and the UI labels itself *"demo mode · sample renders"* so nothing over-claims.
+
+To run it live on your own photo, add a YouCam key and turn fixtures off in `.env.local`:
+
+```bash
+YOUCAM_API_KEY=your_key        # free tier: https://yce.perfectcorp.com/api-console
+YOUCAM_FIXTURES=0
+```
+
+Add an `ANTHROPIC_API_KEY` (or `OPENAI_API_KEY`) to unlock the agentic engine — the app detects the key on the server and switches the toggle on for you.
+
 | Var | Purpose |
 |---|---|
-| `YOUCAM_API_KEY` | Perfect Corp / YouCam AI API key (required) |
-| `ANTHROPIC_API_KEY` | Agentic engine, Claude brain (optional; preferred when both LLM keys are set) |
-| `OPENAI_API_KEY` | Agentic engine, GPT brain (optional; `OPENAI_MODEL` overrides the default `gpt-4o`) |
-| `YOUCAM_FIXTURES` | Set `1` to serve captured sample renders and spend **zero** API units (great for dev/rehearsal); unset/`0` for live renders |
+| `YOUCAM_API_KEY` | YouCam / Perfect Corp API key (required for live renders) |
+| `YOUCAM_FIXTURES` | `1` = demo mode, zero units (default); `0` = live renders |
+| `ANTHROPIC_API_KEY` | Agentic engine, Claude brain (optional; preferred when both are set) |
+| `OPENAI_API_KEY` | Agentic engine, GPT brain (optional; `OPENAI_MODEL` overrides the default) |
 
-The **Agentic** engine unlocks automatically when `ANTHROPIC_API_KEY` or `OPENAI_API_KEY` is set — the
-toggle is derived server‑side from key presence (see `app/page.tsx`), so there is no separate flag to set.
+## Built for retail
 
-### Zero‑cost demo mode
-With `YOUCAM_FIXTURES=1`, the four YouCam calls return captured sample outputs — the whole flow (plan,
-refinement, grooming track, save/share) runs with no API units spent, and the UI labels itself
-**"demo mode · sample renders"** so nothing over‑claims. The concierge *reasoning* is real; the
-*reads/renders* are pre‑recorded. Two bundled samples map to two distinct profiles (a warm, full‑body
-"wedding" read and a cool, selfie‑only "first date" read) so the demo isn't identical every run. Set
-`YOUCAM_FIXTURES=0` for live renders of the actual selfie.
+Aphrodite is meant to drop into a beauty or fashion retailer's own funnel:
 
-## Retail / white‑label
-Aphrodite is built to drop into a beauty or fashion retailer's own funnel:
+- The whole experience is one streamed route plus one client component, themeable through the Tailwind tokens in `app/globals.css` — swap the palette to a brand in one place.
+- Garments, skincare, and accessories live in `lib/concierge/catalog.ts` with price / retailer / URL fields. Point them at real products and the "shop the look" basket becomes a live storefront.
+- Every board is a priced, cross-category basket with a provenance ledger, and the outfit is rendered on the shopper *before* they buy — the try-before-you-buy pattern Perfect Corp makes the conversion-and-fewer-returns case for.
 
-- **Embeddable flow** — the whole experience is one streamed route (`/api/concierge`) + one client
-  component, themeable through the Tailwind `@theme` tokens in `app/globals.css` (swap the palette to
-  match a brand in one place).
-- **Bring‑your‑own catalog** — garments, skincare SKUs, and accessories live in
-  `lib/concierge/catalog.ts` with `price` / `retailer` / `url` fields; point them at real products or
-  affiliate deep‑links and the "shop the look" basket becomes a live storefront.
-- **Cross‑sell by design** — every board is a priced, cross‑category basket (skincare + fashion +
-  accessories) with an on‑screen provenance ledger; the outfit is rendered on the shopper before
-  purchase, the pattern Perfect Corp reports lifting conversion and reducing returns.
-- **YouCam‑key‑only mode** — the guided engine needs no LLM key, so a retailer can ship the whole
-  concierge on their existing YouCam plan and add the agentic upgrade later.
+The demo catalog and its "shop" links are clearly labelled sample inventory (the links are product searches), not a real store.
+
+## Honesty and privacy
+
+This is a hackathon entry, and being straight with the user matters to me. The app never passes a sample render off as a live one; the before/after only ever shows real YouCam output; the saved plan keeps no image or raw API data; image processing sits behind an explicit consent step; and every bit of skin guidance is cosmetic, not medical.
 
 ## Testing
-`npm test` (Vitest) covers occasion parsing, catalog preference/coherence + garment selection
-(guards against mis-gendered styling on the default path),
-request-schema validation, and raw-field stripping. The API route validates the request body (zod),
-caps payload size (413), rate-limits per IP (429), and strips raw provider fields from the SSE stream.
+
+```bash
+npm test
+```
+
+Vitest covers occasion parsing, the catalog and garment selection (including guards against mis-gendered styling), request validation, and stripping raw provider fields out of the stream. The API route validates the request body (zod), caps payload size, and rate-limits per IP.
 
 ## Stack
-Next.js 16 · React 19 · TypeScript · Tailwind v4 · Anthropic SDK · OpenAI (fetch) · Vitest · Zod ·
-lucide-react · YouCam (Perfect Corp) AI API.
 
-## Notes
-This is a hackathon entry. Product/skincare guidance is cosmetic, not medical. Secrets live only in
-`.env.local` (gitignored) — never committed.
+Next.js 16 · React 19 · TypeScript · Tailwind v4 · Anthropic SDK · OpenAI · Zod · Vitest · YouCam (Perfect Corp) AI API.
+
+## License
+
+MIT — see [LICENSE](LICENSE).
