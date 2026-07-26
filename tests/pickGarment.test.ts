@@ -13,6 +13,22 @@ describe("pickGarment — never mis-genders on the default path", () => {
     expect(pickGarment("gala", "cool", { preference: "surprise" })?.wardrobe).toBe("dresses");
   });
 
+  it("a cool woman at an interview on 'Surprise me' is never put in the men's suit", () => {
+    const g = pickGarment("interview", "cool", { preference: "surprise" });
+    expect(g?.wardrobe).not.toBe("suits");
+    expect(g?.cut).not.toBe("masculine");
+    expect(g?.id).not.toBe("slate-suit");
+    // The interview pool has no cool dress, so the honest match is the cool
+    // feminine-cut separates set (navy-blazer-set), not menswear.
+    expect(["dresses", "separates"]).toContain(g?.wardrobe);
+  });
+
+  it("interview with no undertone read on 'Surprise me' still avoids the men's suit", () => {
+    // Color analysis can be skipped/fail; the default must not fall back to slate-suit.
+    const g = pickGarment("interview", undefined, { preference: "surprise" });
+    expect(g?.wardrobe).not.toBe("suits");
+  });
+
   it("a warm woman at a wedding still gets the warm gown", () => {
     expect(pickGarment("wedding", "warm", { preference: "surprise" })?.id).toBe("scarlet-gown");
   });

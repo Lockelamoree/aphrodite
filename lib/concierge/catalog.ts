@@ -231,6 +231,32 @@ export const GARMENT_CATALOG: CatalogGarment[] = [
     sizes: ["XS", "S", "M", "L", "XL"],
     inStock: true,
   },
+  // The COOL, feminine-cut option for a job interview. Without it, the only
+  // cool-flattering interview piece was `slate-suit` (a masculine men's three-
+  // piece), so a cool-undertone woman on the "Surprise me" default was scored
+  // into it — the same mis-gender the wedding/gala pools already avoid via
+  // `emerald-gown`. Mirrors `blush-blazer-set` (its warm twin) but formality
+  // "formal" so it wins interview's formality target and clears the men's suit;
+  // sized XS–XL as a true separates set. Appended last so existing tie-break
+  // order is untouched. Image eyeball-verified as a clean navy blazer+trouser
+  // shot; live VTO runs through the "separates" -> apparel-top.jpg fixture.
+  {
+    id: "navy-blazer-set",
+    name: "Navy Blazer & Trouser Set",
+    category: "full",
+    formality: "formal",
+    occasions: ["interview", "work"],
+    flatters: "cool",
+    colorHex: "#293A5C",
+    wardrobe: "separates",
+    cut: "feminine",
+    imageUrl: U("1762793193633-c26f3d34e710"),
+    price: 192,
+    retailer: "The Aphrodite Edit",
+    url: shopUrl("navy blazer and trouser suit set women"),
+    sizes: ["XS", "S", "M", "L", "XL"],
+    inStock: true,
+  },
 ];
 
 export function findGarment(id: string): CatalogGarment | undefined {
