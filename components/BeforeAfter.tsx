@@ -20,6 +20,7 @@ export function BeforeAfter({
   beforeLabel = "Your photo",
   afterLabel = "What YouCam sees",
   busyLabel = "Analyzing with YouCam Skin AI…",
+  sliderLabel = "Drag to compare your photo with YouCam's analysis",
 }: {
   before: string;
   after?: string;
@@ -30,6 +31,8 @@ export function BeforeAfter({
   beforeLabel?: string;
   afterLabel?: string;
   busyLabel?: string;
+  /** Accessible label for the compare slider; override for non-skin renders. */
+  sliderLabel?: string;
 }) {
   const [pos, setPos] = useState(55);
   const [touched, setTouched] = useState(false);
@@ -70,8 +73,8 @@ export function BeforeAfter({
                 setPos(Number(e.target.value));
                 setTouched(true);
               }}
-              aria-label="Drag to compare your photo with YouCam's analysis"
-              className="peer absolute inset-0 h-full w-full cursor-ew-resize appearance-none bg-transparent focus:outline-none"
+              aria-label={sliderLabel}
+              className="peer absolute inset-0 h-full w-full cursor-ew-resize touch-pan-y appearance-none bg-transparent focus:outline-none"
             />
             {/* Visible circular grip (keyboard focus ring driven by the range's peer state). */}
             <div

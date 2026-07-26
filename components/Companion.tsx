@@ -77,9 +77,11 @@ const EXPERIENCES: Experience[] = [
 export function NextWithAphrodite({
   selfie,
   undertone,
+  demo,
 }: {
   selfie?: string;
   undertone?: string;
+  demo?: boolean;
 }) {
   const { active, render } = useStudio(selfie, undertone);
 
@@ -87,8 +89,10 @@ export function NextWithAphrodite({
     <div className="aura-no-print rounded-[var(--radius-card)] border border-line bg-surface p-5">
       <h3 className="font-serif text-xl text-ink">What&apos;s next with Aphrodite</h3>
       <p className="mb-3 mt-1 text-xs text-muted">
-        Tap an experience and I&apos;ll render it on your selfie — each is a real YouCam product,
-        rendered on you the same way as your outfit.
+        Tap an experience — each is a real YouCam product.{" "}
+        {demo
+          ? "In demo the skin re-check runs on captured data; hair, color, and makeup render on your own photo once you add a YouCam key."
+          : "I’ll render it on your selfie the same way as your outfit."}
       </p>
 
       <div className="flex flex-wrap gap-2">
@@ -128,7 +132,8 @@ export function NextWithAphrodite({
         <StudioPanel active={active} selfie={selfie} />
       ) : (
         <p className="mt-4 text-xs text-muted">
-          Nothing tried yet — tap an experience above to see it rendered on you.
+          Nothing tried yet — tap an experience above
+          {demo ? " (the skin re-check renders in demo)" : " to see it rendered on you"}.
         </p>
       )}
     </div>
@@ -159,6 +164,7 @@ function StudioPanel({ active, selfie }: { active: StudioResult; selfie: string 
             beforeLabel={exp.beforeLabel}
             afterLabel={exp.afterLabel}
             busyLabel={`Rendering with ${exp.api}…`}
+            sliderLabel={`Drag to compare ${exp.beforeLabel} with ${exp.afterLabel}`}
           />
           {active.kind === "skin_recheck" && active.skin && <GlowSummary skin={active.skin} />}
         </>
@@ -193,7 +199,7 @@ function GlowSummary({ skin }: { skin: { concerns: { name: string; score: number
           <span className="text-ink">{prettyConcern(c.name)}</span> ({Math.round(c.score)}/100)
         </span>
       ))}
-      . Re-check after a week on your plan to watch it move.
+      . Re-check after a week on your plan to see your progress.
     </p>
   );
 }

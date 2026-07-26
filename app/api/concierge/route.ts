@@ -5,6 +5,7 @@ import { parseConciergeRequest } from "@/lib/concierge/request-schema";
 import { sanitizeEvent } from "@/lib/concierge/sanitize";
 import type { AgenticBrain, ConciergeEvent, ConciergeMode } from "@/lib/concierge/types";
 import { env } from "@/lib/env";
+import { createRateLimiter } from "@/lib/http/rate-limit";
 
 // The concierge does long, multi-step generation — keep it on the Node runtime
 // and allow a generous execution window.
@@ -13,22 +14,8 @@ export const maxDuration = 300;
 
 // Body-size ceiling (two ~12MB images inflate to ~32MB of base64 + JSON overhead).
 const MAX_BODY_BYTES = 40 * 1024 * 1024;
-// Prototype-grade in-memory per-IP rate limit (not multi-instance safe).
-const RL_MAX = 20;
-const RL_WINDOW_MS = 60_000;
-const rateBuckets = new Map<string, { count: number; resetAt: number }>();
-
-function isRateLimited(req: Request): boolean {
-  const ip = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "local";
-  const now = Date.now();
-  const bucket = rateBuckets.get(ip);
-  if (!bucket || now > bucket.resetAt) {
-    rateBuckets.set(ip, { count: 1, resetAt: now + RL_WINDOW_MS });
-    return false;
-  }
-  bucket.count += 1;
-  return bucket.count > RL_MAX;
-}
+// Prototype-grade in-memory per-IP rate limit (see lib/http/rate-limit).
+const isRateLimited = createRateLimiter({ max: 20, windowMs: 60_000 });
 
 export async function POST(req: Request): Promise<Response> {
   // Reject oversized payloads before buffering the body.
