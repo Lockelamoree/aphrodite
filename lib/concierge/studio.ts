@@ -2,6 +2,7 @@ import "server-only";
 
 import { imageInputFromString } from "@/lib/concierge/image";
 import type { ConciergeEvent, StudioKind, StudioRequest } from "@/lib/concierge/types";
+import { env } from "@/lib/env";
 import { tryOnHairColor } from "@/lib/youcam/hairColor";
 import { tryOnHairstyle } from "@/lib/youcam/hairstyle";
 import { applyMakeup } from "@/lib/youcam/makeup";
@@ -54,7 +55,7 @@ export async function* runStudio(req: StudioRequest): AsyncGenerator<ConciergeEv
       const skin = await analyzeSkin(person);
       yield { type: "skin", analysis: skin };
       if (skin.overlayUrl) yield { type: "image", slot: "studio", url: skin.overlayUrl };
-      yield* say("Here's your fresh read. Follow your plan and re-check in a week to watch it move.");
+      yield* say("Here's your fresh read — a baseline to compare against after a week on your plan.");
       return;
     }
 
@@ -68,10 +69,17 @@ export async function* runStudio(req: StudioRequest): AsyncGenerator<ConciergeEv
     if (img.url) {
       yield { type: "image", slot: "studio", url: img.url };
       yield* say(CLOSER[kind]);
-    } else {
-      // Honest degrade: fixtures/demo has no captured render for this photo.
+    } else if (env.youcamFixtures) {
+      // Demo mode: the generative try-ons (hair/color/makeup) have no captured
+      // fixture yet, so be honest about what the demo can and can't show — rather
+      // than telling the user to "use the sample selfie" they are already on.
       yield* say(
-        "I can render this on a live YouCam connection — connect YouCam (or use the sample selfie in demo) to try it on your own photo.",
+        "In demo mode I show your skin read and outfit render from captured samples — these live hair, color, and makeup try-ons need a YouCam key to render on your photo.",
+      );
+    } else {
+      // Live, but the render came back without an image this time.
+      yield* say(
+        "That try-on didn't return a render just now — check your YouCam connection and try again in a moment.",
       );
     }
   } catch {

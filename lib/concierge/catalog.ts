@@ -324,7 +324,7 @@ export const SKINCARE_SKUS: Record<string, SkincareSku> = {
   "hydrating sheet mask": { name: "Hydrating Sheet Mask (5-pack)", price: 20, imageUrl: T("1596755389378-c31d21fd1273") },
   "hydrating mask": { name: "Overnight Hydrating Mask", price: 26, imageUrl: T("1556228578-8c89e6adf883") },
   "de-puff roller": { name: "Cooling De-Puff Roller", price: 22, imageUrl: T("1631730359585-38a4935cbec4") },
-  "camouflage concealer": { name: "Perfecting Concealer", price: 26, imageUrl: T("1487412720507-e7ab37603c6f") },
+  "perfecting concealer": { name: "Perfecting Concealer", price: 26, imageUrl: T("1487412720507-e7ab37603c6f") },
   "matte moisturizer": { name: "Matte Finish Moisturizer", price: 28, imageUrl: T("1608248543803-ba4f8c70ae0b") },
 };
 

@@ -12,6 +12,11 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Nested build output + Claude Code's local worktrees (both gitignored) must
+    // never be linted — compiled bundles under .claude/worktrees/**/.next otherwise
+    // surface thousands of false positives that have nothing to do with the source.
+    "**/.next/**",
+    ".claude/**",
   ]),
 ]);
 

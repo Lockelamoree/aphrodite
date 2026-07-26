@@ -490,7 +490,7 @@ function buildNarrative(
 /**
  * Countdown that differs in KIND by how far away the event is — the whole point
  * of the "occasion" framing. Short horizons forbid new actives and pivot to
- * hydration + camouflage; long horizons front-load the lowest-health concern.
+ * hydration + soft complexion prep; long horizons front-load the lowest-health concern.
  */
 function buildCountdown(
   focus: SkinConcern[],
@@ -624,7 +624,7 @@ function buildShopping(
     if (track === "grooming") {
       add("matte moisturizer", "Keeps skin looking fresh, not shiny, on the day.");
     } else {
-      add("camouflage concealer", "Evens things out for a smooth, photo-ready finish on the day.");
+      add("perfecting concealer", "Evens things out for a smooth, photo-ready finish on the day.");
     }
   } else {
     for (const c of focus) {

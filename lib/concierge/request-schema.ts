@@ -13,7 +13,7 @@ import type { ConciergeRequest } from "@/lib/concierge/types";
 /** Max decoded image bytes accepted in a data URL (≈ a large phone photo). */
 export const MAX_IMAGE_BYTES = 12 * 1024 * 1024;
 
-function isValidImageRef(s: string): boolean {
+export function isValidImageRef(s: string): boolean {
   if (/^https:\/\/\S+$/i.test(s)) return true;
   const m = /^data:image\/(?:jpeg|jpg|png|webp);base64,([A-Za-z0-9+/=]+)$/i.exec(s);
   if (!m) return false;
