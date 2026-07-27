@@ -1,5 +1,30 @@
 @import "tailwindcss";
 
+/* ---- Webfonts: Sentient (serif display) + Synonym (sans UI) ----
+   Fontshare originals, ITF Free Font License, self-hosted so the demo
+   has no third-party dependency at judging time. Variable, wght 200-700. */
+@font-face {
+  font-family: "Sentient";
+  src: url("/fonts/sentient-variable.woff2") format("woff2");
+  font-weight: 200 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Sentient";
+  src: url("/fonts/sentient-variable-italic.woff2") format("woff2");
+  font-weight: 200 700;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Synonym";
+  src: url("/fonts/synonym-variable.woff2") format("woff2");
+  font-weight: 200 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* ---- Aphrodite design tokens (cherry-blossom beauty concierge) ---- */
 @theme {
   --color-paper: #fbf2f2; /* blush ivory background */
@@ -12,11 +37,14 @@
   --color-gold: #cba86a; /* soft warm gold (emblem / secondary) */
   --color-rose: #bf5140; /* attention / low-health (distinct warm red) */
   --color-leaf: #6f9e78; /* leaf green — healthy / "strong" (blossom-branch) */
+  --color-paper-deep: #f7ecec; /* deeper blush — footer surface */
 
-  --font-serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua",
-    Georgia, "Times New Roman", serif;
-  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
-    Helvetica, Arial, sans-serif;
+  /* Sentient's x-height (502/1000) is a near-metric match for the Iowan/
+     Palatino fallbacks, so a slow font load doesn't reflow the layout. */
+  --font-serif: "Sentient", "Iowan Old Style", "Palatino Linotype", Palatino,
+    "Book Antiqua", Georgia, "Times New Roman", serif;
+  --font-sans: "Synonym", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    Roboto, Helvetica, Arial, sans-serif;
 
   --radius-card: 1.1rem;
 }
@@ -87,9 +115,29 @@ body {
   animation: aura-reveal 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
+/* Soft-gold twinkle — reserved for the glow check-in's improvement moment. */
+@keyframes aura-twinkle {
+  0% {
+    opacity: 0;
+    transform: scale(0.4) rotate(-12deg);
+  }
+  55% {
+    opacity: 1;
+    transform: scale(1.15) rotate(4deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+.aura-twinkle {
+  animation: aura-twinkle 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .aura-fade-up,
-  .aura-reveal {
+  .aura-reveal,
+  .aura-twinkle {
     animation: none;
   }
 }

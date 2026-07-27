@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Copy, Download, RefreshCw, Save, Share2, Trash2 } from "lucide-react";
+import { Copy, Download, RefreshCw, Save, Share2, Sparkles, Trash2 } from "lucide-react";
 
 import { BeforeAfter } from "@/components/BeforeAfter";
 import { AphroditeMark, CompanionBubble, NextWithAphrodite } from "@/components/Companion";
@@ -100,7 +100,15 @@ export function Concierge({ agenticAvailable = false }: { agenticAvailable?: boo
     }
   }
 
+  const activeStep =
+    state.phase === "running" ? state.steps[state.steps.length - 1]?.name : undefined;
+
   return (
+    <>
+      <div className="aura-no-print border-b border-line bg-primary-soft/60 px-5 py-1.5 text-center text-xs text-ink">
+        Skin analysis, color read, try-on &amp; lighting by{" "}
+        <span className="font-medium text-primary">Perfect Corp YouCam AI</span>
+      </div>
     <main className="mx-auto w-full max-w-5xl px-5 py-10 sm:py-16">
       <header className="mb-10 flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -109,9 +117,15 @@ export function Concierge({ agenticAvailable = false }: { agenticAvailable?: boo
           <span className="hidden text-sm text-muted sm:inline">occasion concierge</span>
         </div>
         <div className="flex items-center gap-3">
-          <span className="hidden text-xs text-muted sm:inline">
-            Powered by <span className="font-medium text-primary">YouCam AI</span>
-          </span>
+          {state.phase === "running" && (
+            <span
+              role="status"
+              className="hidden items-center gap-1.5 rounded-full bg-primary-soft px-3 py-1 text-xs font-medium text-primary sm:inline-flex"
+            >
+              <Dot />
+              {stageLabel(activeStep)}
+            </span>
+          )}
           {state.phase !== "idle" && (
             <button
               onClick={startOver}
@@ -137,18 +151,14 @@ export function Concierge({ agenticAvailable = false }: { agenticAvailable?: boo
             />
           )}
           <h1 className="max-w-2xl font-serif text-4xl leading-tight text-ink sm:text-5xl">
-            Tell me the occasion.
-            <br />
-            I&apos;ll get your skin and your look ready for it.
+            Occasion-ready, from one selfie.
           </h1>
           <p className="mt-4 max-w-xl text-lg text-muted">
-            One selfie. Aphrodite reads your skin and your colors, then plans a skincare
-            countdown timed to the day. Add a full-body photo and it renders the outfit
-            on you.
+            Tell Aphrodite the occasion — she reads your skin and colors, plans your
+            prep countdown, and dresses you for the day.
           </p>
           <p className="mt-3 text-sm text-muted">
-            Powered by <span className="font-medium text-primary">YouCam AI</span> — Skin
-            Analysis · Color Analysis · Apparel Try-On · Photo Lighting
+            0–100 skin scores · outfit rendered on you · one priced look board
           </p>
 
           <div className="mt-6 max-w-xl">
@@ -297,7 +307,57 @@ export function Concierge({ agenticAvailable = false }: { agenticAvailable?: boo
         />
       )}
     </main>
+    <footer className="aura-no-print mt-16 border-t border-gold/40 bg-paper-deep">
+      <div className="mx-auto w-full max-w-5xl px-5 py-6">
+        <div className="flex items-center gap-2">
+          <AphroditeMark size={18} />
+          <span className="font-serif text-lg text-primary">Aphrodite</span>
+          <span className="text-xs text-muted">your occasion concierge</span>
+        </div>
+        <div className="mt-3 flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
+          <p className="text-xs text-muted">
+            Skin analysis &amp; try-on by{" "}
+            <span className="font-medium text-primary">Perfect Corp YouCam AI</span> ·
+            cosmetic guidance, not medical advice · photos are never stored
+          </p>
+          <div className="flex gap-4 text-xs">
+            <a
+              href="https://github.com/Lockelamoree/aphrodite"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-muted transition hover:text-primary focus-visible:ring-2 focus-visible:ring-primary"
+            >
+              GitHub
+            </a>
+            <a
+              href="https://yce.perfectcorp.com/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-muted transition hover:text-primary focus-visible:ring-2 focus-visible:ring-primary"
+            >
+              YouCam API
+            </a>
+          </div>
+        </div>
+      </div>
+    </footer>
+    </>
   );
+}
+
+function stageLabel(step?: string): string {
+  switch (step) {
+    case "analyze_skin":
+      return "Reading your skin…";
+    case "analyze_color":
+      return "Reading your colors…";
+    case "try_on_apparel":
+      return "Dressing you…";
+    case "finish":
+      return "Adding the finishing light…";
+    default:
+      return "Planning your look…";
+  }
 }
 
 /* ---------------- results view ---------------- */
@@ -979,9 +1039,15 @@ function ProgressPanel({ baseline, skin }: { baseline: SavedPlan; skin: SkinAnal
     .sort((a, b) => Math.abs(b.delta) - Math.abs(a.delta))
     .slice(0, 4);
   if (rows.length === 0) return null;
+  const improved = rows.some((r) => r.delta > 0);
   return (
     <div className="rounded-[var(--radius-card)] border border-primary/25 bg-surface p-5">
-      <h3 className="font-serif text-xl text-ink">Your glow check-in</h3>
+      <h3 className="font-serif text-xl text-ink">
+        Your glow check-in
+        {improved && (
+          <Sparkles size={16} className="aura-twinkle ml-1.5 inline text-gold" aria-hidden />
+        )}
+      </h3>
       <p className="mb-3 mt-1 text-xs text-muted">
         Compared with your saved run from {new Date(baseline.savedAt).toLocaleDateString()} — for a
         meaningful read, use a like-for-like selfie (same person, similar lighting).
