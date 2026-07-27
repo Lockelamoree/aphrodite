@@ -185,25 +185,30 @@ export function RetailBasket({ items }: { items: ShoppingItem[] }) {
         })}
       </ul>
 
-      <button
-        type="button"
-        onClick={prepareHandoff}
-        disabled={chosen.length === 0 || overBudget > 0}
-        className="mt-4 inline-flex w-full items-center justify-center gap-2 bg-primary px-5 py-3 text-sm font-medium text-white transition enabled:hover:bg-[#8c3556] focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto"
-      >
-        <ShoppingBag size={17} aria-hidden />
-        Prepare retailer checkout · ${total}
-      </button>
-      {overBudget > 0 && (
-        <p className="mt-2 text-xs text-rose">
-          ${overBudget} over budget — remove an item or raise the budget to check out.
-        </p>
-      )}
-      {handoffReady && (
-        <p role="status" className="mt-3 border-l-2 border-leaf pl-3 text-sm text-ink">
-          Basket handoff ready: {chosen.length} items, selected sizes, and a ${total} total are packaged for checkout.
-        </p>
-      )}
+      {/* Below sm the summary + CTA stick to the viewport bottom while the item
+          list scrolls past (the dominant mobile checkout pattern — price always
+          in view); from sm up it sits statically in flow as before. */}
+      <div className="sticky bottom-0 z-10 -mx-6 border-t border-line bg-surface/95 px-6 pb-3 pt-3 backdrop-blur-sm sm:static sm:z-auto sm:mx-0 sm:border-t-0 sm:bg-transparent sm:px-0 sm:pb-0 sm:pt-1 sm:backdrop-blur-none">
+        <button
+          type="button"
+          onClick={prepareHandoff}
+          disabled={chosen.length === 0 || overBudget > 0}
+          className="mt-1 inline-flex w-full items-center justify-center gap-2 bg-primary px-5 py-3 text-sm font-medium text-white transition enabled:hover:bg-[#8c3556] focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-40 sm:w-auto"
+        >
+          <ShoppingBag size={17} aria-hidden />
+          Prepare retailer checkout · ${total}
+        </button>
+        {overBudget > 0 && (
+          <p className="mt-2 text-xs text-rose">
+            ${overBudget} over budget — remove an item or raise the budget to check out.
+          </p>
+        )}
+        {handoffReady && (
+          <p role="status" className="mt-3 border-l-2 border-leaf pl-3 text-sm text-ink">
+            Basket handoff ready: {chosen.length} items, selected sizes, and a ${total} total are packaged for checkout.
+          </p>
+        )}
+      </div>
     </div>
   );
 }

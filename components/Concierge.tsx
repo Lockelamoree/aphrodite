@@ -30,7 +30,13 @@ const PRESETS: { occasion: string; label: string; descriptor: string }[] = [
 /** Whether the agentic engine is actually runnable — derived server-side from
  * real LLM-key presence (see app/page.tsx) and passed in, so the client toggle
  * can never drift from the deployed config. */
-export function Concierge({ agenticAvailable = false }: { agenticAvailable?: boolean }) {
+export function Concierge({
+  agenticAvailable = false,
+  demoMode = false,
+}: {
+  agenticAvailable?: boolean;
+  demoMode?: boolean;
+}) {
   const { state, run, refine, reset } = useConcierge();
   const [occasion, setOccasion] = useState("");
   const [selfie, setSelfie] = useState<string>();
@@ -106,6 +112,9 @@ export function Concierge({ agenticAvailable = false }: { agenticAvailable?: boo
   return (
     <>
       <div className="aura-no-print border-b border-line bg-primary-soft/60 px-5 py-1.5 text-center text-xs text-ink">
+        {demoMode && (
+          <span className="font-medium text-primary">Demo mode · sample renders — </span>
+        )}
         Skin analysis, color read, try-on &amp; lighting by{" "}
         <span className="font-medium text-primary">Perfect Corp YouCam AI</span>
       </div>
@@ -150,23 +159,37 @@ export function Concierge({ agenticAvailable = false }: { agenticAvailable?: boo
               }}
             />
           )}
-          <h1 className="max-w-2xl font-serif text-4xl leading-tight text-ink sm:text-5xl">
-            Occasion-ready, from one selfie.
-          </h1>
-          <p className="mt-4 max-w-xl text-lg text-muted">
-            Tell Aphrodite the occasion — she reads your skin and colors, plans your
-            prep countdown, and dresses you for the day.
-          </p>
-          <p className="mt-3 text-sm text-muted">
-            0–100 skin scores · outfit rendered on you · one priced look board
-          </p>
+          <div className="lg:grid lg:grid-cols-[1.15fr_0.85fr] lg:items-stretch lg:gap-10">
+            <div>
+              <h1 className="max-w-2xl font-serif text-4xl leading-tight text-ink sm:text-5xl">
+                Occasion-ready, from one selfie.
+              </h1>
+              <p className="mt-4 max-w-xl text-lg text-muted">
+                Tell Aphrodite the occasion — she reads your skin and colors, plans your
+                prep countdown, and dresses you for the day.
+              </p>
+              <p className="mt-3 text-sm text-muted">
+                0–100 skin scores · outfit rendered on you · one priced look board
+              </p>
 
-          <div className="mt-6 max-w-xl">
-            <CompanionBubble>
-              Hi, I&apos;m <span className="font-medium text-primary">Aphrodite</span>, your beauty
-              companion. Tell me the occasion and share a selfie — I&apos;ll read your skin and your
-              colors and get you ready to shine. ✨
-            </CompanionBubble>
+              <div className="mt-6 max-w-xl">
+                <CompanionBubble>
+                  Hi, I&apos;m <span className="font-medium text-primary">Aphrodite</span>, your beauty
+                  companion. Tell me the occasion and share a selfie — I&apos;ll read your skin and your
+                  colors and get you ready to shine. ✨
+                </CompanionBubble>
+              </div>
+            </div>
+            {/* Imagery warmth (premium heroes lead with quiet imagery, not flat
+                color) — decorative only, so it yields entirely on small screens. */}
+            <div className="hidden lg:block" aria-hidden>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/hero-blossom.svg"
+                alt=""
+                className="h-full max-h-[420px] w-full rounded-[var(--radius-card)] border border-gold/30 object-cover shadow-sm"
+              />
+            </div>
           </div>
 
           <div className="mt-8 grid gap-6 md:grid-cols-2">
@@ -439,7 +462,12 @@ function Results({
             Here&apos;s your look for {board.occasion || occasion || "the day"} — I&apos;m rather proud of
             this one ✨ Tweak the outfit below if you like, and save it to come back to.
           </CompanionBubble>
-          <LookBoardPanel board={board} demo={state.demo} outfitRendered={outfitRendered} />
+          <LookBoardPanel
+            board={board}
+            demo={state.demo}
+            outfitRendered={outfitRendered}
+            heroUrl={state.images.finish}
+          />
           <RefineBar refine={refine} disabled={state.phase === "running"} hasColor={!!state.color} />
         </div>
       )}
@@ -476,14 +504,18 @@ function Results({
                 caption="YouCam Apparel Try-On · see it on before you buy"
                 fit="contain"
               />
-              <RenderSlot
-                title={finishTitle}
-                url={state.images.finish}
-                phase={state.phase}
-                busyLabel="Adding YouCam occasion lighting…"
-                emptyLabel="No lighting pass this run."
-                caption={finishCaption}
-              />
+              {/* Once the board showcases the finish render as its editorial
+                  hero, don't repeat it in the evidence grid. */}
+              {!(board && state.images.finish) && (
+                <RenderSlot
+                  title={finishTitle}
+                  url={state.images.finish}
+                  phase={state.phase}
+                  busyLabel="Adding YouCam occasion lighting…"
+                  emptyLabel="No lighting pass this run."
+                  caption={finishCaption}
+                />
+              )}
             </div>
             {state.color ? (
               <Palette profile={state.color} />
@@ -864,36 +896,59 @@ function LookBoardPanel({
   board,
   demo,
   outfitRendered,
+  heroUrl,
 }: {
   board: LookBoard;
   demo?: boolean;
   outfitRendered?: boolean;
+  heroUrl?: string;
 }) {
   const products = board.shopping.filter((s) => typeof s.price === "number");
   const total = products.reduce((sum, p) => sum + (p.price ?? 0), 0);
   return (
     <div className="aura-reveal space-y-6 rounded-[var(--radius-card)] border border-primary/25 bg-surface p-6 shadow-sm">
-      {board.narrative && (
-        <p className="max-w-3xl font-serif text-lg leading-relaxed text-ink">{board.narrative}</p>
-      )}
-
-      <div className="grid gap-8 md:grid-cols-2 [&>*]:min-w-0">
-        {board.countdown.length > 0 && (
-          <div>
-            <h3 className="mb-4 font-serif text-xl text-ink">Skin-prep countdown</h3>
-            <ol className="relative space-y-4 border-l border-line pl-5">
-              {board.countdown.map((s, i) => (
-                <li key={i} className="relative">
-                  <span className="absolute -left-[26px] top-1 h-3 w-3 rounded-full bg-primary ring-4 ring-primary-soft" />
-                  <p className="text-sm font-medium text-primary">{s.when}</p>
-                  <p className="text-[15px] break-words text-ink">{s.action}</p>
-                  {s.productCategory && <p className="text-xs text-muted">→ {s.productCategory}</p>}
-                </li>
-              ))}
-            </ol>
-          </div>
+      {/* Editorial spread: the finished render carries the visual weight on the
+          left; the narrative reads as a serif pull-quote beside it. Stacks on
+          small screens, where the image leads. */}
+      <div className={heroUrl ? "grid gap-6 lg:grid-cols-[0.85fr_1.15fr] [&>*]:min-w-0" : undefined}>
+        {heroUrl && (
+          <figure className="min-w-0">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={heroUrl}
+              alt="Your finished look, relit for the occasion"
+              className="w-full rounded-[calc(var(--radius-card)-0.35rem)] border border-line object-cover"
+            />
+            <figcaption className="mt-2 text-xs text-muted">
+              Occasion lighting · rendered by YouCam AI
+            </figcaption>
+          </figure>
         )}
+        <div className="space-y-6">
+          {board.narrative && (
+            <p className="max-w-3xl font-serif text-xl italic leading-relaxed text-ink">
+              {board.narrative}
+            </p>
+          )}
+          {board.countdown.length > 0 && (
+            <div>
+              <h3 className="mb-4 font-serif text-xl text-ink">Skin-prep countdown</h3>
+              <ol className="relative space-y-4 border-l border-line pl-5">
+                {board.countdown.map((s, i) => (
+                  <li key={i} className="relative">
+                    <span className="absolute -left-[26px] top-1 h-3 w-3 rounded-full bg-primary ring-4 ring-primary-soft" />
+                    <p className="text-sm font-medium text-primary">{s.when}</p>
+                    <p className="text-[15px] break-words text-ink">{s.action}</p>
+                    {s.productCategory && <p className="text-xs text-muted">→ {s.productCategory}</p>}
+                  </li>
+                ))}
+              </ol>
+            </div>
+          )}
+        </div>
+      </div>
 
+      <div className="grid gap-8 [&>*]:min-w-0">
         {board.shopping.length > 0 && (
           <div>
             <div className="mb-1 flex items-baseline justify-between">

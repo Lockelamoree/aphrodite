@@ -96,7 +96,10 @@ body {
   }
 }
 .aura-fade-up {
-  animation: aura-fade-up 0.5s ease both;
+  /* "backwards", not "both": with "both" the identity transform persists after
+     the animation and silently breaks position:sticky for every descendant
+     (transformed ancestors disable viewport-relative sticking). */
+  animation: aura-fade-up 0.5s ease backwards;
 }
 
 /* The Look Board "reveal" — a slightly larger, springier entrance than the
@@ -112,7 +115,8 @@ body {
   }
 }
 .aura-reveal {
-  animation: aura-reveal 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  /* "backwards" for the same sticky-vs-transform reason as .aura-fade-up. */
+  animation: aura-reveal 0.6s cubic-bezier(0.16, 1, 0.3, 1) backwards;
 }
 
 /* Soft-gold twinkle — reserved for the glow check-in's improvement moment. */
