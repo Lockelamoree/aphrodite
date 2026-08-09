@@ -137,6 +137,28 @@ const REFINE_LEAD: Record<RefineAdjust, string> = {
 };
 
 /**
+ * What to say when a refine ran — checked against what actually changed.
+ *
+ * The tone leads above were previously said unconditionally, so pressing "Cooler"
+ * announced "Shifting to cooler tones" even when the wardrobe had nothing cooler
+ * and the replacement garment was warm or neutral. That is a claim about the
+ * result, made before checking the result, and it is the same class of error as
+ * claiming an undertone match the catalogue cannot satisfy.
+ *
+ * A tone refine now only claims the shift when the chosen garment really does
+ * flatter the requested tone. Otherwise it says what is true: the direction was
+ * understood, the wardrobe cannot honour it, here is the closest thing.
+ */
+export function refineLead(adjust: RefineAdjust, garment: CatalogGarment | undefined): string {
+  if (adjust !== "cooler" && adjust !== "warmer") return REFINE_LEAD[adjust];
+  const wanted = adjust === "cooler" ? "cool" : "warm";
+  if (garment && (garment.flatters === wanted || garment.flatters === "neutral")) {
+    return REFINE_LEAD[adjust];
+  }
+  return `I don't have anything ${wanted}er that still suits the occasion — here's the closest match instead.`;
+}
+
+/**
  * Refinement pass: re-style the OUTFIT only, reusing the prior skin/color that
  * the client passes back — so it's fast and doesn't re-spend units on the
  * unchanged reads. Emits no skin/color events (the client keeps them) and
@@ -179,7 +201,7 @@ export async function* runRefineDeterministic(
     // promise a restyle we won't deliver) and keep the current render.
     yield* say(`That's already the strongest match for your ${type ?? "occasion"} — I'll keep this look.`);
   } else if (garment && hasBody) {
-    yield* say(REFINE_LEAD[refine.adjust]);
+    yield* say(refineLead(refine.adjust, garment));
     yield* say(`This time: the ${garment.name} (${garment.formality}).`);
     try {
       yield step(TOOL.tryOnApparel);
@@ -192,7 +214,7 @@ export async function* runRefineDeterministic(
       yield* say(`(The new outfit render didn't come through — the rest of your board is updated.)`);
     }
   } else if (garment) {
-    yield* say(REFINE_LEAD[refine.adjust]);
+    yield* say(refineLead(refine.adjust, garment));
     yield* say(`I'd switch you to the ${garment.name} — add a full-body photo to see it on you.`);
   }
 

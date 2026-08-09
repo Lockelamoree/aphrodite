@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { GARMENT_CATALOG, garmentMatchesCut, findGarment } from "@/lib/concierge/catalog";
-import { pickGarment } from "@/lib/concierge/deterministic";
+import { pickGarment, refineLead } from "@/lib/concierge/deterministic";
 
 /**
  * Regression guard for the mis-gender class of bug.
@@ -114,5 +114,38 @@ describe("the catalog gap this fix exposes", () => {
     const masc = GARMENT_CATALOG.filter((g) => g.cut === "masculine");
     expect(masc).toHaveLength(1);
     expect(masc[0].formality).toBe("formal");
+  });
+});
+
+describe("refineLead — a tone refine may not claim a shift it did not make", () => {
+  // Panel finding, 2026-08-09: pressing "Cooler" narrated "Shifting to cooler
+  // tones" unconditionally, including when the wardrobe had nothing cooler and the
+  // replacement was warm. The claim was made before the result was checked.
+  it("claims the shift only when the garment really flatters the requested tone", () => {
+    expect(refineLead("cooler", findGarment("sky-wrap-maxi"))).toMatch(/cooler tones/i);
+    expect(refineLead("warmer", findGarment("scarlet-gown"))).toMatch(/warmer tones/i);
+  });
+
+  it("allows a neutral garment to satisfy either direction", () => {
+    const neutral = findGarment("champagne-slip")!;
+    expect(neutral.flatters).toBe("neutral");
+    expect(refineLead("cooler", neutral)).toMatch(/cooler tones/i);
+  });
+
+  it("says so honestly when the wardrobe cannot honour the direction", () => {
+    // A warm garment cannot be the result of a successful "cooler" shift.
+    const said = refineLead("cooler", findGarment("scarlet-gown"));
+    expect(said).not.toMatch(/shifting to cooler/i);
+    expect(said).toMatch(/don't have anything cooler/i);
+  });
+
+  it("says so honestly when no garment came back at all", () => {
+    expect(refineLead("warmer", undefined)).toMatch(/don't have anything warmer/i);
+  });
+
+  it("leaves the non-tone leads untouched", () => {
+    expect(refineLead("less_formal", findGarment("scarlet-gown"))).toMatch(/dialing it back/i);
+    expect(refineLead("more_formal", undefined)).toMatch(/taking it up/i);
+    expect(refineLead("reroll", undefined)).toMatch(/different direction/i);
   });
 });

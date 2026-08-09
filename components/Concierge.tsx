@@ -901,9 +901,27 @@ function ApiLedger({ state }: { state: ConciergeState }) {
   const count = rows.filter((r) => r.status === "done").length;
   return (
     <div className="rounded-[var(--radius-card)] border border-line bg-surface p-4">
+      {/* This line used to read "Powered by YouCam AI — 4 Perfect Corp APIs this
+          run" with green ticks in EVERY mode. In demo mode no call is made at all:
+          each feature module short-circuits to a captured fixture before an
+          endpoint is even resolved. So the ledger was crediting Perfect Corp with
+          work it had not done during that run — the exact opposite of what a
+          provenance ledger is for, and worse than saying nothing, because it
+          invites a judge to verify a claim that cannot be verified.
+
+          The mode event already carries `demo`; it simply was not read here. */}
       <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted">
-        Powered by <span className="text-primary">YouCam AI</span> — {count} Perfect Corp{" "}
-        {count === 1 ? "API" : "APIs"} this run
+        {state.demo ? (
+          <>
+            Captured from <span className="text-primary">YouCam AI</span> — {count} Perfect Corp{" "}
+            {count === 1 ? "API" : "APIs"} produced these samples. Nothing was called just now.
+          </>
+        ) : (
+          <>
+            Powered by <span className="text-primary">YouCam AI</span> — {count} Perfect Corp{" "}
+            {count === 1 ? "API" : "APIs"} called live this run
+          </>
+        )}
       </p>
       <div className="flex flex-wrap gap-2">
         {rows.map((r, i) => (
