@@ -36,25 +36,40 @@ flock -n 9 || { echo "another deploy holds the lock; aborting"; exit 1; }
 
 say() { printf '\n=== %s\n' "$*"; }
 
-say "1/7 clone $REF"
+say "1/7 clone $REF straight into its release directory"
+# Build IN the release directory, not in a temp dir that then gets copied.
+#
+# Next.js bakes its absolute project root into the build output, so a build made
+# under /tmp/aphrodite-build-XXXX keeps pointing there no matter where the tree is
+# copied afterwards. Two deploys failed exactly that way: the candidate tried to
+# realpath the old temp path, which is 0700 root-only, and got EACCES — a failure
+# with nothing to do with the release. `cd` before starting does not help; the path
+# is recorded at build time, not resolved at run time.
+#
+# Building here is still safe. This is a NEW release directory; production is
+# reached only through the /opt/aphrodite symlink and keeps serving the previous
+# release until the gate passes and the flip happens.
 TS="$(date -u +%Y%m%d%H%M%S)"
-TMP="$(mktemp -d /tmp/aphrodite-build-XXXXXX)"
-trap 'rm -rf "$TMP"' EXIT
-git clone --quiet --depth 1 --branch "$REF" "$REPO" "$TMP/src"
-SHA="$(git -C "$TMP/src" rev-parse --short HEAD)"
+STAGE="$RELEASES/.staging-$TS"
+rm -rf "$STAGE"
+git clone --quiet --depth 1 --branch "$REF" "$REPO" "$STAGE"
+SHA="$(git -C "$STAGE" rev-parse --short HEAD)"
 TARGET="$RELEASES/${SHA}-${TS}"
+mv -T "$STAGE" "$TARGET"
 echo "  $REF -> $SHA  ->  $TARGET"
+# A failed build or gate must not leave a half-release behind for the pruner to
+# rotate into place later.
+cleanup_failed() { [ "${PUBLISHED:-0}" = "1" ] || { chmod -R u+w "$TARGET" 2>/dev/null; rm -rf "$TARGET"; }; }
+trap cleanup_failed EXIT
 
-say "2/7 install + build (in the temp dir, not in the live tree)"
-cd "$TMP/src"
+say "2/7 install + build in $TARGET"
+cd "$TARGET"
 npm ci --no-audit --no-fund --loglevel=error
 # The build inlines NEXT_PUBLIC_* and needs no secrets: every server-side key is
 # read at request time from the env file.
 npm run build
 
-say "3/7 publish as an immutable release"
-mkdir -p "$TARGET"
-cp -a "$TMP/src/." "$TARGET/"
+say "3/7 make the release immutable"
 chown -R root:root "$TARGET"
 chmod -R a-w "$TARGET"
 find "$TARGET" -type d -exec chmod a+rx {} +
@@ -86,7 +101,7 @@ set +e
 # release. Run it inside $TARGET, which the unprivileged user can traverse.
 runuser -u "$USER_NAME" -- env $(grep -vE '^\s*#|^\s*$' "$ENV_FILE" | xargs) PORT="$CAND_PORT" \
   sh -c "cd '$TARGET' && exec /usr/bin/node node_modules/.bin/next start --port '$CAND_PORT'" \
-  >"$TMP/candidate.log" 2>&1 &
+  >/tmp/aphrodite-candidate.log 2>&1 &
 CAND_PID=$!
 GATE_OK=0
 for _ in $(seq 1 40); do
@@ -112,12 +127,14 @@ if [ "$GATE_OK" != "1" ]; then
   echo
   echo "HEALTH GATE FAILED — production was NOT touched and is still serving the"
   echo "previous release. Candidate log:"
-  tail -25 "$TMP/candidate.log" || true
+  tail -25 /tmp/aphrodite-candidate.log || true
   exit 1
 fi
 echo "  gate passed"
 
 say "6/7 atomic symlink flip + restart"
+# From here the release is published: the EXIT trap must not delete it.
+PUBLISHED=1
 ln -sfn "$TARGET" "$LINK.new"
 mv -Tf "$LINK.new" "$LINK"
 install -m 0644 "$TARGET/deploy/aphrodite.service" /etc/systemd/system/aphrodite.service
