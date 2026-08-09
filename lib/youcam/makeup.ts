@@ -1,6 +1,6 @@
 import "server-only";
 
-import { env } from "@/lib/env";
+import { fixturesActive } from "@/lib/youcam/runtime";
 import { endpointsFor } from "@/lib/youcam/config";
 import { resolveImage, runTaskAndWait } from "@/lib/youcam/client";
 import { fixtureMakeup } from "@/lib/youcam/fixtures";
@@ -50,7 +50,7 @@ export async function applyMakeup(
   undertone?: string,
   opts?: { intervalMs?: number; timeoutMs?: number },
 ): Promise<RenderedImage> {
-  if (env.youcamFixtures) return fixtureMakeup(person);
+  if (fixturesActive()) return fixtureMakeup(person);
   const { file, task } = endpointsFor("makeup");
   const src = await resolveImage(person, file, "src");
   const results = await runTaskAndWait<UrlResults>(

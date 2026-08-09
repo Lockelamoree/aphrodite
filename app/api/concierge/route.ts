@@ -6,6 +6,9 @@ import { sanitizeEvent } from "@/lib/concierge/sanitize";
 import type { AgenticBrain, ConciergeEvent, ConciergeMode } from "@/lib/concierge/types";
 import { env } from "@/lib/env";
 import { createRateLimiter } from "@/lib/http/rate-limit";
+import { LIVE_COOKIE_NAME, gateEnabled, liveAllowed } from "@/lib/auth/gate";
+import { claim as claimLiveRun } from "@/lib/live/ledger";
+import { withYouCamMode } from "@/lib/youcam/runtime";
 
 // The concierge does long, multi-step generation — keep it on the Node runtime
 // and allow a generous execution window.
@@ -39,11 +42,39 @@ export async function POST(req: Request): Promise<Response> {
   }
   const body = parsed.data;
 
+  // --- who may spend money on this request, and how much is left ---
+  //
+  // Two schranken, because a code alone answers only WHO. The YouCam free tier is
+  // finite and one full run costs four to five tasks, so an unlocked judge is also
+  // metered. Claiming BEFORE the run means an exhausted budget degrades the run
+  // instead of being discovered after the units are gone.
+  const cookie = readCookie(req, LIVE_COOKIE_NAME);
+  const unlocked = liveAllowed(cookie);
+  let liveYouCam = false;
+  let liveReason: string;
+  if (!unlocked) {
+    liveReason =
+      "captured sample renders — the live YouCam path is behind a judge access code, so no visitor can spend units";
+  } else if (env.youcamFixtures) {
+    // An unlocked judge on a host whose default is replay: honour the default.
+    // The operator turns YOUCAM_FIXTURES off when they want live runs available.
+    liveReason = "captured sample renders — this host runs YOUCAM_FIXTURES=1";
+  } else {
+    const { granted, state } = claimLiveRun();
+    liveYouCam = granted;
+    liveReason = granted
+      ? `live YouCam calls (run ${state.used} of ${state.budget})`
+      : `the live-run budget of ${state.budget} is used up — showing captured samples instead`;
+  }
+
   // Either LLM key unlocks the agentic engine; Claude is preferred when both
   // are present, GPT is the alternative brain (same tools, same event stream).
+  // Gated the same way: an LLM call costs money, so a locked visitor never
+  // reaches it however they set the toggle.
   const hasAnthropic = Boolean(process.env.ANTHROPIC_API_KEY?.trim());
   const hasOpenAI = Boolean(process.env.OPENAI_API_KEY?.trim());
-  const brain: AgenticBrain | undefined = hasAnthropic ? "claude" : hasOpenAI ? "gpt" : undefined;
+  const keyedBrain: AgenticBrain | undefined = hasAnthropic ? "claude" : hasOpenAI ? "gpt" : undefined;
+  const brain: AgenticBrain | undefined = unlocked ? keyedBrain : undefined;
   const requested = body.mode && body.mode !== "auto" ? body.mode : undefined;
   const mode: ConciergeMode =
     requested === "deterministic"
@@ -51,8 +82,13 @@ export async function POST(req: Request): Promise<Response> {
       : brain
         ? "agentic"
         : "deterministic";
-  // If the user asked for agentic but no key is configured, we downgraded above.
+  // The user asked for agentic and did not get it: either no key is configured, or
+  // the key exists but this request is not unlocked. Say which — a vague downgrade
+  // notice sends a judge hunting for a missing key that is actually present.
   const downgraded = requested === "agentic" && !brain;
+  const downgradeReason = !keyedBrain
+    ? "(No agentic key configured — running in guided mode.)\n\n"
+    : "(The AI-driven engine is behind a judge access code — running in guided mode.)\n\n";
 
   const encoder = new TextEncoder();
   const send = (controller: ReadableStreamDefaultController, ev: ConciergeEvent) =>
@@ -68,14 +104,20 @@ export async function POST(req: Request): Promise<Response> {
           send(controller, {
             type: "mode",
             mode,
-            demo: env.youcamFixtures,
+            demo: !liveYouCam,
             ...(mode === "agentic" && brain ? { brain } : {}),
           });
           if (downgraded) {
             send(controller, {
               type: "narration",
-              text: "(No agentic key configured — running in guided mode.)\n\n",
+              text: downgradeReason,
             });
+          }
+          // Never switch silently between live and replay: a captured render
+          // presented as a live one is the integrity risk named first in
+          // hackathon/config.json.
+          if (gateEnabled() || !liveYouCam) {
+            send(controller, { type: "narration", text: `(YouCam: ${liveReason}.)\n\n` });
           }
         }
         const engine = isRefine
@@ -85,7 +127,9 @@ export async function POST(req: Request): Promise<Response> {
               ? runConciergeOpenAI
               : runConcierge
             : runDeterministic;
-        for await (const ev of engine(body)) send(controller, ev);
+        await withYouCamMode({ live: liveYouCam, reason: liveReason }, async () => {
+          for await (const ev of engine(body)) send(controller, ev);
+        });
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);
         send(controller, { type: "error", message });
@@ -103,4 +147,16 @@ export async function POST(req: Request): Promise<Response> {
       Connection: "keep-alive",
     },
   });
+}
+
+/** Read one cookie without pulling in a parser — the header is tiny and typed here. */
+function readCookie(req: Request, name: string): string | undefined {
+  const header = req.headers.get("cookie");
+  if (!header) return undefined;
+  for (const part of header.split(";")) {
+    const eq = part.indexOf("=");
+    if (eq < 0) continue;
+    if (part.slice(0, eq).trim() === name) return decodeURIComponent(part.slice(eq + 1).trim());
+  }
+  return undefined;
 }

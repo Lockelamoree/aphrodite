@@ -1,6 +1,6 @@
 import "server-only";
 
-import { env } from "@/lib/env";
+import { fixturesActive } from "@/lib/youcam/runtime";
 import { endpointsFor } from "@/lib/youcam/config";
 import { resolveImage, runTaskAndWait } from "@/lib/youcam/client";
 import { fixtureHairstyle } from "@/lib/youcam/fixtures";
@@ -29,7 +29,7 @@ export async function tryOnHairstyle(
   templateId: string = HAIRSTYLE_TEMPLATE_ID,
   opts?: { intervalMs?: number; timeoutMs?: number },
 ): Promise<RenderedImage> {
-  if (env.youcamFixtures) return fixtureHairstyle(person);
+  if (fixturesActive()) return fixtureHairstyle(person);
   if (!templateId) {
     throw new Error("Hairstyle template not configured (set a live YouCam template_id).");
   }

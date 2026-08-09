@@ -1,6 +1,6 @@
 import "server-only";
 
-import { env } from "@/lib/env";
+import { fixturesActive } from "@/lib/youcam/runtime";
 import { endpointsFor } from "@/lib/youcam/config";
 import { resolveImage, runTaskAndWait } from "@/lib/youcam/client";
 import { fixtureColor } from "@/lib/youcam/fixtures";
@@ -25,7 +25,7 @@ interface ColorResults {
 }
 
 export async function analyzeColorProfile(input: ImageInput): Promise<ColorProfile> {
-  if (env.youcamFixtures) return fixtureColor(input);
+  if (fixturesActive()) return fixtureColor(input);
   const { file, task } = endpointsFor("colorTone");
   const source = await resolveImage(input, file, "src");
   const results = await runTaskAndWait<ColorResults>(task, { ...source });

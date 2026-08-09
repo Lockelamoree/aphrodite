@@ -11,6 +11,10 @@ Group=aphrodite
 # The deploy flips the symlink and restarts, so a rollback is just flipping it back.
 WorkingDirectory=/opt/aphrodite
 EnvironmentFile=/etc/aphrodite.env
+# The live-run ledger is the only thing this service writes. StateDirectory both
+# creates /var/lib/aphrodite with the right owner and punches the one hole needed
+# through ProtectSystem=strict — everything else stays read-only.
+StateDirectory=aphrodite
 ExecStart=/usr/bin/node /opt/aphrodite/node_modules/.bin/next start --port ${PORT}
 Restart=on-failure
 RestartSec=3

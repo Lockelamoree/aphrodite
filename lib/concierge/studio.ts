@@ -2,7 +2,7 @@ import "server-only";
 
 import { imageInputFromString } from "@/lib/concierge/image";
 import type { ConciergeEvent, StudioKind, StudioRequest } from "@/lib/concierge/types";
-import { env } from "@/lib/env";
+import { fixturesActive } from "@/lib/youcam/runtime";
 import { tryOnHairColor } from "@/lib/youcam/hairColor";
 import { tryOnHairstyle } from "@/lib/youcam/hairstyle";
 import { applyMakeup } from "@/lib/youcam/makeup";
@@ -69,7 +69,7 @@ export async function* runStudio(req: StudioRequest): AsyncGenerator<ConciergeEv
     if (img.url) {
       yield { type: "image", slot: "studio", url: img.url };
       yield* say(CLOSER[kind]);
-    } else if (env.youcamFixtures) {
+    } else if (fixturesActive()) {
       // Demo mode: the generative try-ons (hair/color/makeup) have no captured
       // fixture yet, so be honest about what the demo can and can't show — rather
       // than telling the user to "use the sample selfie" they are already on.

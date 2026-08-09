@@ -83,6 +83,25 @@ The honest limit: there is currently **one** masculine garment, so a masculine
 shopper has no smart or casual option and no warm-toned one. The app declines to
 claim a colour match it cannot make, rather than inventing one.
 
+## Judge mode
+
+Aphrodite is fully usable with no code at all — you get captured sample renders
+instead of live ones, at zero API cost, and the page says so in the announcement
+bar and again in the provenance ledger. What an access code unlocks is only the two
+paths that spend money: real YouCam renders, and the LLM-driven engine.
+
+Two schranken, not one, because a code answers *who* may spend and not *how many
+times*. The YouCam free tier is finite and one full run costs four to five API
+tasks, so unlocked runs are metered by a ledger. When the budget is gone the app
+keeps working and states on screen that it fell back to captured samples — it never
+passes one off as the other. `/healthz` reports `live_runs_used` and
+`live_runs_budget` so the meter is checkable from outside.
+
+The gate switches itself on only when both `APHRODITE_LIVE_CODES` and
+`APHRODITE_AUTH_SECRET` are set. Nothing configured means nothing to withhold,
+which is what keeps local development and the test suite ungated without a single
+special case in the code.
+
 ## Check it yourself
 
 `GET /healthz` reports state, not liveness — no key required:

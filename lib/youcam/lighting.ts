@@ -1,6 +1,6 @@
 import "server-only";
 
-import { env } from "@/lib/env";
+import { fixturesActive } from "@/lib/youcam/runtime";
 import { endpointsFor } from "@/lib/youcam/config";
 import { resolveImage, runTaskAndWait } from "@/lib/youcam/client";
 import { fixtureLighting } from "@/lib/youcam/fixtures";
@@ -18,7 +18,7 @@ interface LightingResults {
  * Used as the occasion "finishing" render on top of the apparel result.
  */
 export async function applyLighting(input: ImageInput): Promise<RenderedImage> {
-  if (env.youcamFixtures) return fixtureLighting(input);
+  if (fixturesActive()) return fixtureLighting(input);
   const { file, task } = endpointsFor("lighting");
   const source = await resolveImage(input, file, "src");
   const results = await runTaskAndWait<LightingResults>(task, { ...source });

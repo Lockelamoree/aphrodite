@@ -1,6 +1,6 @@
 import "server-only";
 
-import { env } from "@/lib/env";
+import { fixturesActive } from "@/lib/youcam/runtime";
 import { endpointsFor } from "@/lib/youcam/config";
 import { resolveImage, runTaskAndWait } from "@/lib/youcam/client";
 import { fixtureSkin } from "@/lib/youcam/fixtures";
@@ -37,7 +37,7 @@ export async function analyzeSkin(
   input: ImageInput,
   concerns: readonly string[] = DEFAULT_SKIN_CONCERNS,
 ): Promise<SkinAnalysis> {
-  if (env.youcamFixtures) return fixtureSkin(input);
+  if (fixturesActive()) return fixtureSkin(input);
   const { file, task } = endpointsFor("skinAnalysis");
   const source = await resolveImage(input, file, "src");
   const results = await runTaskAndWait<SkinResults>(task, {

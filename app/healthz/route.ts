@@ -4,6 +4,8 @@ import { GARMENT_CATALOG, SKINCARE_SKUS } from "@/lib/concierge/catalog";
 import { CUSTOM_TOOL_DEFS } from "@/lib/concierge/tools";
 import { env } from "@/lib/env";
 import { youcamConfig } from "@/lib/youcam/config";
+import { gateEnabled } from "@/lib/auth/gate";
+import { read as readLedger } from "@/lib/live/ledger";
 
 /**
  * State-reporting health endpoint.
@@ -114,6 +116,7 @@ function youcamState(): { state: FeatureState | "fixtures"; detail: string } {
 
 export async function GET() {
   const llm = await probeOpenai();
+  const ledger = readLedger();
   const youcam = youcamState();
 
   // The gate treats a silently-degraded flagship as a failure, so surface one
@@ -127,9 +130,14 @@ export async function GET() {
       // is itself informative: an unversioned process is not a release.
       revision: process.env.APHRODITE_REVISION ?? "dev",
       demo_mode: env.youcamFixtures,
-      // No access gate is deployed yet; reported so "the demo is ungated" is
-      // externally verifiable rather than a claim in a README.
-      auth_enabled: false,
+      // Whether the live paths are gated, so "the demo is open" or "the expensive
+      // paths are behind a code" is externally verifiable rather than a README claim.
+      auth_enabled: gateEnabled(),
+      // The budget is reported because a metered demo that does not say what is
+      // left is indistinguishable from one that quietly stopped being live.
+      live_runs_used: ledger.used,
+      live_runs_budget: ledger.budget,
+      live_runs_remaining: ledger.remaining,
 
       // Headline counts, from the loaded data. README, submission copy and this
       // endpoint must agree, and this is the one a judge can query.

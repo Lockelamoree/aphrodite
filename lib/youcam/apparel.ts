@@ -1,6 +1,6 @@
 import "server-only";
 
-import { env } from "@/lib/env";
+import { fixturesActive } from "@/lib/youcam/runtime";
 import { endpointsFor } from "@/lib/youcam/config";
 import { resolveImage, runTaskAndWait } from "@/lib/youcam/client";
 import { fixtureApparel } from "@/lib/youcam/fixtures";
@@ -45,7 +45,7 @@ export async function tryOnApparel(
   },
   opts?: { intervalMs?: number; timeoutMs?: number },
 ): Promise<RenderedImage> {
-  if (env.youcamFixtures) return fixtureApparel(args.category, args.renderHint);
+  if (fixturesActive()) return fixtureApparel(args.category, args.renderHint);
   const { file, task } = endpointsFor("apparelVto");
   const [src, ref] = await Promise.all([
     resolveImage(args.person, file, "src"),
