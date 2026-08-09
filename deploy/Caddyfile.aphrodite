@@ -1,0 +1,50 @@
+# >>> APHRODITE VHOST BEGIN (managed by deploy/deploy.sh — do not edit between markers)
+aphrodite.max-gutowski.de {
+    log {
+        output stderr
+        format json
+    }
+    encode zstd gzip
+
+    request_body {
+        # 40MB, matching MAX_BODY_BYTES in app/api/concierge/route.ts exactly.
+        # The sibling Blast Radius vhost caps at 128KB, which would reject every
+        # photo upload at the proxy — before the app could return its own honest
+        # 413. Two images at up to 12MB each arrive base64-encoded in one JSON body,
+        # so the proxy limit has to be the app's limit, not a default.
+        max_size 40MB
+    }
+
+    reverse_proxy 127.0.0.1:3100 {
+        # The concierge streams Server-Sent Events for the whole run. Without
+        # flush_interval Caddy buffers, and the judge watches a spinner instead of
+        # the steps arriving.
+        flush_interval -1
+    }
+
+    header {
+        X-Content-Type-Options nosniff
+        X-Frame-Options DENY
+        Referrer-Policy strict-origin-when-cross-origin
+        Permissions-Policy "camera=(), microphone=(), geolocation=()"
+        Strict-Transport-Security "max-age=31536000; includeSubDomains"
+
+        # Measured against the running app rather than copied from the sibling site,
+        # whose policy would break this one in two places:
+        #
+        #   img-src  — the look board loads garment and SKU thumbnails from
+        #              images.unsplash.com. Verified: that is the ONLY external
+        #              origin the browser requests (8 requests in a full run).
+        #              OpenAI and the YouCam API are called server-side, so they
+        #              need no connect-src entry.
+        #   'unsafe-inline' on script-src — Next.js App Router emits inline
+        #              bootstrap scripts (7 measured) and issues no nonce. Dropping
+        #              it does not harden the page, it stops it hydrating.
+        #   'unsafe-inline' on style-src — one inline <style> plus 20 style
+        #              attributes, from Tailwind v4 and the compare-slider position.
+        #
+        # data: on img-src is required: uploaded photos are held as data URLs.
+        Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://images.unsplash.com; connect-src 'self'; font-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'"
+    }
+}
+# <<< APHRODITE VHOST END

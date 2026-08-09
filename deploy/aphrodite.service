@@ -1,0 +1,40 @@
+[Unit]
+Description=Aphrodite occasion concierge
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=aphrodite
+Group=aphrodite
+# /opt/aphrodite is a symlink into an immutable /opt/aphrodite-releases/<sha>-<ts>.
+# The deploy flips the symlink and restarts, so a rollback is just flipping it back.
+WorkingDirectory=/opt/aphrodite
+EnvironmentFile=/etc/aphrodite.env
+ExecStart=/usr/bin/node /opt/aphrodite/node_modules/.bin/next start --port ${PORT}
+Restart=on-failure
+RestartSec=3
+
+# Sandboxing. The app needs no write access anywhere: Next.js serves a prebuilt
+# .next, and nothing is persisted — the saved plan lives in the visitor's own
+# localStorage, not on the server.
+NoNewPrivileges=yes
+PrivateTmp=yes
+PrivateDevices=yes
+ProtectSystem=strict
+ProtectHome=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectControlGroups=yes
+ReadOnlyPaths=/opt/aphrodite-releases
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+RestrictNamespaces=yes
+LockPersonality=yes
+MemoryDenyWriteExecute=no
+RestrictSUIDSGID=yes
+RemoveIPC=yes
+CapabilityBoundingSet=
+AmbientCapabilities=
+
+[Install]
+WantedBy=multi-user.target
