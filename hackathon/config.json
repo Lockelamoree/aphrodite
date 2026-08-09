@@ -1,0 +1,217 @@
+{
+  "schemaVersion": 1,
+  "_note": "Written 2026-08-09, retro-fitted onto an already-built project. Fields marked UNKNOWN are genuinely not researched and must be interviewed before any skill instantiates a template from them — they are NOT placeholders to be guessed at.",
+  "event": {
+    "name": "YouCam API Skin AI & Apparel VTO Hackathon",
+    "organizer": "Perfect Corp",
+    "startDate": "UNKNOWN",
+    "deadline": "2026-08-17T11:45:00-04:00",
+    "timezone": "America/New_York",
+    "track": "combined — Skin AI and Apparel VTO",
+    "rulesUrl": "https://youcam-api.devpost.com/rules",
+    "submissionPlatform": "devpost",
+    "submissionUrl": "https://youcam-api.devpost.com/"
+  },
+  "technologies": {
+    "required": [
+      "YouCam / Perfect Corp AI API",
+      "Next.js 16",
+      "TypeScript"
+    ],
+    "mustBeInRuntime": [
+      "YouCam / Perfect Corp AI API"
+    ]
+  },
+  "product": {
+    "name": "Aphrodite",
+    "oneLiner": "Name an occasion, upload one selfie, and an AI beauty companion returns a skincare countdown, an outfit rendered on your own body, and a shoppable look board.",
+    "pitch": "Aphrodite is an occasion concierge. You tell it the event and the date and give it one selfie; an LLM orchestrates the YouCam Skin and Apparel VTO APIs as tools, reads your skin and colour, plans a skincare countdown that fits the time you actually have, renders a garment on your own body, and assembles one shoppable look board. Two engines share one event stream — an agentic one and a rule-based fallback — so the product works with no LLM key at all.",
+    "audience": "Someone with a dated event and no confident plan for it: a wedding, a job interview, a first date.",
+    "antiPattern": "A filter app or a skin-scoring gimmick. The product is the plan for a specific day; the renders are its evidence."
+  },
+  "rubric": {
+    "_weights": "No weights are published by the organizer. Every criterion carries weight 1 and a 10-point scale; total 50.",
+    "criteria": [
+      {
+        "key": "technological_implementation",
+        "name": "Technological Implementation",
+        "weight": 1,
+        "anchors": {
+          "9_10": "Several YouCam APIs chained so each one's output feeds the next; failures degrade honestly; the integration is provable from the running product, not only from the code.",
+          "5_6": "One or two APIs called correctly and in isolation.",
+          "1_3": "An API is called once and its result decorates a static page."
+        }
+      },
+      {
+        "key": "design",
+        "name": "Design",
+        "weight": 1,
+        "anchors": {
+          "9_10": "Reads as a finished product: one clear path, coherent typography and colour, real empty and error states, works at 320px and at 200% text zoom, keyboard reachable.",
+          "5_6": "Attractive on the happy path, thin at the edges.",
+          "1_3": "A form and a results dump."
+        }
+      },
+      {
+        "key": "potential_impact",
+        "name": "Potential Impact",
+        "weight": 1,
+        "anchors": {
+          "9_10": "A named audience with a dated need, and a credible commercial story — priced basket, return-confidence, a first-party signal a retailer would want.",
+          "5_6": "A plausible audience asserted but not evidenced.",
+          "1_3": "A demo looking for a problem."
+        }
+      },
+      {
+        "key": "quality_of_the_idea",
+        "name": "Quality of the Idea",
+        "weight": 1,
+        "anchors": {
+          "9_10": "Non-obvious API use that only makes sense once you understand the problem; the LLM does planning the APIs cannot do alone.",
+          "5_6": "A sensible but expected use of the APIs.",
+          "1_3": "The API demo with a new colour scheme."
+        }
+      },
+      {
+        "key": "special_skin_vto_fusion",
+        "name": "Special category — Skin AI and Apparel VTO as one experience",
+        "weight": 1,
+        "anchors": {
+          "9_10": "The skin reading visibly determines the garment and the countdown, and the judge sees that chain happen on screen in one run.",
+          "5_6": "Both capabilities are present on one page but do not visibly inform each other.",
+          "1_3": "Two separate features behind two separate buttons."
+        }
+      }
+    ],
+    "tiebreaker": "special_skin_vto_fusion",
+    "_tiebreakerNote": "Not published by the organizer. Working assumption, because it is the only criterion the event singles out as a special category — and it is where this entry is weakest relative to its own engine.",
+    "scaleTotal": 50
+  },
+  "judges": [],
+  "_judgesNote": "UNKNOWN — no judge roster researched for this event. Deliberately left empty rather than filled with invented personas. Fill hackathon/JUDGE_DOSSIER.md once researched.",
+  "killGate": [
+    "fits the combined track: uses both a Skin API and the Apparel VTO API in one run",
+    "provably uses the YouCam API at judging time (evidence: the on-screen provenance ledger names each API called, and /api/dev/verify pins the live request/response schema)",
+    "judge-testable without a rebuild: hosted URL, keyless demo mode works out of the box",
+    "public repo with MIT license, README chapter, demo video under 180 s",
+    "no fabricated render is ever presented as a live one — demo mode says so on screen"
+  ],
+  "integrityRisks": [
+    "Passing a captured fixture render off as a live YouCam render. Mitigated by a demo flag on the mode event that makes the UI and the print footer say 'demo mode · sample renders · 0 API units'.",
+    "Claiming a colour or formality match the wardrobe cannot actually satisfy — a 'tone shift' announced when the catalogue has nothing in that direction.",
+    "Skin scores read as medical or worth-based judgements. Scores are health-framed, no-shame wording, and the lowest score is a 'priority area', not a defect."
+  ],
+  "vocabulary": {
+    "use": [
+      "priority area",
+      "health score",
+      "rendered on you",
+      "captured fixture",
+      "honest empty state",
+      "priced basket"
+    ],
+    "ban": [
+      "camouflage",
+      "flawless",
+      "glowing",
+      "perfect skin",
+      "flaws",
+      "simulated"
+    ],
+    "reframes": [
+      {
+        "not": "hide your flaws",
+        "instead": "the areas YouCam scored lowest, and what to do about them before the date"
+      },
+      {
+        "not": "AI-generated look",
+        "instead": "rendered on your own photo by the YouCam API"
+      },
+      {
+        "not": "we simulate the result",
+        "instead": "every image is a real render; in demo mode they are captured samples and the page says so"
+      }
+    ],
+    "glossary": "Aphrodite, YouCam, Perfect Corp, Apparel VTO, AI-Cloth, look board, occasion concierge, skincare countdown, undertone, look-VTO, provenance ledger"
+  },
+  "schedule": {
+    "path": "hackathon/SCHEDULE.md",
+    "neverCut": [
+      "public repo + MIT license",
+      "demo video uploaded and linked on Devpost",
+      "hosted judge URL that stays live through judging",
+      "zero-unit fixture fallback on every demo path",
+      "honest demo-mode labelling"
+    ],
+    "cutOrder": [
+      "studio try-ons (hair colour, hairstyle, makeup)",
+      "accessory and makeup renders",
+      "multi-turn refinement beyond the outfit"
+    ]
+  },
+  "demo": {
+    "liveUrl": "https://aphrodite.max-gutowski.de",
+    "healthUrl": "https://aphrodite.max-gutowski.de/healthz",
+    "accessNotes": "Public and keyless: the page loads in YOUCAM_FIXTURES=1 demo mode for everyone, zero API units. The live agentic path (real OpenAI + real YouCam calls) is behind a judge role code, so cost is only incurred deliberately.",
+    "cantFailFallback": "YOUCAM_FIXTURES=1 serves captured fixtures for skin, colour, apparel and lighting, so every demo path completes with zero API units even if the YouCam key is dead or rate-limited.",
+    "spendCapUsd": 25,
+    "_spendCapNote": "Decided 2026-08-09: 25 USD. Must ALSO be set as a hard cap on the OpenAI dashboard by the operator — an in-app cap cannot stop spend the app does not mediate.",
+    "host": {
+      "domain": "aphrodite.max-gutowski.de",
+      "user": "aphrodite",
+      "appName": "aphrodite",
+      "repoUrl": "https://github.com/Lockelamoree/aphrodite.git",
+      "vps": "152.53.229.182, ssh alias 'blastradius', root, Caddy already fronting other sites"
+    },
+    "_dns": "A record aphrodite.max-gutowski.de -> 152.53.229.182 — OPERATOR TASK, not yet set as of 2026-08-09."
+  },
+  "testCommand": "npm test",
+  "verifyCommands": [
+    "npx tsc --noEmit",
+    "npm test",
+    "npm run lint",
+    "npm run build"
+  ],
+  "submission": {
+    "videoMaxSeconds": 180,
+    "videoUrl": "UNKNOWN — first cut exists untracked at submission/aphrodite-demo.mp4 (~90 s), not uploaded",
+    "fields": [
+      "tagline",
+      "elevator_pitch",
+      "full_description",
+      "built_with",
+      "try_it_links",
+      "video_demo_link",
+      "screenshots"
+    ],
+    "compliancePath": "hackathon/COMPLIANCE.md"
+  },
+  "priorWork": [
+    {
+      "name": "VPS deploy pattern (atomic symlink flip, health gate, access gate, Caddy front, systemd unit)",
+      "status": "reused infrastructure pattern from the author's earlier Blast Radius entry on the same VPS",
+      "fence": "Infrastructure only. No Aphrodite product code is reused from it; deploy scripts for this app do not exist yet and must be instantiated."
+    },
+    {
+      "name": "YouCam / Perfect Corp AI API",
+      "status": "external pre-existing dependency",
+      "fence": "Consumed as a service. lib/youcam/ (the REST client) and lib/concierge/ (the orchestration) are new work for this event."
+    }
+  ],
+  "paths": {
+    "dossier": "hackathon/JUDGE_DOSSIER.md",
+    "rubric": "hackathon/RUBRIC.md",
+    "vocabulary": "hackathon/VOCABULARY.md",
+    "reviews": "hackathon/reviews/",
+    "claimProofMap": "hackathon/CLAIM_PROOF_MAP.md",
+    "submissionCopy": "hackathon/SUBMISSION_COPY.md"
+  },
+  "llm": {
+    "provider": "openai",
+    "model": "gpt-5",
+    "modelEnvVar": "OPENAI_MODEL",
+    "keySource": "reused from /etc/blast-radius.env on the VPS; copied server-side into /etc/aphrodite.env. The key is never brought onto the workstation — local dev runs on fixtures.",
+    "preflight": "2026-08-09: key valid (HTTP 200, 124 models). Streaming + function-calling verified with the app's exact request shape (model/stream/messages/tools, no temperature, no max_tokens) on gpt-5, gpt-5-mini, gpt-4.1 and gpt-4o — all returned tool_calls in the stream.",
+    "sharedKeyCaveat": "Same key as the Blast Radius instance, so both apps share that key's budget and rate limit."
+  }
+}
