@@ -27,7 +27,17 @@ ProtectKernelTunables=yes
 ProtectKernelModules=yes
 ProtectControlGroups=yes
 ReadOnlyPaths=/opt/aphrodite-releases
-RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX
+# AF_NETLINK is required, and leaving it out cost a deploy to diagnose.
+# On startup Next.js enumerates network interfaces to print the LAN URL, which on
+# Linux goes through a netlink socket. Without AF_NETLINK that call fails with
+# EAFNOSUPPORT (errno 97) as an UNHANDLED REJECTION at the `listening` event — so
+# the socket ends up bound and listening while the request handler is never wired
+# up. The service reports active, `ss` shows it listening, and every request just
+# hangs until the proxy times out: status 0, size 0, no error anywhere.
+#
+# Verified by bisection: the identical command outside the sandbox answered
+# /healthz in 1s; inside it, never.
+RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX AF_NETLINK
 RestrictNamespaces=yes
 LockPersonality=yes
 MemoryDenyWriteExecute=no
