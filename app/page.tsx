@@ -1,4 +1,8 @@
+import { cookies } from "next/headers";
+
 import { Concierge } from "@/components/Concierge";
+import { LIVE_COOKIE_NAME, gateEnabled, liveAllowed } from "@/lib/auth/gate";
+import { env } from "@/lib/env";
 
 // Read the environment PER REQUEST, not once at build time.
 //
@@ -10,19 +14,28 @@ import { Concierge } from "@/components/Concierge";
 // HTML: 0 occurrences of "Demo mode" live, 1 on the dev server.
 //
 // A page whose honesty labelling depends on build-time env is a page that will
-// eventually lie. The same applies to agenticAvailable: baked at build time it
-// would advertise the agentic engine on a host with no key, or hide it on a host
-// that has one.
+// eventually lie.
 export const dynamic = "force-dynamic";
 
-// Server component: derive whether the agentic engine is actually runnable from
-// the presence of a real LLM key, so the client toggle can never drift from the
-// deployed config (no separate NEXT_PUBLIC flag to keep in sync). Same for demo
-// mode — the announcement bar must state it before the first run, not after.
-export default function Home() {
-  const agenticAvailable = Boolean(
+export default async function Home() {
+  const cookieStore = await cookies();
+  const unlocked = liveAllowed(cookieStore.get(LIVE_COOKIE_NAME)?.value);
+
+  // What THIS visitor will actually get — not what the host default happens to be.
+  //
+  // Turning YOUCAM_FIXTURES off to make live runs available to judges broke this
+  // once already: the host default said live, so the banner disappeared, while an
+  // unauthenticated visitor still received captured samples through the gate. The
+  // page claimed one thing and the run delivered another. Whether the renders are
+  // captured depends on the host default AND on whether this request is unlocked.
+  const demoMode = env.youcamFixtures || (gateEnabled() && !unlocked);
+
+  // Same reasoning for the engine: a key on the host does not mean this visitor
+  // may use it, so the toggle must reflect the gate rather than mere key presence.
+  const hasKey = Boolean(
     process.env.ANTHROPIC_API_KEY?.trim() || process.env.OPENAI_API_KEY?.trim(),
   );
-  const demoMode = /^(1|true)$/i.test(process.env.YOUCAM_FIXTURES ?? "");
+  const agenticAvailable = hasKey && unlocked;
+
   return <Concierge agenticAvailable={agenticAvailable} demoMode={demoMode} />;
 }

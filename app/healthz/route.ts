@@ -129,7 +129,12 @@ export async function GET() {
       // Injected at deploy time from the release SHA. Absent in local dev, which
       // is itself informative: an unversioned process is not a release.
       revision: process.env.APHRODITE_REVISION ?? "dev",
+      // The HOST default. Note this is NOT what an anonymous visitor gets when the
+      // gate is on: they are forced onto captured fixtures regardless, which is
+      // what public_demo_mode reports. Conflating the two once made the landing
+      // page claim live renders while serving samples.
       demo_mode: env.youcamFixtures,
+      public_demo_mode: env.youcamFixtures || gateEnabled(),
       // Whether the live paths are gated, so "the demo is open" or "the expensive
       // paths are behind a code" is externally verifiable rather than a README claim.
       auth_enabled: gateEnabled(),
