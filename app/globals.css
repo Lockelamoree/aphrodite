@@ -30,12 +30,31 @@
   --color-paper: #fbf2f2; /* blush ivory background */
   --color-surface: #fffafb; /* rose-white card surface */
   --color-ink: #2c2126; /* warm plum-ink */
-  --color-muted: #937a80; /* dusty mauve secondary text */
-  --color-line: #f0dbdd; /* blossom hairline borders */
+  /* Darkened from #937a80 on 2026-08-09. The original measured 3.58:1 on
+     --color-paper and 3.81:1 on --color-surface, which FAILS WCAG AA (4.5:1) for
+     body text — and muted carries most of the body copy on this site: the
+     sub-headline, every descriptor, the figure captions, the blocking-reason line
+     and the footer. Same hue (346deg) and same saturation, lightness 53% -> 46%,
+     Same hue and saturation, lightness 53% -> 44%: the smallest step that passes
+     on ALL FOUR grounds this token appears on — paper 5.04:1, surface 5.37:1,
+     paper-deep 4.80:1 (the footer), primary-soft 4.56:1. Measuring only against
+     paper is how the footer stayed below the line. Do not lighten without
+     re-measuring all four. */
+  --color-muted: #7b6267; /* dusty mauve secondary text, AA on every ground */
+  /* Strengthened from #f0dbdd: at 1.20:1 against the ground, card edges were
+     effectively invisible, so nothing on the page read as an object sitting on a
+     surface. Borders are not controls, so no ratio is mandated — but a card you
+     cannot see the edge of is why the page read as one flat pink wash. */
+  --color-line: #dfc0c5; /* blossom hairline borders */
   --color-primary: #aa4467; /* cherry-rose primary accent */
   --color-primary-soft: #f8e4ea; /* pale blossom */
   --color-gold: #cba86a; /* soft warm gold (emblem / secondary) */
-  --color-rose: #bf5140; /* attention / low-health (distinct warm red) */
+  /* Darkened from #bf5140, which measured 4.27:1 on paper, 4.07:1 on paper-deep,
+     3.87:1 on primary-soft and 4.00:1 on its own 10% tint — all below AA, and this
+     token carries error messages, "out of stock", the over-budget warning and
+     negative score deltas. Text that reports a problem has to be readable.
+     Now 5.04:1 / 4.79:1 / 4.56:1 / 4.67:1 respectively. */
+  --color-rose: #ad4939; /* attention / low-health (distinct warm red) */
   --color-leaf: #6f9e78; /* leaf green — healthy / "strong" (blossom-branch) */
   --color-paper-deep: #f7ecec; /* deeper blush — footer surface */
 

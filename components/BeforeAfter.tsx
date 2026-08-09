@@ -100,7 +100,9 @@ export function BeforeAfter({
             <span className="absolute left-3 top-3 rounded-full bg-ink/70 px-2.5 py-1 text-xs font-medium text-white">
               {beforeLabel}
             </span>
-            <span className="absolute right-3 top-3 rounded-full bg-primary/85 px-2.5 py-1 text-xs font-medium text-white">
+            <span // Opaque, not /85: over a light photo the translucent pill composited to
+            // 4.21:1 against its own white label, under AA for 12px text.
+            className="absolute right-3 top-3 rounded-full bg-primary px-2.5 py-1 text-xs font-medium text-white">
               {afterLabel}
             </span>
             {!touched && (
