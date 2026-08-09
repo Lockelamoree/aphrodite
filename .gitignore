@@ -43,3 +43,9 @@ next-env.d.ts
 
 # Claude Code local config
 .claude/
+
+# Submission media: the reel lives on YouTube/Vimeo, not in git (13 MB of takes).
+# The text drafts beside them ARE tracked — they existed only on one machine.
+submission/*.mp4
+submission/*.mov
+submission/*.webm

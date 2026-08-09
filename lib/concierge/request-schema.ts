@@ -36,6 +36,7 @@ export const conciergeRequestSchema = z
     skinGoal: z.enum(["balanced", "glow", "firm", "clear", "even"]).optional(),
     track: z.enum(["style", "grooming"]).optional(),
     garmentPreference: z.enum(["surprise", "dresses", "suits", "separates"]).optional(),
+    cutPreference: z.enum(["any", "feminine", "masculine"]).optional(),
     refine: z
       .object({
         adjust: z.enum(["less_formal", "more_formal", "cooler", "warmer", "reroll"]),

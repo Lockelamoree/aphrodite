@@ -1,0 +1,89 @@
+<svg viewBox="0 0 552 736" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="">
+  <!-- Decorative cherry-blossom panel: warm dawn gradient, soft bokeh, five-petal
+       blossoms. Hand-built so the hero gets imagery warmth with zero photo assets. -->
+  <defs>
+    <linearGradient id="dawn" x1="0" y1="0" x2="0.4" y2="1">
+      <stop offset="0" stop-color="#fffafb"/>
+      <stop offset="0.45" stop-color="#fbdce8"/>
+      <stop offset="1" stop-color="#f6e6d9"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#f8e4ea" stop-opacity="0.9"/>
+      <stop offset="1" stop-color="#f8e4ea" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="goldglow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#cba86a" stop-opacity="0.5"/>
+      <stop offset="1" stop-color="#cba86a" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="soft" x="-40%" y="-40%" width="180%" height="180%">
+      <feGaussianBlur stdDeviation="6"/>
+    </filter>
+    <filter id="softer" x="-60%" y="-60%" width="220%" height="220%">
+      <feGaussianBlur stdDeviation="16"/>
+    </filter>
+    <g id="blossom">
+      <g id="petals">
+        <ellipse cx="0" cy="-17" rx="10" ry="16" fill="#f4c6d3"/>
+        <ellipse cx="0" cy="-17" rx="10" ry="16" fill="#f4c6d3" transform="rotate(72)"/>
+        <ellipse cx="0" cy="-17" rx="10" ry="16" fill="#f4c6d3" transform="rotate(144)"/>
+        <ellipse cx="0" cy="-17" rx="10" ry="16" fill="#f4c6d3" transform="rotate(216)"/>
+        <ellipse cx="0" cy="-17" rx="10" ry="16" fill="#f4c6d3" transform="rotate(288)"/>
+      </g>
+      <circle r="5.5" fill="#eeaec2"/>
+      <g stroke="#cba86a" stroke-width="1.1" stroke-linecap="round">
+        <line x1="0" y1="0" x2="0" y2="-7"/>
+        <line x1="0" y1="0" x2="6" y2="-3.5"/>
+        <line x1="0" y1="0" x2="-6" y2="-3.5"/>
+        <line x1="0" y1="0" x2="4" y2="5.5"/>
+        <line x1="0" y1="0" x2="-4" y2="5.5"/>
+      </g>
+      <g fill="#aa4467">
+        <circle cx="0" cy="-8" r="1.4"/>
+        <circle cx="7" cy="-4.2" r="1.4"/>
+        <circle cx="-7" cy="-4.2" r="1.4"/>
+        <circle cx="4.8" cy="6.6" r="1.4"/>
+        <circle cx="-4.8" cy="6.6" r="1.4"/>
+      </g>
+    </g>
+  </defs>
+
+  <rect width="552" height="736" fill="url(#dawn)"/>
+
+  <!-- bokeh field -->
+  <circle cx="452" cy="120" r="150" fill="url(#glow)"/>
+  <circle cx="90" cy="270" r="120" fill="url(#glow)"/>
+  <circle cx="470" cy="560" r="170" fill="url(#goldglow)"/>
+  <circle cx="160" cy="640" r="130" fill="url(#glow)"/>
+  <circle cx="300" cy="60" r="90" fill="url(#goldglow)"/>
+
+  <!-- distant, heavily blurred blossoms (depth) -->
+  <g filter="url(#softer)" opacity="0.55">
+    <use href="#blossom" transform="translate(120 150) scale(2.6) rotate(14)"/>
+    <use href="#blossom" transform="translate(470 350) scale(3.1) rotate(-30)"/>
+    <use href="#blossom" transform="translate(70 560) scale(2.2) rotate(48)"/>
+  </g>
+
+  <!-- mid-field blossoms -->
+  <g filter="url(#soft)" opacity="0.85">
+    <use href="#blossom" transform="translate(390 140) scale(2.1) rotate(-12)"/>
+    <use href="#blossom" transform="translate(170 400) scale(1.7) rotate(26)"/>
+    <use href="#blossom" transform="translate(430 660) scale(1.9) rotate(8)"/>
+  </g>
+
+  <!-- foreground blossoms, crisp -->
+  <use href="#blossom" transform="translate(300 260) scale(1.45) rotate(-8)"/>
+  <use href="#blossom" transform="translate(452 470) scale(1.15) rotate(22)"/>
+  <use href="#blossom" transform="translate(150 660) scale(1.3) rotate(-24)"/>
+  <use href="#blossom" transform="translate(238 550) scale(0.85) rotate(40)"/>
+
+  <!-- drifting petals -->
+  <g fill="#f4c6d3">
+    <ellipse cx="330" cy="120" rx="6" ry="10" transform="rotate(35 330 120)" opacity="0.8"/>
+    <ellipse cx="210" cy="220" rx="5" ry="8" transform="rotate(-20 210 220)" opacity="0.7"/>
+    <ellipse cx="480" cy="250" rx="5" ry="9" transform="rotate(60 480 250)" opacity="0.75"/>
+    <ellipse cx="90" cy="450" rx="6" ry="9" transform="rotate(15 90 450)" opacity="0.6"/>
+    <ellipse cx="360" cy="430" rx="4" ry="7" transform="rotate(-45 360 430)" opacity="0.7"/>
+    <ellipse cx="290" cy="690" rx="6" ry="10" transform="rotate(25 290 690)" opacity="0.65"/>
+    <ellipse cx="500" cy="80" rx="4" ry="7" transform="rotate(-30 500 80)" opacity="0.6"/>
+  </g>
+</svg>

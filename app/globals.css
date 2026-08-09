@@ -1,22 +1,69 @@
 @import "tailwindcss";
 
+/* ---- Webfonts: Sentient (serif display) + Synonym (sans UI) ----
+   Fontshare originals, ITF Free Font License, self-hosted so the demo
+   has no third-party dependency at judging time. Variable, wght 200-700. */
+@font-face {
+  font-family: "Sentient";
+  src: url("/fonts/sentient-variable.woff2") format("woff2");
+  font-weight: 200 700;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Sentient";
+  src: url("/fonts/sentient-variable-italic.woff2") format("woff2");
+  font-weight: 200 700;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: "Synonym";
+  src: url("/fonts/synonym-variable.woff2") format("woff2");
+  font-weight: 200 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* ---- Aphrodite design tokens (cherry-blossom beauty concierge) ---- */
 @theme {
   --color-paper: #fbf2f2; /* blush ivory background */
   --color-surface: #fffafb; /* rose-white card surface */
   --color-ink: #2c2126; /* warm plum-ink */
-  --color-muted: #937a80; /* dusty mauve secondary text */
-  --color-line: #f0dbdd; /* blossom hairline borders */
+  /* Darkened from #937a80 on 2026-08-09. The original measured 3.58:1 on
+     --color-paper and 3.81:1 on --color-surface, which FAILS WCAG AA (4.5:1) for
+     body text — and muted carries most of the body copy on this site: the
+     sub-headline, every descriptor, the figure captions, the blocking-reason line
+     and the footer. Same hue (346deg) and same saturation, lightness 53% -> 46%,
+     Same hue and saturation, lightness 53% -> 44%: the smallest step that passes
+     on ALL FOUR grounds this token appears on — paper 5.04:1, surface 5.37:1,
+     paper-deep 4.80:1 (the footer), primary-soft 4.56:1. Measuring only against
+     paper is how the footer stayed below the line. Do not lighten without
+     re-measuring all four. */
+  --color-muted: #7b6267; /* dusty mauve secondary text, AA on every ground */
+  /* Strengthened from #f0dbdd: at 1.20:1 against the ground, card edges were
+     effectively invisible, so nothing on the page read as an object sitting on a
+     surface. Borders are not controls, so no ratio is mandated — but a card you
+     cannot see the edge of is why the page read as one flat pink wash. */
+  --color-line: #dfc0c5; /* blossom hairline borders */
   --color-primary: #aa4467; /* cherry-rose primary accent */
   --color-primary-soft: #f8e4ea; /* pale blossom */
   --color-gold: #cba86a; /* soft warm gold (emblem / secondary) */
-  --color-rose: #bf5140; /* attention / low-health (distinct warm red) */
+  /* Darkened from #bf5140, which measured 4.27:1 on paper, 4.07:1 on paper-deep,
+     3.87:1 on primary-soft and 4.00:1 on its own 10% tint — all below AA, and this
+     token carries error messages, "out of stock", the over-budget warning and
+     negative score deltas. Text that reports a problem has to be readable.
+     Now 5.04:1 / 4.79:1 / 4.56:1 / 4.67:1 respectively. */
+  --color-rose: #ad4939; /* attention / low-health (distinct warm red) */
   --color-leaf: #6f9e78; /* leaf green — healthy / "strong" (blossom-branch) */
+  --color-paper-deep: #f7ecec; /* deeper blush — footer surface */
 
-  --font-serif: "Iowan Old Style", "Palatino Linotype", Palatino, "Book Antiqua",
-    Georgia, "Times New Roman", serif;
-  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto,
-    Helvetica, Arial, sans-serif;
+  /* Sentient's x-height (502/1000) is a near-metric match for the Iowan/
+     Palatino fallbacks, so a slow font load doesn't reflow the layout. */
+  --font-serif: "Sentient", "Iowan Old Style", "Palatino Linotype", Palatino,
+    "Book Antiqua", Georgia, "Times New Roman", serif;
+  --font-sans: "Synonym", ui-sans-serif, system-ui, -apple-system, "Segoe UI",
+    Roboto, Helvetica, Arial, sans-serif;
 
   --radius-card: 1.1rem;
 }
@@ -68,7 +115,10 @@ body {
   }
 }
 .aura-fade-up {
-  animation: aura-fade-up 0.5s ease both;
+  /* "backwards", not "both": with "both" the identity transform persists after
+     the animation and silently breaks position:sticky for every descendant
+     (transformed ancestors disable viewport-relative sticking). */
+  animation: aura-fade-up 0.5s ease backwards;
 }
 
 /* The Look Board "reveal" — a slightly larger, springier entrance than the
@@ -84,12 +134,33 @@ body {
   }
 }
 .aura-reveal {
-  animation: aura-reveal 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+  /* "backwards" for the same sticky-vs-transform reason as .aura-fade-up. */
+  animation: aura-reveal 0.6s cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+
+/* Soft-gold twinkle — reserved for the glow check-in's improvement moment. */
+@keyframes aura-twinkle {
+  0% {
+    opacity: 0;
+    transform: scale(0.4) rotate(-12deg);
+  }
+  55% {
+    opacity: 1;
+    transform: scale(1.15) rotate(4deg);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) rotate(0deg);
+  }
+}
+.aura-twinkle {
+  animation: aura-twinkle 0.7s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
 @media (prefers-reduced-motion: reduce) {
   .aura-fade-up,
-  .aura-reveal {
+  .aura-reveal,
+  .aura-twinkle {
     animation: none;
   }
 }

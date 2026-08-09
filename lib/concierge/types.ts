@@ -60,6 +60,17 @@ export type StyleTrack = "style" | "grooming";
 /** The silhouette the shopper explicitly wants to try. */
 export type GarmentPreference = "surprise" | "dresses" | "suits" | "separates";
 
+/**
+ * Which tailoring cuts to consider. "any" is the honest default: until the
+ * shopper says, the app must not make a presentation-defining choice for them.
+ *
+ * This is NEVER inferred from the photo — guessing someone's presentation from
+ * their face is both wrong and unnecessary, because asking costs one tap. A
+ * "masculine" or "feminine" value only ever comes from an explicit control or
+ * from a bundled sample that ships with its own answer.
+ */
+export type CutPreference = "any" | "feminine" | "masculine";
+
 /** A one-tap refinement of an existing look (re-styles the outfit in place). */
 export type RefineAdjust = "less_formal" | "more_formal" | "cooler" | "warmer" | "reroll";
 
@@ -78,6 +89,8 @@ export interface ConciergeRequest {
   track?: StyleTrack;
   /** Explicit wardrobe preference; never inferred from the user's photo. */
   garmentPreference?: GarmentPreference;
+  /** Explicit cut/presentation preference; never inferred from the user's photo. */
+  cutPreference?: CutPreference;
   /**
    * When present, this is a refinement of a prior look: re-style the outfit only,
    * reusing the prior skin/color (passed here) instead of re-analyzing — so it's
