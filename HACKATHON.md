@@ -90,10 +90,10 @@ tier also carrying a blog feature and a marketing meeting with Perfect Corp.
 | Requirement | State on 2026-08-09 |
 |---|---|
 | Public repo + license | **done** — `github.com/Lockelamoree/aphrodite`, MIT |
-| Text description | **draft** — `submission/devpost.md`, untracked |
+| Text description | **draft** — `submission/devpost.md`, tracked; still missing the try-it and video links |
 | Screenshots | **done** — `~/aphrodite-demo/screenshots/` |
 | Demo video 1–3 min, shows YouCam integration | **first cut done, not uploaded** — `submission/aphrodite-demo.mp4`, ~90 s |
-| Hosted, judge-testable instance | **not yet** — VPS release is open |
+| Hosted, judge-testable instance | **live** — https://aphrodite.max-gutowski.de (2026-08-09), keyless, zero API units |
 
 ## Standing orders
 

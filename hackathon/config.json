@@ -203,9 +203,9 @@
     ]
   },
   "demo": {
-    "liveUrl": "NOT YET DEPLOYED — planned https://aphrodite.max-gutowski.de",
-    "healthUrl": "NOT YET DEPLOYED — /healthz exists and is verifiable locally at http://localhost:3000/healthz",
-    "accessNotes": "Public and keyless: the page loads in YOUCAM_FIXTURES=1 demo mode for everyone, zero API units. The live agentic path (real OpenAI + real YouCam calls) is behind a judge role code, so cost is only incurred deliberately.",
+    "liveUrl": "https://aphrodite.max-gutowski.de",
+    "healthUrl": "https://aphrodite.max-gutowski.de/healthz",
+    "accessNotes": "Public and keyless. Runs YOUCAM_FIXTURES=1 so every visitor gets the full flow at ZERO YouCam units, and OPENAI_API_KEY is deliberately UNSET so the rule-based engine serves every request — no visitor can spend money. The demo-mode banner and the provenance ledger both say so on screen.",
     "cantFailFallback": "YOUCAM_FIXTURES=1 serves captured fixtures for skin, colour, apparel and lighting, so every demo path completes with zero API units even if the YouCam key is dead or rate-limited.",
     "spendCapUsd": 25,
     "_spendCapNote": "Decided 2026-08-09: 25 USD. Must ALSO be set as a hard cap on the OpenAI dashboard by the operator — an in-app cap cannot stop spend the app does not mediate.",
@@ -217,7 +217,9 @@
       "vps": "152.53.229.182, ssh alias 'blastradius', root, Caddy already fronting other sites"
     },
     "_dns": "A record aphrodite.max-gutowski.de -> 152.53.229.182 — OPERATOR TASK, not yet set as of 2026-08-09.",
-    "verifyLocally": "npm run dev, then GET /healthz and drive the bundled 'Wedding · full-body' sample end to end in fixture mode (zero API units)."
+    "verifyLocally": "npm run dev, then GET /healthz and drive the bundled 'Wedding · full-body' sample end to end in fixture mode (zero API units).",
+    "deployedAt": "2026-08-09",
+    "deployNotes": "deploy/deploy.sh on the VPS: fresh clone into an immutable release, build in place (Next.js records its absolute project root at build time, so building elsewhere and copying does not work), health gate asserting revision == built SHA and no key_present_unverified, then an atomic symlink flip. Fails closed."
   },
   "testCommand": "npm test",
   "verifyCommands": [
@@ -275,14 +277,17 @@
       "blockedOn": "verified imagery + one units-on capture session"
     },
     {
-      "title": "No hosted judge URL yet",
-      "detail": "Stage One requires a judge-testable instance. The app has /healthz and deploy-ready state, but no DNS record, no Node on the VPS and no deploy artifacts (deploy.sh, systemd unit, Caddy block) yet.",
-      "blockedOn": "operator: A record aphrodite.max-gutowski.de -> 152.53.229.182, plus a hard OpenAI spend cap"
-    },
-    {
       "title": "Demo video not uploaded",
       "detail": "A ~90s first cut exists untracked at submission/aphrodite-demo.mp4. Stage One needs it on YouTube or Vimeo and linked on Devpost.",
       "blockedOn": "operator: upload + paste the Devpost form"
+    }
+  ],
+  "closedGaps": [
+    {
+      "title": "No hosted judge URL yet",
+      "closed": "2026-08-09",
+      "how": "Live at https://aphrodite.max-gutowski.de, verified from outside: /healthz reports revision 910c27a, and a driven browser run reached the look board with the demo banner present, the honest ledger wording, 13 images and 0 broken, zero CSP violations and zero console errors.",
+      "costOfGettingThere": "Four failed deploys, each caught by the health gate with production untouched: a stale CDN-cached bootstrap script, Next.js baking its build-time project root, systemd RestrictAddressFamilies missing AF_NETLINK (the app listened but answered nothing), and the landing page being statically prerendered so the demo banner was decided by the build environment."
     }
   ]
 }
