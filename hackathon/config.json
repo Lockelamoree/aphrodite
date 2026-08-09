@@ -203,8 +203,8 @@
     ]
   },
   "demo": {
-    "liveUrl": "https://aphrodite.max-gutowski.de",
-    "healthUrl": "https://aphrodite.max-gutowski.de/healthz",
+    "liveUrl": "NOT YET DEPLOYED — planned https://aphrodite.max-gutowski.de",
+    "healthUrl": "NOT YET DEPLOYED — /healthz exists and is verifiable locally at http://localhost:3000/healthz",
     "accessNotes": "Public and keyless: the page loads in YOUCAM_FIXTURES=1 demo mode for everyone, zero API units. The live agentic path (real OpenAI + real YouCam calls) is behind a judge role code, so cost is only incurred deliberately.",
     "cantFailFallback": "YOUCAM_FIXTURES=1 serves captured fixtures for skin, colour, apparel and lighting, so every demo path completes with zero API units even if the YouCam key is dead or rate-limited.",
     "spendCapUsd": 25,
@@ -216,7 +216,8 @@
       "repoUrl": "https://github.com/Lockelamoree/aphrodite.git",
       "vps": "152.53.229.182, ssh alias 'blastradius', root, Caddy already fronting other sites"
     },
-    "_dns": "A record aphrodite.max-gutowski.de -> 152.53.229.182 — OPERATOR TASK, not yet set as of 2026-08-09."
+    "_dns": "A record aphrodite.max-gutowski.de -> 152.53.229.182 — OPERATOR TASK, not yet set as of 2026-08-09.",
+    "verifyLocally": "npm run dev, then GET /healthz and drive the bundled 'Wedding · full-body' sample end to end in fixture mode (zero API units)."
   },
   "testCommand": "npm test",
   "verifyCommands": [
@@ -272,6 +273,16 @@
       "title": "Menswear catalog gap",
       "detail": "One masculine garment exists (slate-suit, formal, flatters cool). A masculine-presenting shopper has no smart or casual option and no warm-undertone option, so the app correctly declines to claim a colour match for the warm wedding sample. Widening this needs verified front-facing reference imagery, and the render quality of any new reference cannot be confirmed without spending YouCam units.",
       "blockedOn": "verified imagery + one units-on capture session"
+    },
+    {
+      "title": "No hosted judge URL yet",
+      "detail": "Stage One requires a judge-testable instance. The app has /healthz and deploy-ready state, but no DNS record, no Node on the VPS and no deploy artifacts (deploy.sh, systemd unit, Caddy block) yet.",
+      "blockedOn": "operator: A record aphrodite.max-gutowski.de -> 152.53.229.182, plus a hard OpenAI spend cap"
+    },
+    {
+      "title": "Demo video not uploaded",
+      "detail": "A ~90s first cut exists untracked at submission/aphrodite-demo.mp4. Stage One needs it on YouTube or Vimeo and linked on Devpost.",
+      "blockedOn": "operator: upload + paste the Devpost form"
     }
   ]
 }
