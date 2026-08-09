@@ -10,7 +10,9 @@
     "track": "combined — Skin AI and Apparel VTO",
     "rulesUrl": "https://youcam-api.devpost.com/rules",
     "submissionPlatform": "devpost",
-    "submissionUrl": "https://youcam-api.devpost.com/"
+    "submissionUrl": "https://youcam-api.devpost.com/",
+    "prizes": "1st $5,000 cash + blog feature + marketing meeting · 2nd $1,000 same · 3rd-5th 5,000 YouCam API units (~$275) each + blog feature + marketing meeting",
+    "judgesFetched": "2026-08-09 from https://youcam-api.devpost.com/ — NO individuals are named. The panel is listed as a group: 'YouCam API Team'. No criterion weights published."
   },
   "technologies": {
     "required": [
@@ -40,7 +42,8 @@
           "9_10": "Several YouCam APIs chained so each one's output feeds the next; failures degrade honestly; the integration is provable from the running product, not only from the code.",
           "5_6": "One or two APIs called correctly and in isolation.",
           "1_3": "An API is called once and its result decorates a static page."
-        }
+        },
+        "verbatim": "How thoroughly and skillfully does the project integrate at least one YouCam API from the Skin/Fashion category? Does the project demonstrate clear consumer or retail value? Does the code reflect genuine effort and a working, non-trivial implementation?"
       },
       {
         "key": "design",
@@ -50,7 +53,8 @@
           "9_10": "Reads as a finished product: one clear path, coherent typography and colour, real empty and error states, works at 320px and at 200% text zoom, keyboard reachable.",
           "5_6": "Attractive on the happy path, thin at the edges.",
           "1_3": "A form and a results dump."
-        }
+        },
+        "verbatim": "Does the project deliver a complete, coherent product experience — not just a technical proof of concept?"
       },
       {
         "key": "potential_impact",
@@ -60,7 +64,8 @@
           "9_10": "A named audience with a dated need, and a credible commercial story — priced basket, return-confidence, a first-party signal a retailer would want.",
           "5_6": "A plausible audience asserted but not evidenced.",
           "1_3": "A demo looking for a problem."
-        }
+        },
+        "verbatim": "Does the project make a credible, specific case for solving a real problem for a real audience — and does the solution actually address that problem based on what's demonstrated?"
       },
       {
         "key": "quality_of_the_idea",
@@ -70,7 +75,8 @@
           "9_10": "Non-obvious API use that only makes sense once you understand the problem; the LLM does planning the APIs cannot do alone.",
           "5_6": "A sensible but expected use of the APIs.",
           "1_3": "The API demo with a new colour scheme."
-        }
+        },
+        "verbatim": "Is this a creative, non-obvious use of at least one Perfect Corp. YouCam API from the Skin or Fashion category — and does the team demonstrate genuine understanding of the problem space they're working in?"
       },
       {
         "key": "special_skin_vto_fusion",
@@ -87,8 +93,54 @@
     "_tiebreakerNote": "Not published by the organizer. Working assumption, because it is the only criterion the event singles out as a special category — and it is where this entry is weakest relative to its own engine.",
     "scaleTotal": 50
   },
-  "judges": [],
-  "_judgesNote": "UNKNOWN — no judge roster researched for this event. Deliberately left empty rather than filled with invented personas. Fill hackathon/JUDGE_DOSSIER.md once researched.",
+  "judges": [
+    {
+      "key": "tech",
+      "name": "YouCam API Team — Technological Implementation lens",
+      "role": "Perfect Corp reviewer scoring integration depth and whether the code is non-trivial AND shows consumer or retail value",
+      "persona": "Reads the published criterion literally and skims: integration depth and whether the code is non-trivial AND shows consumer or retail value. Distrusts AI demos by default and wants to see the thing work, not read that it works.",
+      "wins": "A chain where each YouCam API's output feeds the next, provable from the running product; a priced basket that makes the retail value concrete.",
+      "loses": "One API called in isolation; a demo with no commercial story; code that looks like a wrapper around a sample request.",
+      "caresMostAbout": "technological_implementation"
+    },
+    {
+      "key": "design",
+      "name": "YouCam API Team — Design lens",
+      "role": "Perfect Corp reviewer scoring whether it reads as a finished product rather than a proof of concept",
+      "persona": "Reads the published criterion literally and skims: whether it reads as a finished product rather than a proof of concept. Distrusts AI demos by default and wants to see the thing work, not read that it works.",
+      "wins": "One clear path, coherent type and colour, real empty and error states, reflows at 320px and 200% zoom, keyboard reachable.",
+      "loses": "Beautiful happy path, broken edges; a results dump; anything that only looks right at desktop width.",
+      "caresMostAbout": "design"
+    },
+    {
+      "key": "impact",
+      "name": "YouCam API Team — Potential Impact lens",
+      "role": "Perfect Corp reviewer scoring whether the demonstrated thing actually addresses the stated problem for a named audience",
+      "persona": "Reads the published criterion literally and skims: whether the demonstrated thing actually addresses the stated problem for a named audience. Distrusts AI demos by default and wants to see the thing work, not read that it works.",
+      "wins": "A named person with a dated need, and the demo visibly solving THAT need — not a generic beauty tool.",
+      "loses": "An audience asserted in prose but absent from the screen; impact claimed with no evidence in the product.",
+      "caresMostAbout": "potential_impact"
+    },
+    {
+      "key": "idea",
+      "name": "YouCam API Team — Quality of the Idea lens",
+      "role": "Perfect Corp reviewer scoring creative, non-obvious API use plus real understanding of the problem space",
+      "persona": "Reads the published criterion literally and skims: creative, non-obvious API use plus real understanding of the problem space. Distrusts AI demos by default and wants to see the thing work, not read that it works.",
+      "wins": "The LLM doing planning the APIs cannot do alone; a use of the API the API's own docs would not suggest.",
+      "loses": "The API demo restyled; novelty asserted rather than demonstrated.",
+      "caresMostAbout": "quality_of_the_idea"
+    },
+    {
+      "key": "special",
+      "name": "YouCam API Team — Special category — Skin AI and Apparel VTO as one lens",
+      "role": "Perfect Corp reviewer scoring whether the two capabilities are genuinely fused into one experience",
+      "persona": "Reads the published criterion literally and skims: whether the two capabilities are genuinely fused into one experience. Distrusts AI demos by default and wants to see the thing work, not read that it works.",
+      "wins": "The skin reading visibly drives the garment and the countdown, and a judge watches that happen in one run.",
+      "loses": "Two features on one page that never inform each other; fusion that exists in code but never on screen.",
+      "caresMostAbout": "special_skin_vto_fusion"
+    }
+  ],
+  "_judgesNote": "The organizer names NO individuals — the panel is the group 'YouCam API Team' (verified 2026-08-09 on the Devpost page). Rather than invent personas, the one real entity is modelled as one lens per PUBLISHED criterion, with each lens's wins/loses derived from that criterion's verbatim wording. These are criterion lenses, not researched people, and must never be presented as real judge intel.",
   "killGate": [
     "fits the combined track: uses both a Skin API and the Apparel VTO API in one run",
     "provably uses the YouCam API at judging time (evidence: the on-screen provenance ledger names each API called, and /api/dev/verify pins the live request/response schema)",

@@ -57,12 +57,33 @@ try-ons are gated off (`HAS_STUDIO_RENDERS=false`) and the smarter garment choic
 falls back to an existing fixture image, so the strongest part of the build is
 currently invisible.
 
-## Biggest open unknown
+## Biggest open unknown — answered 2026-08-09
 
-**Who actually judges, and against what internal weighting.** No judge roster has
-been researched for this event — `hackathon/config.json` records `judges: []`
-rather than inventing personas. Until that is filled, judge-facing decisions are
-made against the four published criteria only.
+**Who actually judges?** Checked on the Devpost page: **no individuals are named.**
+The panel is listed as a single group, **"YouCam API Team"**, with no titles or
+backgrounds. No criterion weights are published either.
+
+So there is no roster to research and no personal taste to play to. `hackathon/config.json`
+therefore models that one real entity as **one lens per published criterion**, with each
+lens's wins/loses derived from that criterion's verbatim wording. Those are criterion
+lenses, not people — they must never be presented as real judge intel.
+
+The remaining unknown is the **internal weighting**, which is simply not published.
+
+### One criterion clause worth pinning
+
+The verbatim wording of *Technological Implementation* is broader than a code review:
+
+> "How thoroughly and skillfully does the project integrate at least one YouCam API from
+> the Skin/Fashion category? **Does the project demonstrate clear consumer or retail
+> value?** Does the code reflect genuine effort and a working, non-trivial implementation?"
+
+Retail value is scored **under the technical criterion**, not only under Potential Impact.
+The priced basket, the cross-category mix and the return-confidence framing are therefore
+judged artifacts, not decoration — they must stay visible on screen.
+
+Prizes, for positioning: 1st $5,000 · 2nd $1,000 · 3rd–5th 5,000 API units each, each
+tier also carrying a blog feature and a marketing meeting with Perfect Corp.
 
 ## Submission requirements
 
