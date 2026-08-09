@@ -144,7 +144,7 @@
   "killGate": [
     "fits the combined track: uses both a Skin API and the Apparel VTO API in one run",
     "provably uses the YouCam API at judging time (evidence: the on-screen provenance ledger names each API called, and /api/dev/verify pins the live request/response schema)",
-    "judge-testable without a rebuild: hosted URL, keyless demo mode works out of the box",
+    "judge-testable without a rebuild: live at https://aphrodite.max-gutowski.de, keyless demo mode works out of the box, and a role code unlocks the live paths",
     "public repo with MIT license, README chapter, demo video under 180 s",
     "no fabricated render is ever presented as a live one — demo mode says so on screen"
   ],
@@ -205,10 +205,10 @@
   "demo": {
     "liveUrl": "https://aphrodite.max-gutowski.de",
     "healthUrl": "https://aphrodite.max-gutowski.de/healthz",
-    "accessNotes": "Public and keyless. Runs YOUCAM_FIXTURES=1 so every visitor gets the full flow at ZERO YouCam units, and OPENAI_API_KEY is deliberately UNSET so the rule-based engine serves every request — no visitor can spend money. The demo-mode banner and the provenance ledger both say so on screen.",
+    "accessNotes": "Open to everyone: the full flow runs for any visitor at ZERO YouCam units and with no LLM call, and both the announcement bar and the provenance ledger say the renders are captured samples. Two schranken guard the paths that spend: a role code (APHRODITE_LIVE_CODES + APHRODITE_AUTH_SECRET, exchanged at /unlock for a 12h HttpOnly cookie) opens live YouCam and the LLM engine, and a ledger caps live runs at APHRODITE_LIVE_RUN_BUDGET. The codes are NOT in this repo — a public repo carrying them would be no gate at all.",
     "cantFailFallback": "YOUCAM_FIXTURES=1 serves captured fixtures for skin, colour, apparel and lighting, so every demo path completes with zero API units even if the YouCam key is dead or rate-limited.",
     "spendCapUsd": 25,
-    "_spendCapNote": "Decided 2026-08-09: 25 USD. Must ALSO be set as a hard cap on the OpenAI dashboard by the operator — an in-app cap cannot stop spend the app does not mediate.",
+    "_spendCapNote": "Hard cap confirmed set on the OpenAI dashboard by the operator, 2026-08-09.",
     "host": {
       "domain": "aphrodite.max-gutowski.de",
       "user": "aphrodite",
@@ -219,7 +219,10 @@
     "_dns": "A record aphrodite.max-gutowski.de -> 152.53.229.182 — OPERATOR TASK, not yet set as of 2026-08-09.",
     "verifyLocally": "npm run dev, then GET /healthz and drive the bundled 'Wedding · full-body' sample end to end in fixture mode (zero API units).",
     "deployedAt": "2026-08-09",
-    "deployNotes": "deploy/deploy.sh on the VPS: fresh clone into an immutable release, build in place (Next.js records its absolute project root at build time, so building elsewhere and copying does not work), health gate asserting revision == built SHA and no key_present_unverified, then an atomic symlink flip. Fails closed."
+    "deployNotes": "deploy/deploy.sh on the VPS: fresh clone into an immutable release, build in place (Next.js records its absolute project root at build time, so building elsewhere and copying does not work), health gate asserting revision == built SHA and no key_present_unverified, then an atomic symlink flip. Fails closed.",
+    "liveRunBudget": 8,
+    "_liveRunBudgetNote": "8 runs, ~32-40 YouCam tasks. Deliberately conservative because the remaining unit balance is still unknown — no documented endpoint exposes it. Raise it once the real number is known.",
+    "verifiedLive": "2026-08-09 against the deployed site: an anonymous run returns mode=deterministic, three /fixtures/ URLs, an honest YouCam narration, and the ledger file is never created. With the judge cookie the same request switches to mode=agentic and the demo banner correctly disappears. /healthz reports public_demo_mode separately from demo_mode so both are checkable from outside."
   },
   "testCommand": "npm test",
   "verifyCommands": [
