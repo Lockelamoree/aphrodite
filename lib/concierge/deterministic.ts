@@ -4,8 +4,8 @@ import {
   completeTheLook,
   findGarment,
   GARMENT_CATALOG,
+  garmentMatchesCut,
   garmentMatchesPreference,
-  garmentSuitsTrack,
   skincareSkuFor,
   type CatalogGarment,
   type Formality,
@@ -24,6 +24,7 @@ import type {
   ShoppingItem,
   SkinGoal,
   StyleTrack,
+  CutPreference,
 } from "@/lib/concierge/types";
 import { analyzeColorProfile } from "@/lib/youcam/color";
 import { analyzeSkin } from "@/lib/youcam/skin";
@@ -85,6 +86,7 @@ export async function* runDeterministic(
   // --- apparel ---
   const garment = pickGarment(type, color?.undertone, {
     preference: req.garmentPreference ?? "surprise",
+    cut: req.cutPreference ?? "any",
     track,
   });
   const occ = type ?? "special occasion";
@@ -165,6 +167,7 @@ export async function* runRefineDeterministic(
     adjust: refine.adjust,
     exclude: refine.adjust === "reroll" ? currentId : undefined,
     preference: req.garmentPreference ?? "surprise",
+    cut: req.cutPreference ?? "any",
     track,
     // A tone shift shouldn't change the KIND of garment — keep dresses as dresses.
     keepWardrobe: toneAdjust ? currentGarment?.wardrobe : undefined,
@@ -260,6 +263,8 @@ interface PickHint {
   keepWardrobe?: string;
   /** Self-selected styling track; "grooming" forces a masculine-cut suit. */
   track?: StyleTrack;
+  /** Explicit cut preference. "any"/undefined = the shopper hasn't said. */
+  cut?: CutPreference;
 }
 
 export function pickGarment(
@@ -303,19 +308,25 @@ export function pickGarment(
   // women's cut. It overrides any wardrobe preference the shopper set.
   const grooming = hint?.track === "grooming";
   const preference = grooming ? "suits" : (hint?.preference ?? "surprise");
+  // The effective cut preference. Grooming implies "masculine" even when the
+  // shopper never touched the cut control; otherwise only an explicit choice
+  // counts. Nothing here looks at the photo.
+  const cutPref: CutPreference = grooming ? "masculine" : (hint?.cut ?? "any");
   if (preference !== "surprise") {
     const preferred = candidates.filter((g) => garmentMatchesPreference(g, preference));
     candidates = preferred.length
       ? preferred
       : GARMENT_CATALOG.filter((g) => garmentMatchesPreference(g, preference));
   }
-  if (grooming) {
-    // Grooming skips color analysis, so `undertone` is undefined and the +0.5
-    // neutral-undertone bonus below would otherwise float a women's neutral
-    // piece (the ivory pantsuit) above the menswear suit. Restrict to
-    // masculine/neutral cuts so only a menswear suit can win.
-    const masc = candidates.filter((g) => garmentSuitsTrack(g, "grooming"));
-    candidates = masc.length ? masc : GARMENT_CATALOG.filter((g) => g.cut === "masculine");
+  if (cutPref !== "any") {
+    // Applies on EVERY track, not just grooming. Previously the cut filter was
+    // gated on `track === "grooming"`, so a shopper on the default styling track
+    // could be dressed in any cut — and because the catalog is overwhelmingly
+    // feminine, a masculine-presenting person was reliably handed a gown.
+    const matching = candidates.filter((g) => garmentMatchesCut(g, cutPref));
+    candidates = matching.length
+      ? matching
+      : GARMENT_CATALOG.filter((g) => garmentMatchesCut(g, cutPref));
   }
   if (hint?.exclude) {
     const filtered = candidates.filter((g) => g.id !== hint.exclude);
@@ -337,10 +348,19 @@ export function pickGarment(
     const dist = wf < 0 ? 0 : Math.abs(FORMALITY_ORDER.indexOf(g.formality) - wf);
     const weight = formalityAdjust ? 6 : 4;
     const formalityScore = wf < 0 ? 0 : weight * Math.max(0, 1 - dist * 0.9);
-    // On the "Surprise me" default, break exact ties toward a dress/separates, so
-    // an ambiguous tie never defaults a shopper into a men's suit (suit-wearers
-    // pick the Suits preference or the grooming track). Explicit prefs skip this.
-    const defaultLean = preference === "surprise" && g.wardrobe !== "suits" ? 0.1 : 0;
+    // Cycle 3 added an unconditional lean toward dresses/separates on "Surprise
+    // me" so a cool-undertone woman wouldn't default into the men's suit. That
+    // fix is still right for its case and is kept — but it must not survive an
+    // explicit "masculine", or the lean would push a masculine shopper straight
+    // back off the only menswear suit in the catalog.
+    //
+    // Note what this means: with no stated cut, the lean IS a soft feminine
+    // default. That is defensible only because the catalog is 9 feminine to 1
+    // masculine — so the UI asks for the cut before the first result instead of
+    // relying on it. "any" is not a neutral option here, and pretending it is was
+    // the root of the masculine-sample-in-a-gown bug.
+    const defaultLean =
+      preference === "surprise" && cutPref !== "masculine" && g.wardrobe !== "suits" ? 0.1 : 0;
     // Tone-only refines (cooler/warmer) keep the same KIND of garment, so a gown
     // stays a gown instead of flipping into a suit on a score tie.
     const continuity = hint?.keepWardrobe && g.wardrobe === hint.keepWardrobe ? 3 : 0;

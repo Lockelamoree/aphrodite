@@ -149,6 +149,7 @@
     "no fabricated render is ever presented as a live one — demo mode says so on screen"
   ],
   "integrityRisks": [
+    "The wardrobe is 9 feminine cuts to 1 masculine and 1 neutral, so any 'no preference' default resolves feminine in practice. Until the catalog is widened, the UI must keep ASKING for the cut rather than defaulting — a default here is a guess about the person, and on 2026-08-09 it was rendering the bundled masculine sample in an evening gown with earrings and heels in the basket.",
     "Passing a captured fixture render off as a live YouCam render. Mitigated by a demo flag on the mode event that makes the UI and the print footer say 'demo mode · sample renders · 0 API units'.",
     "Claiming a colour or formality match the wardrobe cannot actually satisfy — a 'tone shift' announced when the catalogue has nothing in that direction.",
     "Skin scores read as medical or worth-based judgements. Scores are health-framed, no-shame wording, and the lowest score is a 'priority area', not a defect."
@@ -265,5 +266,12 @@
     "keySource": "reused from /etc/blast-radius.env on the VPS; copied server-side into /etc/aphrodite.env. The key is never brought onto the workstation — local dev runs on fixtures.",
     "preflight": "2026-08-09: key valid (HTTP 200, 124 models). Streaming + function-calling verified with the app's exact request shape (model/stream/messages/tools, no temperature, no max_tokens) on gpt-5, gpt-5-mini, gpt-4.1 and gpt-4o — all returned tool_calls in the stream.",
     "sharedKeyCaveat": "Same key as the Blast Radius instance, so both apps share that key's budget and rate limit."
-  }
+  },
+  "knownGaps": [
+    {
+      "title": "Menswear catalog gap",
+      "detail": "One masculine garment exists (slate-suit, formal, flatters cool). A masculine-presenting shopper has no smart or casual option and no warm-undertone option, so the app correctly declines to claim a colour match for the warm wedding sample. Widening this needs verified front-facing reference imagery, and the render quality of any new reference cannot be confirmed without spending YouCam units.",
+      "blockedOn": "verified imagery + one units-on capture session"
+    }
+  ]
 }

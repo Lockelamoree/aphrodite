@@ -4,6 +4,7 @@ import {
   completeTheLook,
   findGarment,
   garmentMatchesPreference,
+  garmentMatchesCut,
   garmentSuitsTrack,
   SKINCARE_SKUS,
   skincareSkuFor,
@@ -16,6 +17,7 @@ import type {
   GarmentPreference,
   LookBoard,
   StyleTrack,
+  CutPreference,
 } from "@/lib/concierge/types";
 import { analyzeColorProfile } from "@/lib/youcam/color";
 import { analyzeSkin } from "@/lib/youcam/skin";
@@ -41,6 +43,8 @@ export interface RunContext {
   track: StyleTrack;
   /** Explicit silhouette preference supplied by the shopper. */
   garmentPreference: GarmentPreference;
+  /** Explicit cut preference supplied by the shopper; "any" when unstated. */
+  cutPreference: CutPreference;
   /** The garment actually rendered, carried into the shop-the-look board. */
   rendered?: CatalogGarment;
 }
@@ -110,6 +114,16 @@ export async function executeTool(
           return {
             events: [],
             resultForModel: `Garment "${garment.id}" is a ${garment.cut}-cut piece, but the grooming track needs a masculine-cut menswear suit. Pick a catalog garment whose cut is "masculine".`,
+            isError: true,
+          };
+        }
+        if (!garmentMatchesCut(garment, ctx.cutPreference)) {
+          // Same guard as the deterministic engine's cut filter. Without this the
+          // agentic path could still dress a shopper against their stated cut —
+          // the model sees the whole catalog, and the catalog is mostly feminine.
+          return {
+            events: [],
+            resultForModel: `Garment "${garment.id}" is a ${garment.cut}-cut piece, but the shopper asked for "${ctx.cutPreference}" cuts. Pick a catalog garment whose cut is "${ctx.cutPreference}" or "neutral".`,
             isError: true,
           };
         }

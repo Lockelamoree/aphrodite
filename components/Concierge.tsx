@@ -17,6 +17,7 @@ import type {
   RefineAdjust,
   SkinGoal,
   StyleTrack,
+  CutPreference,
 } from "@/lib/concierge/types";
 import type { SkinAnalysis } from "@/lib/youcam/types";
 
@@ -47,17 +48,42 @@ export function Concierge({
   const [skinGoal, setSkinGoal] = useState<SkinGoal>("balanced");
   const [track, setTrack] = useState<StyleTrack>("style");
   const [garmentPreference, setGarmentPreference] = useState<GarmentPreference>("surprise");
+  // Deliberately undefined until the shopper chooses, and required before the
+  // first run. There is no safe default: the catalog is 9 feminine cuts to 1
+  // masculine, so an "any" default silently resolves feminine — which is how a
+  // masculine sample ended up rendered in an evening gown. Asking costs one tap;
+  // guessing from the photo is never acceptable.
+  const [cutPreference, setCutPreference] = useState<CutPreference | undefined>(undefined);
   const [consent, setConsent] = useState(false);
+  // True while the loaded photos are the bundled samples rather than the user's
+  // own. The consent statement is about *their* photo, so it does not apply.
+  const [usingSample, setUsingSample] = useState(false);
   const { plan: savedPlan, save: savePlan, clear: clearPlan } = useSavedPlan();
   // When set, the finished board is compared against this saved baseline (a
   // returning-user "glow check-in"); cleared once consumed.
   const [baseline, setBaseline] = useState<SavedPlan | null>(null);
 
-  const canSubmit = occasion.trim().length > 2 && !!selfie && consent && state.phase !== "running";
+  // Bundled samples don't need photo consent — they aren't the shopper's photo.
+  const consentSatisfied = consent || usingSample;
+  const missing: string[] = [];
+  if (occasion.trim().length <= 2) missing.push("an occasion");
+  if (!selfie) missing.push("a selfie");
+  if (!cutPreference) missing.push("a cut");
+  if (!consentSatisfied) missing.push("your agreement to photo processing");
+  const canSubmit = missing.length === 0 && state.phase !== "running";
 
   function submit() {
-    if (!selfie || !consent) return;
-    run({ occasion: occasion.trim(), personImage: selfie, bodyImage: body, mode, skinGoal, track, garmentPreference });
+    if (!selfie || !consentSatisfied || !cutPreference) return;
+    run({
+      occasion: occasion.trim(),
+      personImage: selfie,
+      bodyImage: body,
+      mode,
+      skinGoal,
+      track,
+      garmentPreference,
+      cutPreference,
+    });
   }
 
   function startOver() {
@@ -93,12 +119,20 @@ export function Concierge({
         setSelfie(s);
         setBody(b);
         setGarmentPreference("surprise");
+        // The bundled wedding sample is a masculine-presenting person, so the
+        // sample ships with its own answer to the cut question. Without this the
+        // run resolves feminine (see the cutPreference state comment) and renders
+        // him in the Scarlet A-Line Gown — on the very path a judge clicks first.
+        setCutPreference("masculine");
+        setUsingSample(true);
         if (!occasion.trim()) setOccasion("An evening wedding in 3 weeks");
       } else {
         const s = await fetch("/samples/selfie-2.jpg").then((r) => r.blob()).then(fileToDataUrl);
         setSelfie(s);
         setBody(undefined);
         setGarmentPreference("dresses");
+        setCutPreference("feminine");
+        setUsingSample(true);
         if (!occasion.trim()) setOccasion("A first date on Friday");
       }
     } catch {
@@ -200,7 +234,7 @@ export function Concierge({
                 onChange={(e) => setOccasion(e.target.value)}
                 rows={2}
                 placeholder="e.g. An evening wedding in 3 weeks"
-                className="mt-2 w-full resize-none rounded-lg border border-line bg-paper px-3 py-2 text-ink outline-none focus:border-primary"
+                className="mt-2 w-full resize-none rounded-lg border border-line bg-paper px-3 py-2 text-ink transition focus:border-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
               />
               <p className="mt-4 text-xs font-medium uppercase tracking-wide text-muted">
                 Or start from an occasion
@@ -227,8 +261,24 @@ export function Concierge({
 
             <div className="rounded-[var(--radius-card)] border border-line bg-surface p-6">
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <Uploader label="Selfie" required value={selfie} onChange={setSelfie} />
-                <Uploader label="Full-body (optional)" value={body} onChange={setBody} />
+                <Uploader
+                  label="Selfie"
+                  required
+                  value={selfie}
+                  onChange={(v) => {
+                    setSelfie(v);
+                    // A real upload replaces the sample, so photo consent applies again.
+                    setUsingSample(false);
+                  }}
+                />
+                <Uploader
+                  label="Full-body (optional)"
+                  value={body}
+                  onChange={(v) => {
+                    setBody(v);
+                    setUsingSample(false);
+                  }}
+                />
               </div>
               <p className="mt-3 text-xs text-muted">
                 For the skin read, use a clear, front-facing close-up. Your photo is sent to YouCam
@@ -241,7 +291,7 @@ export function Concierge({
                   type="button"
                   onClick={() => loadSample("wedding")}
                   title="The full experience: skin read, colors, outfit try-on and lighting, rendered on a full-body photo."
-                  className="text-xs font-medium text-primary underline-offset-2 hover:underline focus-visible:ring-2 focus-visible:ring-primary"
+                  className="min-h-[24px] rounded-full border border-primary/40 px-3 py-1 text-xs font-medium text-primary transition hover:border-primary hover:bg-primary-soft focus-visible:ring-2 focus-visible:ring-primary"
                 >
                   Wedding · full-body →
                 </button>
@@ -249,7 +299,7 @@ export function Concierge({
                   type="button"
                   onClick={() => loadSample("date")}
                   title="Selfie only: skin read + color analysis. Add a full-body photo to render the outfit."
-                  className="text-xs font-medium text-primary underline-offset-2 hover:underline focus-visible:ring-2 focus-visible:ring-primary"
+                  className="min-h-[24px] rounded-full border border-primary/40 px-3 py-1 text-xs font-medium text-primary transition hover:border-primary hover:bg-primary-soft focus-visible:ring-2 focus-visible:ring-primary"
                 >
                   First date · selfie only →
                 </button>
@@ -262,6 +312,14 @@ export function Concierge({
               <span className="text-sm text-muted">Skin focus</span>
               <div className="mt-2">
                 <FocusToggle value={skinGoal} onChange={setSkinGoal} />
+              </div>
+            </div>
+            <div>
+              <span className="text-sm text-muted">
+                Cut <span className="text-primary">*</span>
+              </span>
+              <div className="mt-2">
+                <CutToggle value={cutPreference} onChange={setCutPreference} />
               </div>
             </div>
             <div>
@@ -286,27 +344,41 @@ export function Concierge({
           </div>
           <p className="mt-2 text-xs text-muted">{modeHint(mode, agenticAvailable)}</p>
 
-          <label className="mt-6 flex max-w-xl items-start gap-2 text-sm text-ink">
-            <input
-              type="checkbox"
-              checked={consent}
-              onChange={(e) => setConsent(e.target.checked)}
-              className="mt-0.5 h-4 w-4 shrink-0 accent-primary"
-            />
-            <span>
-              I agree to my photo being processed by <span className="font-medium text-primary">YouCam</span>{" "}
-              (Perfect Corp) to generate my look. It isn&apos;t stored by Aphrodite.
-            </span>
-          </label>
+          {usingSample ? (
+            <p className="mt-6 max-w-xl text-sm text-ink">
+              You&apos;re using a bundled sample photo, so there&apos;s nothing of yours to consent
+              to. Upload your own photo and the agreement below reappears.
+            </p>
+          ) : (
+            <label className="mt-6 flex max-w-xl items-start gap-3 text-sm text-ink">
+              <input
+                type="checkbox"
+                checked={consent}
+                onChange={(e) => setConsent(e.target.checked)}
+                className="mt-0.5 h-6 w-6 shrink-0 accent-primary"
+              />
+              <span>
+                I agree to my photo being processed by <span className="font-medium text-primary">YouCam</span>{" "}
+                (Perfect Corp) to generate my look. It isn&apos;t stored by Aphrodite.
+              </span>
+            </label>
+          )}
 
           <button
             onClick={submit}
             disabled={!canSubmit}
-            title={!consent ? "Please agree to photo processing to continue" : undefined}
             className="mt-6 rounded-full bg-primary px-7 py-3 text-base font-medium text-white shadow-sm transition enabled:hover:bg-[#8c3556] focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-40"
           >
             Build my look
           </button>
+          {/* The blocking reason must be VISIBLE, not a title attribute: a title
+              only appears on mouse hover, so keyboard and touch users previously
+              met a dead button with no explanation. */}
+          {missing.length > 0 && (
+            <p className="mt-3 max-w-xl text-sm text-muted" aria-live="polite">
+              Still needed: {missing.join(", ")}.
+            </p>
+          )}
         </section>
       ) : (
         <Results
@@ -348,7 +420,7 @@ export function Concierge({
               href="https://github.com/Lockelamoree/aphrodite"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-muted transition hover:text-primary focus-visible:ring-2 focus-visible:ring-primary"
+              className="inline-flex min-h-[24px] items-center text-muted transition hover:text-primary focus-visible:ring-2 focus-visible:ring-primary"
             >
               GitHub
             </a>
@@ -356,7 +428,7 @@ export function Concierge({
               href="https://yce.perfectcorp.com/"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-muted transition hover:text-primary focus-visible:ring-2 focus-visible:ring-primary"
+              className="inline-flex min-h-[24px] items-center text-muted transition hover:text-primary focus-visible:ring-2 focus-visible:ring-primary"
             >
               YouCam API
             </a>
@@ -1020,6 +1092,47 @@ const WARDROBE_OPTIONS: { v: GarmentPreference; label: string }[] = [
   { v: "suits", label: "Suits" },
   { v: "separates", label: "Separates" },
 ];
+
+const CUT_OPTIONS: { v: CutPreference; label: string }[] = [
+  { v: "feminine", label: "Feminine" },
+  { v: "masculine", label: "Masculine" },
+];
+
+/**
+ * How we should cut and tailor the outfit. Required before the first run.
+ *
+ * There is no "either / no preference" option, and that is deliberate: with a
+ * catalog of 9 feminine cuts to 1 masculine, an unset value resolves feminine in
+ * practice, so offering it would be a guess dressed up as a choice. Asking
+ * outright is both honest and one tap. Presentation is never inferred from the
+ * uploaded photo.
+ */
+function CutToggle({
+  value,
+  onChange,
+}: {
+  value: CutPreference | undefined;
+  onChange: (v: CutPreference) => void;
+}) {
+  return (
+    <div className="inline-flex flex-wrap gap-1.5" role="group" aria-label="Garment cut">
+      {CUT_OPTIONS.map((o) => (
+        <button
+          key={o.v}
+          onClick={() => onChange(o.v)}
+          aria-pressed={value === o.v}
+          className={`rounded-full border px-3 py-1.5 text-xs transition focus-visible:ring-2 focus-visible:ring-primary ${
+            value === o.v
+              ? "border-primary bg-primary text-white"
+              : "border-line text-ink hover:border-primary hover:text-primary"
+          }`}
+        >
+          {o.label}
+        </button>
+      ))}
+    </div>
+  );
+}
 
 function WardrobeToggle({
   value,

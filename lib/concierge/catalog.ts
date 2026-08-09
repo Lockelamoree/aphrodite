@@ -1,4 +1,4 @@
-import type { GarmentPreference, StyleTrack } from "@/lib/concierge/types";
+import type { CutPreference, GarmentPreference, StyleTrack } from "@/lib/concierge/types";
 import type { ApparelCategory } from "@/lib/youcam/apparel";
 
 /**
@@ -277,6 +277,22 @@ export function garmentMatchesPreference(
  * track accepts anything. Shared by the deterministic selector and the agentic
  * try-on guard so both engines refuse to style grooming into a women's cut.
  */
+/**
+ * Does this garment's cut match what the shopper asked for?
+ *
+ * "neutral" cuts always pass — that is what makes them neutral. "any" passes
+ * everything, because an unstated preference must not be turned into a guess;
+ * `pickGarment` handles the unstated case by refusing to break ties on
+ * presentation rather than by filtering here.
+ */
+export function garmentMatchesCut(
+  garment: CatalogGarment,
+  preference: CutPreference = "any",
+): boolean {
+  if (preference === "any") return true;
+  return garment.cut === preference || garment.cut === "neutral";
+}
+
 export function garmentSuitsTrack(
   garment: CatalogGarment,
   track: StyleTrack = "style",

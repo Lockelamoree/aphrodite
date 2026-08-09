@@ -29,6 +29,7 @@ export async function* runConcierge(
     hasBody: Boolean(req.bodyImage),
     track: req.track ?? "style",
     garmentPreference: req.garmentPreference ?? "surprise",
+    cutPreference: req.cutPreference ?? "any",
   };
 
   const messages: Anthropic.Beta.BetaMessageParam[] = [

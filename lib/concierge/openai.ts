@@ -27,6 +27,7 @@ export async function* runConciergeOpenAI(
     hasBody: Boolean(req.bodyImage),
     track: req.track ?? "style",
     garmentPreference: req.garmentPreference ?? "surprise",
+    cutPreference: req.cutPreference ?? "any",
   };
 
   const tools = CUSTOM_TOOL_DEFS.map((t) => ({
