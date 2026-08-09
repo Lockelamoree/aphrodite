@@ -21,6 +21,9 @@ export function BeforeAfter({
   afterLabel = "What YouCam sees",
   busyLabel = "Analyzing with YouCam Skin AI…",
   sliderLabel = "Drag to compare your photo with YouCam's analysis",
+  beforeAlt = "Your selfie",
+  headingLevel = "h3",
+  aspectClass = "aspect-[4/5]",
 }: {
   before: string;
   after?: string;
@@ -33,7 +36,17 @@ export function BeforeAfter({
   busyLabel?: string;
   /** Accessible label for the compare slider; override for non-skin renders. */
   sliderLabel?: string;
+  /** Alt text for the base image — it isn't always the user's own selfie. */
+  beforeAlt?: string;
+  /** So the same component can sit under different parents without breaking the
+   *  document outline (the hero needs an h2, the results grid an h3). */
+  headingLevel?: "h2" | "h3";
+  /** Frame shape. The results grid wants a 4:5 portrait; the hero needs a shorter
+   *  frame on phones so it stays proof rather than a wall between the visitor and
+   *  the form. */
+  aspectClass?: string;
 }) {
+  const Heading = headingLevel;
   const [pos, setPos] = useState(55);
   const [touched, setTouched] = useState(false);
   const analyzing = phase === "running" && !after;
@@ -41,13 +54,13 @@ export function BeforeAfter({
   return (
     <div className="relative w-full overflow-hidden rounded-[var(--radius-card)] border border-line bg-surface">
       <div className="flex items-center justify-between border-b border-line px-4 py-2.5">
-        <h3 className="font-serif text-lg text-ink">{title}</h3>
+        <Heading className="font-serif text-lg text-ink">{title}</Heading>
         <span className="text-[11px] text-muted">{caption}</span>
       </div>
-      <div className="relative aspect-[4/5] w-full select-none">
+      <div className={`relative w-full select-none ${aspectClass}`}>
         {/* base selfie */}
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src={before} alt="Your selfie" className="absolute inset-0 h-full w-full object-cover" />
+        <img src={before} alt={beforeAlt} className="absolute inset-0 h-full w-full object-cover" />
 
         {after && (
           <>
