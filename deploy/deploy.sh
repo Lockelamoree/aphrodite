@@ -79,8 +79,14 @@ PY
 say "5/7 health gate on the NEW release, before anything is switched"
 CAND_PORT=$((PORT + 1))
 set +e
+# `next start` resolves the project root from the WORKING DIRECTORY, not from the
+# path of its own binary. Without an explicit cd it looked for .next relative to
+# /tmp and then tried to realpath the mktemp build dir, which is 0700 root-only —
+# so the gate failed with EACCES for a reason that had nothing to do with the
+# release. Run it inside $TARGET, which the unprivileged user can traverse.
 runuser -u "$USER_NAME" -- env $(grep -vE '^\s*#|^\s*$' "$ENV_FILE" | xargs) PORT="$CAND_PORT" \
-  /usr/bin/node "$TARGET/node_modules/.bin/next" start --port "$CAND_PORT" >"$TMP/candidate.log" 2>&1 &
+  sh -c "cd '$TARGET' && exec /usr/bin/node node_modules/.bin/next start --port '$CAND_PORT'" \
+  >"$TMP/candidate.log" 2>&1 &
 CAND_PID=$!
 GATE_OK=0
 for _ in $(seq 1 40); do
