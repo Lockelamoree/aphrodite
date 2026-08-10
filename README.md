@@ -4,13 +4,44 @@ I built Aphrodite for Perfect Corp's [YouCam API Skin AI & Apparel VTO Hackathon
 
 Most virtual try-on demos stop at "here's a garment on you." I wanted the thing I actually want before a wedding or an interview — *what do I do with my skin between now and the day, what should I wear for my coloring, and where do I buy all of it* — answered in one place, from a single photo.
 
+## Try it — nothing to install
+
+**→ https://aphrodite.max-gutowski.de** — open, no signup, no key, **zero YouCam API units per visit**. Pick the bundled "Wedding · full-body" sample and the full loop finishes in about 4.5 seconds.
+
+| | |
+|---|---|
+| **4** YouCam APIs chained in one run | Skin Analysis → Skin-Tone → Apparel Try-On → Photo Lighting |
+| **~4.5 s** end to end | measured on the hosted instance, fixture-served |
+| **89** tests in 10 files | `npm test`, measured 2026-08-10; `tsc` / `lint` / `build` also green |
+| **0** API units to look | every publicly reachable path is fixture-served, and the page says so |
+| **11 / 17** catalogue | garments / skincare SKUs, cross-checkable at [`/healthz`](https://aphrodite.max-gutowski.de/healthz) |
+
+What you see there are **captured YouCam renders**, not live ones, and the page states that in the announcement bar and again in the provenance ledger. Live renders and the LLM engine sit behind an access code, because both spend money — see [Judge mode](#judge-mode). Every number above resolves to a measurement in [`hackathon/CLAIM_PROOF_MAP.md`](hackathon/CLAIM_PROOF_MAP.md).
+
 ## What it does
 
 - **Reads you with YouCam AI.** Skin Analysis (0–100 health scores — I focus the lowest ones), Facial Color / Skin Tone (I derive your undertone and a palette from the colors it detects), Apparel Try-On (the outfit rendered onto your photo), and AI Photo Lighting (a camera-ready finish on the selfie).
 - **Plans the occasion.** A skincare countdown that changes in *kind* with how far off the event is — weeks out it front-loads active ingredients and tapers them; a day out it stops new actives and switches to hydration and de-puffing, so nothing flares on the day.
 - **Dresses you for your coloring, and asks before it assumes.** Your undertone drives the outfit pick — a cool read leans to cool-flattering pieces — and the garment is rendered on you, not just described. Which *cut* you want is a question the app asks outright, and it overrides the colour match when the two conflict; see [Asking instead of assuming](#asking-instead-of-assuming).
 - **Completes the look.** One cross-category, priced basket — skincare + the garment + matched accessories — with an on-screen ledger of exactly which YouCam APIs produced each result.
-- **Keeps going.** Save an image-free plan (no photo, mask, or raw API response is stored) and come back for a glow check-in that compares your scores to your saved run. There's also a studio to try a new hair color, hairstyle, or makeup look on the same selfie (live with a YouCam key).
+- **Keeps going.** Save an image-free plan (no photo, mask, or raw API response is stored) and come back for a glow check-in that compares your scores to your saved run. A studio for hair color, hairstyle, and makeup on the same selfie is wired but **not shipped** — see [What is wired versus what renders](#what-is-wired-versus-what-renders).
+
+## What is wired versus what renders
+
+One honest sentence instead of three different API counts: **8 endpoints are declared, 7 have a calling module, 5 slugs are verified against the live API, and 4 render on every run.**
+
+| Endpoint | Calling module | Slug verified | Renders today |
+|---|---|---|---|
+| Skin Analysis | yes | yes (2026-07-19) | **yes** |
+| Skin-Tone / Facial Color | yes | yes (2026-07-19) | **yes** |
+| Apparel Try-On (`cloth-v3`) | yes | yes (2026-07-19) | **yes** |
+| AI Photo Lighting | yes | yes (2026-07-19) | **yes** |
+| AI Hair Color | yes | yes (2026-07-24) | no — no captured fixture |
+| AI Makeup | yes | **no** — the key 401s on this feature | no |
+| AI Hairstyle | yes | **no** — the key 401s on this feature | no |
+| `look-vto` | **no call site** | — | no |
+
+The last four are why the studio tiles return an honest empty state rather than an image. `/healthz` reports the declared figure as `youcam_apis_wired: 8`; the number to judge the product on is **4**.
 
 ## Two engines, one stream
 
@@ -97,6 +128,10 @@ keeps working and states on screen that it fell back to captured samples — it 
 passes one off as the other. `/healthz` reports `live_runs_used` and
 `live_runs_budget` so the meter is checkable from outside.
 
+A code is redeemed at **https://aphrodite.max-gutowski.de/unlock** and becomes a
+12-hour `HttpOnly` cookie. The judging code is published in the Devpost submission's
+testing field, not here — a code committed to a public repo would be no gate at all.
+
 The gate switches itself on only when both `APHRODITE_LIVE_CODES` and
 `APHRODITE_AUTH_SECRET` are set. Nothing configured means nothing to withhold,
 which is what keeps local development and the test suite ungated without a single
@@ -104,10 +139,11 @@ special case in the code.
 
 ## Check it yourself
 
-`GET /healthz` reports state, not liveness — no key required:
+`GET /healthz` reports state, not liveness — no key required, and it works on the hosted instance:
 
 ```bash
-curl -s http://localhost:3000/healthz
+curl -s https://aphrodite.max-gutowski.de/healthz    # the instance a judge visits
+curl -s http://localhost:3000/healthz               # a local run
 ```
 
 It returns the deployed revision, whether demo mode is on, the headline counts read
@@ -131,7 +167,13 @@ This is a hackathon entry, and being straight with the user matters to me. The a
 npm test
 ```
 
-Vitest covers occasion parsing, the catalog and garment selection (including guards against mis-gendered styling), request validation, and stripping raw provider fields out of the stream. The API route validates the request body (zod), caps payload size, and rate-limits per IP.
+**89 tests in 10 files, all passing** (measured 2026-08-10). Vitest covers occasion parsing, the catalog and garment selection (including guards against mis-gendered styling), the cut preference and the catalogue's 9:1:1 shape, the access gate, the provenance ledger, request validation, rate limiting, and stripping raw provider fields out of the stream. The API route validates the request body (zod), caps payload size, and rate-limits per IP.
+
+The four gates this project holds itself to, all green as of 2026-08-10:
+
+```bash
+npx tsc --noEmit && npm test && npm run lint && npm run build
+```
 
 ## Stack
 

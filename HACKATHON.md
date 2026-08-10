@@ -27,7 +27,8 @@ guess has been corrected.
 
 **Aphrodite**: name an occasion, upload one selfie, and an AI beauty companion
 returns a skincare countdown, an outfit rendered on your own body, and a
-shoppable look board — every image a real YouCam render, nothing simulated.
+shoppable look board — every image is a real YouCam render; in demo mode they are
+captured samples and the page says so.
 
 - **Audience:** someone with a dated event and no confident plan for it — a
   wedding, an interview, a first date.
@@ -56,6 +57,13 @@ screen.** Logic the judge cannot see scores nothing. As of 2026-08-09 the studio
 try-ons are gated off (`HAS_STUDIO_RENDERS=false`) and the smarter garment choice
 falls back to an existing fixture image, so the strongest part of the build is
 currently invisible.
+
+Review 002 (2026-08-10) sharpened *why* the special category sits at 6/10, and it is
+not the studio: **every face returns the same fixture skin read**, so the chain is
+narrated rather than demonstrated — a judge cannot see the skin determine anything
+when the input never varies. The named remedy is a second skin fixture plus
+per-garment renders, which makes the fusion falsifiable: two different faces have to
+produce two different garments. That is cheaper than the studio and worth more.
 
 ## Biggest open unknown — answered 2026-08-09
 
@@ -87,19 +95,22 @@ tier also carrying a blog feature and a marketing meeting with Perfect Corp.
 
 ## Submission requirements
 
-| Requirement | State on 2026-08-09 |
+| Requirement | State on 2026-08-10 |
 |---|---|
 | Public repo + license | **done** — `github.com/Lockelamoree/aphrodite`, MIT |
-| Text description | **draft** — `submission/devpost.md`, tracked; still missing the try-it and video links |
-| Screenshots | **done** — `~/aphrodite-demo/screenshots/` |
-| Demo video 1–3 min, shows YouCam integration | **first cut done, not uploaded** — `submission/aphrodite-demo.mp4`, ~90 s |
-| Hosted, judge-testable instance | **live** — https://aphrodite.max-gutowski.de (2026-08-09), keyless, zero API units |
+| Text description | **draft, now carrying the links** — `submission/devpost.md`: hosted URL, headline stats and a paste-ready testing field are in; the video link is still missing because there is no video to link |
+| Screenshots | **NOT done** — the six PNGs in `~/aphrodite-demo/screenshots/` are dated 2026-07-26, sit outside the repo, and predate the gate, the announcement bar, the cycle-6 design and the hosted instance. They no longer show what a judge sees. Re-capture from the corrected hosted build |
+| Demo video 1–3 min, shows YouCam integration | **not delivered.** Two competing cuts exist and neither is published: `submission/aphrodite-demo.mp4` (87.2 s, gitignored) and `~/aphrodite-demo/aphrodite-demo.mp4` (122.3 s, outside the repo). The 87 s cut also carries a banned word at ~0:52 and the pre-fix provenance ledger at ~0:30, so it must be re-cut, not just uploaded |
+| Hosted, judge-testable instance | **live** — https://aphrodite.max-gutowski.de (since 2026-08-09). The public path is keyless and costs zero units; the paths that spend money are behind a role code redeemed at `/unlock` |
 
 ## Standing orders
 
-1. **No live YouCam calls without explicit approval.** Units are finite (free
-   tier ~1000) and testing has already eaten into them. `YOUCAM_FIXTURES=1`
-   serves captured fixtures at zero cost; a fixture run takes ~4.5 s versus ~90 s.
+1. **No live YouCam calls without explicit approval.** The remaining balance is
+   **584 units as of 2026-08-10** (operator-stated; no documented endpoint exposes
+   it, so it cannot be re-read from the app). A full run costs 4–5 units.
+   `YOUCAM_FIXTURES=1` serves captured fixtures at zero cost; a fixture run takes
+   ~4.5 s versus ~90 s. How the 584 get split — judge-facing live runs, a capture
+   session, a video re-record — is undecided and is the operator's call.
 2. **Measured claims only.** Numbers in submission copy come from a measured row
    in the claim-proof map, never from an estimate that reads like a measurement.
 3. **Honest degradation over fabricated output.** A render that cannot run shows
@@ -109,15 +120,16 @@ tier also carrying a blog feature and a marketing meeting with Perfect Corp.
 
 ## The battle-rhythm docs
 
-Only the machine contract exists so far. The rest are created by the skills as
-they run, not up front.
-
 | Doc | State |
 |---|---|
-| `hackathon/config.json` | **written 2026-08-09** |
-| `hackathon/reviews/` | to be written by `hackathon-judge` |
-| `hackathon/JUDGE_DOSSIER.md` | blocked on the judge roster being unknown |
-| `hackathon/RUBRIC.md`, `SCHEDULE.md`, `COMPLIANCE.md`, `VOCABULARY.md`, `CLAIM_PROOF_MAP.md` | not yet written |
+| `hackathon/config.json` | written 2026-08-09, fact-refreshed 2026-08-10 (584 units, DNS, known gaps) |
+| `hackathon/reviews/` | **001** 2026-08-09 baseline (Stage One FAIL, 26/50) · **002** 2026-08-10 post-deploy (Stage One FAIL, 30/50, Depth 3.5/10) |
+| `hackathon/RUBRIC.md` | written 2026-08-10 — the four published criteria plus the special category, verbatim |
+| `hackathon/SCHEDULE.md` | written 2026-08-10 — never-cut list, cut order, the seven days that are left |
+| `hackathon/COMPLIANCE.md` | written 2026-08-10 — Stage-One checklist against the current state |
+| `hackathon/VOCABULARY.md` | written 2026-08-10 — use / ban / reframes, extracted from the machine contract |
+| `hackathon/CLAIM_PROOF_MAP.md` | written 2026-08-10 — every number in judge-facing copy, with its measurement |
+| `hackathon/JUDGE_DOSSIER.md` | **deliberately absent.** Devpost names no individuals; the panel is the group "YouCam API Team". Inventing personas would be fabricated intel |
 
 ## Prior work fence
 

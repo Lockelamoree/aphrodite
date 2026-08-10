@@ -2,7 +2,37 @@
 
 > Draft for review. Measured claims only — every line below is backed by something
 > a judge can see in the repo or the demo. Nothing here asserts live-render quality
-> we haven't verified, or retail metrics without a source.
+> we haven't verified, or retail metrics without a source. Each number resolves to a
+> row in `hackathon/CLAIM_PROOF_MAP.md`; anything unmeasured says so out loud.
+
+---
+
+## Try it first — hosted, keyless, zero API units
+
+**→ https://aphrodite.max-gutowski.de**
+
+| | |
+|---|---|
+| **4** YouCam APIs chained in one run | Skin Analysis → Skin-Tone → Apparel Try-On → Photo Lighting |
+| **~4.5 s** for the whole loop | measured on the hosted instance |
+| **0** API units to look | every public path is fixture-served, and the page says so on screen |
+| **89** tests in 10 files | `tsc` / `lint` / `build` green too, measured 2026-08-10 |
+| **8** APIs declared, **4** that render | the honest surface — see "YouCam APIs used" below |
+
+No signup, no key, nothing to install. The bundled *"Wedding · full-body"* sample drives
+the complete loop. What you see is **captured YouCam renders**, and the announcement bar
+and the provenance ledger both say so — nothing here passes a sample off as a live call.
+State is checkable from outside at
+[`/healthz`](https://aphrodite.max-gutowski.de/healthz).
+
+**Live renders and the LLM engine are behind a code**, because both spend money. The
+judging code is in the *Testing instructions* field of this submission; redeem it at
+`/unlock`. Not published in the repo — a code in a public repo is no gate.
+
+> **Not yet measured, stated plainly:** the live YouCam path is not exercised on any
+> publicly reachable route, so this submission carries **no committed live-run receipt**
+> with a Perfect Corp `task_id`. The four-step client in `lib/youcam/client.ts` is real
+> first-party work and it is dormant for an anonymous visitor. Judge it as what it is.
 
 ---
 
@@ -28,11 +58,19 @@ Most virtual try-on demos stop at "here's a garment on you." Before a wedding or
 - **Two engines, one event stream.** An **agentic** engine (Claude *or* GPT) orchestrates the YouCam REST APIs via typed function-calling tools, reasoning over your scores; and a **guided** rule engine produces the *same* board with no LLM at all. They emit an identical event stream, so the UI doesn't care which drove the run. The app works on a YouCam key alone; the LLM is a pure upgrade.
 - **YouCam / Perfect Corp AI API** drives every render over REST: Skin Analysis, Skin-Tone / Facial Color, Apparel Try-On, AI Photo Lighting — plus AI Hair Color, AI Hairstyle, and AI Makeup in the studio.
 - **Cost-safe demo mode.** A fixture/replay layer serves real captured YouCam outputs so the entire app — plan, try-on, refine, save, check-in — runs with **zero API units and no keys**, and the UI labels itself *"demo mode · sample renders"* so nothing over-claims.
-- **Hardened boundary.** zod request validation, per-IP rate limiting, a payload-size cap, and raw provider fields stripped out of the stream. 45 Vitest tests (occasion parsing, garment selection incl. mis-gender guards, request validation, raw-field stripping, rate limiting); `tsc` / `lint` / `build` green.
+- **Hardened boundary.** zod request validation, per-IP rate limiting, a payload-size cap, and raw provider fields stripped out of the stream. 89 Vitest tests in 10 files (occasion parsing, garment selection incl. mis-gender guards, the cut preference, the access gate, the provenance ledger, request validation, raw-field stripping, rate limiting); `tsc` / `lint` / `build` green — all four measured 2026-08-10.
 
 ## YouCam APIs used
 
-Skin Analysis · Skin-Tone / Facial Color Analysis · Apparel (Cloth) Try-On · AI Photo Lighting · AI Hair Color · AI Hairstyle · AI Makeup Try-On. The **special-category** goal — Skin AI **and** Apparel VTO fused into one experience — is the core loop: the same skin read that drives the skincare countdown also feeds the coloring that drives the outfit that gets rendered on you.
+**Four render in every run:** Skin Analysis · Skin-Tone / Facial Color Analysis · Apparel (Cloth) Try-On · AI Photo Lighting.
+
+**Wired but not shipped, so not claimed:** AI Hair Color (slug verified, no captured
+fixture), AI Makeup and AI Hairstyle (slugs never verified — the key 401s on those
+features). The studio tiles that would call them return an honest empty state instead of
+an image, and this submission does not count them. Declared endpoints: 8. With a calling
+module: 7. Slug-verified: 5. Rendering: **4**.
+
+The **special-category** goal — Skin AI **and** Apparel VTO fused into one experience — is the core loop: the same skin read that drives the skincare countdown also feeds the coloring that drives the outfit that gets rendered on you.
 
 ## Challenges
 
@@ -52,9 +90,16 @@ How much of a "wow" try-on demo is actually *product coherence* — timing, prov
 
 - Capture the studio try-on fixtures + a cool-tone full-body render so the fully-fused chain renders on screen in the zero-cost demo.
 - Point the catalog at a real retailer's live products so the shoppable basket becomes a live storefront.
-- A one-click hosted deploy with a live LLM key + spend cap, so the agentic engine can be judged live.
+- Widen the menswear catalogue past its single garment, and commit a live-run receipt with a real Perfect Corp `task_id` so the integration is provable without an access code.
 
 ## How to test it (zero API units)
+
+**The fastest path is the hosted instance — https://aphrodite.max-gutowski.de — no
+install, no key, zero units.** Pick the *"Wedding · full-body"* sample. For live renders
+and the agentic engine, redeem the code from the *Testing instructions* field at
+[`/unlock`](https://aphrodite.max-gutowski.de/unlock).
+
+Or run it locally:
 
 ```bash
 git clone https://github.com/Lockelamoree/aphrodite && cd aphrodite
@@ -64,6 +109,27 @@ npm run dev                    # http://localhost:3000 → "Wedding · full-body
 ```
 
 No keys needed; the whole flow runs on captured renders, labelled *"demo mode."* Add a `YOUCAM_API_KEY` (+ set `YOUCAM_FIXTURES=0`) for live renders, and an `ANTHROPIC_API_KEY` or `OPENAI_API_KEY` to switch on the agentic engine.
+
+## Testing instructions (Devpost field — paste as-is, then fill the code)
+
+```
+Hosted, keyless, zero API units: https://aphrodite.max-gutowski.de
+Pick the bundled "Wedding · full-body" sample — the full loop takes about 4.5 s.
+What you see are captured YouCam renders; the page says so in the announcement bar
+and in the provenance ledger at the bottom of the board.
+
+To judge the paths that spend money (live YouCam renders + the GPT-5 agentic engine):
+  1. open https://aphrodite.max-gutowski.de/unlock
+  2. enter the judging code:  <PASTE THE JUDGE CODE HERE — NOT IN THE PUBLIC REPO>
+  3. that sets a 12-hour cookie; live runs are metered by a ledger and the remaining
+     budget is visible at /healthz
+
+State is checkable from outside without a key:
+  https://aphrodite.max-gutowski.de/healthz
+It reports the deployed revision, whether demo mode is on, the catalogue counts, the
+live-run budget, and a three-state answer per model-backed feature (live / off /
+key_present_unverified) so a present-but-rejected key cannot look configured.
+```
 
 ## Built with
 
