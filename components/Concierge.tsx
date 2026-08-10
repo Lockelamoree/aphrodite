@@ -169,6 +169,18 @@ export function Concierge({
               {stageLabel(activeStep)}
             </span>
           )}
+          {/* A judge holding an access code had no way in from the product: the code
+              is redeemed at /unlock and nothing linked there, so the live paths were
+              unreachable for anyone who did not already know the URL. Shown only in
+              demo mode — an already-unlocked visitor has nothing to redeem. */}
+          {demoMode && (
+            <a
+              href="/unlock"
+              className="rounded-full border border-line px-4 py-1.5 text-sm text-muted transition hover:bg-white hover:text-ink focus-visible:ring-2 focus-visible:ring-primary"
+            >
+              Have an access code?
+            </a>
+          )}
           {state.phase !== "idle" && (
             <button
               type="button"
@@ -205,19 +217,30 @@ export function Concierge({
               </p>
               {/* Headline numbers belong in the product, not only in the writeup:
                   the judged criterion asks whether the retail value is DEMONSTRATED.
-                  Each figure here is checkable against /healthz, which reports the
-                  same counts from the loaded data. */}
+
+                  These figures used to render identically in every mode, which made
+                  the block claim four fired Perfect Corp APIs and a read of "your own
+                  photo" on a page where nothing is called and every visitor gets the
+                  same captured fixture. That is the same over-claim already fixed in
+                  the provenance ledger 700 lines below — it simply was not read here
+                  either. `demoMode` is request-derived, never the host default, for
+                  the reason recorded at the ledger fix: honesty that depends on a
+                  global variable eventually lies. */}
               <dl className="mt-6 grid max-w-xl grid-cols-3 gap-4 border-y border-line py-4">
                 <div>
                   <dt className="font-serif text-2xl text-primary">4</dt>
                   <dd className="mt-0.5 text-xs leading-snug text-muted">
-                    Perfect Corp APIs chained in one run — skin, color, try-on, lighting
+                    {demoMode
+                      ? "Perfect Corp APIs in the chain — skin, color, try-on, lighting. Captured samples here, 0 units spent"
+                      : "Perfect Corp APIs chained in one run — skin, color, try-on, lighting"}
                   </dd>
                 </div>
                 <div>
                   <dt className="font-serif text-2xl text-primary">0–100</dt>
                   <dd className="mt-0.5 text-xs leading-snug text-muted">
-                    skin health scores, read from your own photo
+                    {demoMode
+                      ? "skin health scores — read from the bundled sample photo, not from your upload"
+                      : "skin health scores, read from your own photo"}
                   </dd>
                 </div>
                 <div>

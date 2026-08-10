@@ -64,14 +64,24 @@ export function BeforeAfter({
 
         {after && (
           <>
-            {/* Full-size overlay clipped to the left `pos%` so it stays pixel-aligned
-                with the base selfie underneath. */}
+            {/* Full-size overlay clipped to the RIGHT of the divider so it stays
+                pixel-aligned with the base selfie underneath — and so it sits on the
+                side its own label is pinned to.
+
+                This used to clip to inset(0 (100-pos)% 0 0), i.e. the overlay was
+                revealed on the LEFT while beforeLabel sat left-3 and afterLabel
+                right-3. Every frame therefore labelled the YouCam render "the photo"
+                and the untouched original "YouCam render" — the provenance pills read
+                backwards on the hero card whose caption is "Not an illustration, not
+                a stock pair." Labels stay where they are (left = before, right =
+                after, and the pill contrast was tuned in those positions); the clip
+                moved to match them. */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={after}
               alt={afterLabel}
               className="absolute inset-0 h-full w-full object-cover"
-              style={{ clipPath: `inset(0 ${100 - pos}% 0 0)` }}
+              style={{ clipPath: `inset(0 0 0 ${pos}%)` }}
             />
             <div
               className="pointer-events-none absolute inset-y-0 w-0.5 bg-white/90 shadow"
