@@ -306,6 +306,11 @@
       "blockedOn": "nothing — fix in the doc pass"
     },
     {
+      "title": "The bundled wedding selfie cannot be analysed live",
+      "detail": "public/samples/selfie.jpg — the selfie the flagship 'Wedding · full-body' preset sends, and the first thing a judge clicks — was rejected by BOTH analysis APIs on 2026-08-10: skin analysis returned error_src_face_too_small and skin-tone returned error_face_angle_downward. Receipts in hackathon/receipts/001/. Fixtures hide this completely, so the demo looks perfect while the same click with units on returns nothing. The colour API succeeds on samples/full-body.jpg, so the API is fine and the sample photo is not. Consequence: closing kill-gate 2 needs a suitable sample image, not just approval to spend.",
+      "blockedOn": "a sample photo with a larger, frontal face, then one more units-on run"
+    },
+    {
       "title": "Demo video not uploaded",
       "detail": "A ~90s first cut exists untracked at submission/aphrodite-demo.mp4. Stage One needs it on YouTube or Vimeo and linked on Devpost.",
       "blockedOn": "operator: upload + paste the Devpost form"

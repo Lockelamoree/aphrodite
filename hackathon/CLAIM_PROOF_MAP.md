@@ -38,11 +38,26 @@ claiming "45 Vitest tests" against a measured 89.
 | DNS | `aphrodite.max-gutowski.de` → `152.53.229.182` | `getent hosts` | 2026-08-10 | README, devpost |
 | Deployed revision | `edb01c2` | `GET /healthz` on the hosted instance | 2026-08-10 | `/healthz` |
 
+## Measured against the live API, 2026-08-10 — `hackathon/receipts/`
+
+Seven tasks, ~7 units, with operator approval. Four succeeded, three returned provider
+errors, and all seven are committed including the failures.
+
+| Claim | Value | Evidence |
+|---|---|---|
+| Apparel VTO renders live | **yes** — 222,607 bytes, 14.7 s | real `task_id`, `sha256 27c9d899f431ddf6…`, `receipts/000-misaimed-attempt/receipt.json` |
+| Photo Lighting renders live | **yes** — 126,542 bytes, 3.6 s | real `task_id`, `sha256 44cd13b0…`, bytes committed at `receipts/001/photo_lighting.render.jpg` and re-verified after download |
+| Skin-Tone / Facial Color reads live | **yes** — `skin_color #b7947d`, `hair_color #B56637`, `face_quality` all "good", 7.0 s | real `task_id`, run on `samples/full-body.jpg` |
+| The four-step client contract | **confirmed live** — presigned-PUT upload → flat-body `runTask` → poll to `task_status` → results | every step in both receipt files |
+| Skin Analysis on the bundled wedding selfie | **fails live** — `error_src_face_too_small` | `receipts/001/receipt.json`. Not a claim; a defect, recorded below |
+| Skin-Tone on the bundled wedding selfie | **fails live** — `error_face_angle_downward` | `receipts/001/receipt.json` |
+
 ## Not yet measured — and said so out loud
 
 | Claim | Why it is unmeasured | Where it must be labelled |
 |---|---|---|
-| Live YouCam render quality and latency | No units-on run has been made since the deploy. There is **no committed receipt** with a genuine Perfect Corp `task_id`. | devpost (labelled), README "What is wired versus what renders" |
+| A complete live run of all four steps in one chain | Two of the four fail on the bundled sample photo (see above), so no single live run has traversed the whole chain. Three of the four APIs are individually proven; the chain is not. | devpost (labelled), README "What is wired versus what renders" |
+| Skin Analysis producing scores from any image | Every live attempt so far used a bundled sample whose face is too small. The API has never returned scores to this project outside fixtures. | `receipts/README.md` |
 | The agentic (LLM) engine running for a judge | `/healthz` reports `agentic_engine: live` on gpt-5, but it sits behind an access code, so an anonymous judge never sees it fire. | devpost — keep it an architecture note, not a lead claim |
 | Any retail metric (conversion, return rate) | Perfect Corp publishes such figures; this project has measured none of its own and must not borrow theirs as if it had. | devpost "Built for retail", README |
 | Studio try-ons (hair colour, hairstyle, makeup) | Two of three slugs never verified, no captured fixture, nothing renders. | README surface table, devpost "wired but not shipped" |

@@ -1,0 +1,160 @@
+{
+  "_what": "One real YouCam run, captured as evidence for kill-gate 2. Nothing here is synthesised: every task id and poll envelope is the provider's own answer, and every sha256 is of the image the provider returned.",
+  "capturedAt": "2026-08-10T12:34:40.873Z",
+  "apiBase": "https://yce-api-01.perfectcorp.com",
+  "gitRevision": "bc1ef29",
+  "deployedHealthz": {
+    "status": "ok",
+    "revision": "bc1ef29",
+    "demo_mode": false,
+    "public_demo_mode": true,
+    "auth_enabled": true,
+    "live_runs_used": 0,
+    "live_runs_budget": 8,
+    "live_runs_remaining": 8,
+    "garments": 11,
+    "skincare_skus": 17,
+    "youcam_apis_wired": 8,
+    "agent_tools": 4,
+    "agentic_engine": "live",
+    "agentic_engine_reason": "gpt-5 available",
+    "agentic_model": "gpt-5",
+    "youcam": "key_present_unverified",
+    "youcam_reason": "key present; not probed because every YouCam task call costs units",
+    "degraded": true
+  },
+  "unitsSpent": "3 tasks (~4-5 units)",
+  "chain": [
+    "skin_analysis",
+    "skin_tone_analysis",
+    "photo_lighting"
+  ],
+  "steps": [
+    {
+      "feature": "skin_analysis",
+      "fileEndpoint": "/s2s/v2.1/file/skin-analysis",
+      "taskEndpoint": "/s2s/v2.1/task/skin-analysis",
+      "requestBody": {
+        "src_file_id": "u7N9eYAHOhQF402KUf6S4WhaIJZ7BMyE/Ahbliieq6ELbKfeLEmuXUa9yH4wuc2K",
+        "dst_actions": [
+          "wrinkle",
+          "acne",
+          "dark_circle_v2",
+          "age_spot",
+          "redness",
+          "oiliness",
+          "pore",
+          "texture",
+          "firmness",
+          "moisture"
+        ],
+        "format": "json",
+        "miniserver_args": {
+          "enable_mask_overlay": true
+        }
+      },
+      "taskId": "c7T3vNWgHHYWcLggioP64zfd0hdmoNT1O6zb356KzpFHOKctZv74OGxvIFr4TgWdZ1Dw5stRx3QX_3QtFuxIQ_pW0L5pGgwoOlVxfElKXLk",
+      "pollEnvelopes": [
+        {
+          "status": 200,
+          "data": {
+            "error": null,
+            "results": null,
+            "task_status": "running"
+          }
+        },
+        {
+          "status": 200,
+          "data": {
+            "error": "error_src_face_too_small",
+            "error_message": "The face area in the uploaded image is too small",
+            "results": null,
+            "task_status": "error"
+          }
+        }
+      ],
+      "startedAt": "2026-08-10T12:34:27.801Z",
+      "finalStatus": "error",
+      "finishedAt": "2026-08-10T12:34:32.716Z",
+      "durationMs": 4915
+    },
+    {
+      "feature": "skin_tone_analysis",
+      "fileEndpoint": "/s2s/v2.0/file/skin-tone-analysis",
+      "taskEndpoint": "/s2s/v2.0/task/skin-tone-analysis",
+      "requestBody": {
+        "src_file_id": "Ksg1mBJs8s9VEWxhFv2+NRFeoO+uPnAXHyMeo7qGUxALbKfeLEmuXUa9yH4wuc2K"
+      },
+      "taskId": "jcmEF8NkuMg2EYwpy9ryRqCEfRmkBPfol2_WzVhRUGkDAVXYkecb6lXqRZpFwrd52n6oM3hgv-BX95J8XisUoeuqvUV2qp_TgcHL94SHw-4",
+      "pollEnvelopes": [
+        {
+          "status": 200,
+          "data": {
+            "error": null,
+            "results": null,
+            "task_status": "running"
+          }
+        },
+        {
+          "status": 200,
+          "data": {
+            "error": null,
+            "results": null,
+            "task_status": "running"
+          }
+        },
+        {
+          "status": 200,
+          "data": {
+            "error": "error_face_angle_downward",
+            "results": null,
+            "task_status": "error"
+          }
+        }
+      ],
+      "startedAt": "2026-08-10T12:34:32.716Z",
+      "finalStatus": "error",
+      "finishedAt": "2026-08-10T12:34:37.165Z",
+      "durationMs": 4449
+    },
+    {
+      "feature": "photo_lighting",
+      "fileEndpoint": "/s2s/v2.0/file/lighting",
+      "taskEndpoint": "/s2s/v2.0/task/lighting",
+      "requestBody": {
+        "src_file_id": "A4902x0gxqmw9hXOgEd8C2APUC4Sm6aM8mxAK3Nu8AoLbKfeLEmuXUa9yH4wuc2K"
+      },
+      "taskId": "3SHfgaOGeODI8g5LuulyMdScaYemA_B2QRWoax6q_pTPZzCKSksAW7afR0FExhcM2m1CGpLRP9Zbg8yVrCWNCjMNs2dYJoUCiZpB8_vrlNU",
+      "pollEnvelopes": [
+        {
+          "status": 200,
+          "data": {
+            "error": null,
+            "results": null,
+            "task_status": "running"
+          }
+        },
+        {
+          "status": 200,
+          "data": {
+            "error": null,
+            "results": {
+              "url": "https://yce-us.s3-accelerate.amazonaws.com/ttl30/481807048493763962/116771678395/v2/aeMNNB0KmUIP8rnQ996tC5Q/b1ac7c64-387d-4a72-a910-d61d6a184ebe.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20260810T123440Z&X-Amz-SignedHeaders=host&X-Amz-Expires=7200&X-Amz-Credential=AKIARB77EV5Y5D7DAE3S%2F20260810%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Signature=4980b3af050c648ed7d963f0dbb01aeb90dee77a83634120a46a6cfd635a48ac"
+            },
+            "task_status": "success"
+          }
+        }
+      ],
+      "startedAt": "2026-08-10T12:34:37.165Z",
+      "finalStatus": "success",
+      "resultUrl": "https://yce-us.s3-accelerate.amazonaws.com/ttl30/481807048493763962/116771678395/v2/aeMNNB0KmUIP8rnQ996tC5Q/b1ac7c64-387d-4a72-a910-d61d6a184ebe.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20260810T123440Z&X-Amz-SignedHeaders=host&X-Amz-Expires=7200&X-Amz-Credential=AKIARB77EV5Y5D7DAE3S%2F20260810%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Signature=4980b3af050c648ed7d963f0dbb01aeb90dee77a83634120a46a6cfd635a48ac",
+      "render": {
+        "sha256": "44cd13b02b268259eec0b9a1918d8fcfa68333ab1a0aac0c88c01b033c7b0181",
+        "bytes": 126542,
+        "contentType": "image/jpeg"
+      },
+      "finishedAt": "2026-08-10T12:34:40.746Z",
+      "durationMs": 3581
+    }
+  ]
+}
