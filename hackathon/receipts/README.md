@@ -46,6 +46,30 @@ fused chain does not complete on the app's own flagship sample. Closing kill-gat
 needs a sample image whose face is large enough and frontal, not just approval to
 spend.
 
+### What the API actually accepts as a face
+
+Follow-up screening on 2026-08-10, one unit per attempt, because the error strings above
+suggested the fix was "a bigger, more frontal face". It is not:
+
+| Image | `skin-tone-analysis` verdict |
+|---|---|
+| `samples/full-body.jpg` — whole body, small distant face | **accepted** |
+| `samples/selfie.jpg` — tight frontal headshot | `error_face_angle_downward` |
+| `samples/selfie-2.jpg` — three-quarter portrait | `error_face_not_forward_facing` — but **accepted by skin analysis**, which returned real scores and ten masks |
+| A frontal, eye-level headshot at 900×900 | `error_face_position_too_small` |
+| The same headshot at 2000×2500 with generous margin | identical rejection |
+
+The only image that passed has the *smallest* face, and neither resolution nor margin
+changed anything. The API is deterministic — the same image always draws the same error
+— so this is a real constraint, not flakiness. Practical consequence: choosing a sample
+that satisfies **both** analysis endpoints is trial and error at one unit per attempt,
+and that cost belongs in any plan to close kill-gate 2.
+
+The captured outputs that *did* come back are now the product's fixtures rather than
+composed numbers: `samples/selfie-2.jpg`'s real scores and its own dark-circle mask
+(`public/fixtures/skin-overlay-cool.jpg`), and `samples/full-body.jpg`'s real colour
+read. See the provenance header in `lib/youcam/fixtures.ts`.
+
 ### Two failures in `000-misaimed-attempt/` were mine, not the product's
 
 The first capture sent `full-body.jpg` into all four steps. Skin analysis answered

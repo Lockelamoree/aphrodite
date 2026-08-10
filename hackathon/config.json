@@ -301,19 +301,19 @@
       "blockedOn": "one deploy/deploy.sh run on the VPS"
     },
     {
-      "title": "Documented test count understates the suite",
-      "detail": "README, HACKATHON.md and the project notes say 57 tests in 8 files. Measured 2026-08-10: 89 tests in 10 files, all passing. Undersold rather than oversold, but it is still an unmeasured number in submission-adjacent copy.",
-      "blockedOn": "nothing — fix in the doc pass"
-    },
-    {
       "title": "The bundled wedding selfie cannot be analysed live",
       "detail": "public/samples/selfie.jpg — the selfie the flagship 'Wedding · full-body' preset sends, and the first thing a judge clicks — was rejected by BOTH analysis APIs on 2026-08-10: skin analysis returned error_src_face_too_small and skin-tone returned error_face_angle_downward. Receipts in hackathon/receipts/001/. Fixtures hide this completely, so the demo looks perfect while the same click with units on returns nothing. The colour API succeeds on samples/full-body.jpg, so the API is fine and the sample photo is not. Consequence: closing kill-gate 2 needs a suitable sample image, not just approval to spend.",
       "blockedOn": "a sample photo with a larger, frontal face, then one more units-on run"
     },
     {
-      "title": "Demo video not uploaded",
-      "detail": "A ~90s first cut exists untracked at submission/aphrodite-demo.mp4. Stage One needs it on YouTube or Vimeo and linked on Devpost.",
-      "blockedOn": "operator: upload + paste the Devpost form"
+      "title": "Demo video recorded but not uploaded",
+      "detail": "submission/aphrodite-demo-2026-08-10.mp4, 88 s, cut 2026-08-10 from a production build in demo mode. Inside the published 1-3 minute window, every caption anchored to the panel it describes, each YouCam API named as it appears. It carries CAPTIONS AND NO AUDIO: the TTS environment the earlier takes used no longer exists on the workstation, so the narration lines are burned in rather than spoken. Two older cuts are archived under submission/archive-old-cuts/ and must not be published.",
+      "blockedOn": "operator: upload to YouTube or Vimeo, paste the URL here and into Devpost"
+    },
+    {
+      "title": "What the live API accepts as a face is not what its error strings imply",
+      "detail": "Five images screened against skin-tone-analysis 2026-08-10. Only samples/full-body.jpg passed - the image with the SMALLEST face. A tight frontal headshot was rejected error_face_angle_downward, a three-quarter portrait error_face_not_forward_facing, and a frontal eye-level headshot error_face_position_too_small at both 900x900 and 2000x2500 with margin. The API is deterministic per image, but 'bigger and more frontal' is demonstrably not the criterion, so choosing a sample that satisfies both analysis endpoints costs one unit per attempt.",
+      "blockedOn": "trial and error against the live API, budgeted in units"
     }
   ],
   "closedGaps": [
@@ -322,6 +322,23 @@
       "closed": "2026-08-09",
       "how": "Live at https://aphrodite.max-gutowski.de, verified from outside: /healthz reports revision 910c27a, and a driven browser run reached the look board with the demo banner present, the honest ledger wording, 13 images and 0 broken, zero CSP violations and zero console errors.",
       "costOfGettingThere": "Four failed deploys, each caught by the health gate with production untouched: a stale CDN-cached bootstrap script, Next.js baking its build-time project root, systemd RestrictAddressFamilies missing AF_NETLINK (the app listened but answered nothing), and the landing page being statically prerendered so the demo banner was decided by the build environment."
+    },
+    {
+      "title": "The wedding sample presented two different people as one user",
+      "closed": "2026-08-10",
+      "how": "The preset bundled samples/selfie.jpg for the face and samples/full-body.jpg for the body - two different men - so the board showed one man's skin read beside the other man's try-on render. The preset now uses full-body.jpg for both. The apparel fixture is a genuine YouCam render of that photo and the captured colour read is from that same photo, so every panel on this path is now the same person's own data.",
+      "costOfGettingThere": "Found only by looking at a captured frame. Five review cycles and two adversarial panels read the code and missed it."
+    },
+    {
+      "title": "The skin comparator showed a different person's face as 'what YouCam sees'",
+      "closed": "2026-08-10",
+      "how": "public/fixtures/skin-overlay.jpg was an unrelated man's face served beside the warm sample under the labels 'Your photo' and 'What YouCam sees' - a picture asserting the API had altered someone's features. Deleted. The cool sample now carries a mask genuinely captured from its own face (public/fixtures/skin-overlay-cool.jpg) with that run's real scores; the warm sample shows no overlay at all, which the comparator already degrades to honestly.",
+      "costOfGettingThere": "The file's own code comment claimed the mask matched its sample. It did not, and nobody had looked."
+    },
+    {
+      "title": "Screenshots were stale and outside the repo",
+      "closed": "2026-08-10",
+      "how": "Nine stills captured from a production build of the corrected code, committed at submission/screenshots/ with a note on what each one proves. Screenshots are a REQUIRED Devpost field; the old six PNGs from 2026-07-26 showed a pre-gate UI that no longer exists."
     }
   ]
 }

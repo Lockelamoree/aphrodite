@@ -1,4 +1,31 @@
-# Aphrodite — demo video shot-script (DRAFT, target ≤ 2:50)
+# Aphrodite — demo video shot-script (target ≤ 2:50)
+
+> **Recorded 2026-08-10 → `submission/aphrodite-demo-2026-08-10.mp4`, 88 s, 1280×932.**
+> Cut from a production build in demo mode, zero YouCam units. What shipped differs
+> from the plan below in three ways, all deliberate:
+>
+> 1. **Captions, no voiceover.** The TTS environment the earlier takes used
+>    (`edge-tts`) no longer exists on this machine, so the narration lines are burned in
+>    as on-screen captions instead of spoken. The Devpost rule requires the video to
+>    show the product working and name the YouCam API used — captions do both — but a
+>    spoken track would score better on presentation. Re-recording the audio needs only
+>    a TTS and the lines below.
+> 2. **Two segments, because honesty forces it.** The wedding path carries the fused
+>    chain and the Apparel VTO render. The selfie-only path carries the *captured* skin
+>    overlay — the only mask in the repo taken from the face it is shown beside — plus
+>    the honest empty state where a render would otherwise be invented.
+> 3. **No comparator on the wedding path.** Its mask was a different person's face and
+>    was removed; see `lib/youcam/fixtures.ts`.
+>
+> Every caption is anchored to the element it describes. An earlier cut captioned "the
+> outfit is rendered on the body" over the basket list, which is exactly the kind of
+> small lie this project refuses elsewhere.
+>
+> **Two older cuts are archived, not published:** `submission/archive-old-cuts/`. The
+> 87 s cut carries a banned word in its burned-in subtitle at ~0:52 and a pre-fix
+> provenance ledger at ~0:30; the 122 s cut predates the gate entirely. Neither may be
+> uploaded.
+
 
 > The Devpost rule: a 1–3 min video that shows **YouCam API integration** + on-device
 > (app-running) footage. Record in **demo mode** (`YOUCAM_FIXTURES=1`) so it costs

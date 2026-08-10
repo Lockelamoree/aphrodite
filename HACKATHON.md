@@ -59,11 +59,16 @@ falls back to an existing fixture image, so the strongest part of the build is
 currently invisible.
 
 Review 002 (2026-08-10) sharpened *why* the special category sits at 6/10, and it is
-not the studio: **every face returns the same fixture skin read**, so the chain is
-narrated rather than demonstrated — a judge cannot see the skin determine anything
-when the input never varies. The named remedy is a second skin fixture plus
-per-garment renders, which makes the fusion falsifiable: two different faces have to
-produce two different garments. That is cheaper than the studio and worth more.
+not the studio: **every face returned the same fixture skin read**, so the chain was
+narrated rather than demonstrated — a judge cannot see the skin determine anything when
+the input never varies.
+
+Half of that is now fixed. The selfie-only sample carries a **captured** skin read of
+its own face — real scores and the real mask from a live run — so the two samples now
+produce genuinely different reads and different plans. What is still missing is a
+second *apparel* render: until two faces visibly yield two different garments, the
+fusion cannot be watched, only followed. That remains cheaper than the studio and worth
+more.
 
 ## Biggest open unknown — answered 2026-08-09
 
@@ -98,9 +103,9 @@ tier also carrying a blog feature and a marketing meeting with Perfect Corp.
 | Requirement | State on 2026-08-10 |
 |---|---|
 | Public repo + license | **done** — `github.com/Lockelamoree/aphrodite`, MIT |
-| Text description | **draft, now carrying the links** — `submission/devpost.md`: hosted URL, headline stats and a paste-ready testing field are in; the video link is still missing because there is no video to link |
-| Screenshots | **NOT done** — the six PNGs in `~/aphrodite-demo/screenshots/` are dated 2026-07-26, sit outside the repo, and predate the gate, the announcement bar, the cycle-6 design and the hosted instance. They no longer show what a judge sees. Re-capture from the corrected hosted build |
-| Demo video 1–3 min, shows YouCam integration | **not delivered.** Two competing cuts exist and neither is published: `submission/aphrodite-demo.mp4` (87.2 s, gitignored) and `~/aphrodite-demo/aphrodite-demo.mp4` (122.3 s, outside the repo). The 87 s cut also carries a banned word at ~0:52 and the pre-fix provenance ledger at ~0:30, so it must be re-cut, not just uploaded |
+| Text description | **draft, now carrying the links** — `submission/devpost.md`: hosted URL, headline stats and a paste-ready testing field are in. The video link is the one remaining hole, and it stays open until the reel is uploaded |
+| Screenshots | **done 2026-08-10** — nine stills in `submission/screenshots/`, captured from a production build of the corrected code, each with a note on what it proves. The 2026-07-26 PNGs outside the repo are superseded |
+| Demo video 1–3 min, shows YouCam integration | **recut 2026-08-10, not yet uploaded** — `submission/aphrodite-demo-2026-08-10.mp4`, 88 s, from a production build, every caption anchored to the panel it describes. Captions, no voiceover: the TTS environment is gone from this machine. The two older cuts are archived under `submission/archive-old-cuts/` and must not be published |
 | Hosted, judge-testable instance | **live** — https://aphrodite.max-gutowski.de (since 2026-08-09). The public path is keyless and costs zero units; the paths that spend money are behind a role code redeemed at `/unlock` |
 
 ## Standing orders

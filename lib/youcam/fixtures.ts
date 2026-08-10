@@ -4,19 +4,34 @@ import type { ApparelCategory } from "@/lib/youcam/apparel";
 import type { ColorProfile, ImageInput, RenderedImage, SkinAnalysis } from "@/lib/youcam/types";
 
 /**
- * Replay fixtures — real captured YouCam outputs (see public/fixtures/*.jpg and
- * the scores/colors from a verified live run) served WITHOUT calling the API.
- * Gated by env.youcamFixtures (YOUCAM_FIXTURES=1). Lets dev + demo rehearsal
- * consume zero API units; the small delays keep the streaming UX realistic.
+ * Replay fixtures — captured YouCam outputs served WITHOUT calling the API.
+ * Gated by env.youcamFixtures (YOUCAM_FIXTURES=1), so dev and demo rehearsal cost
+ * zero units; the small delays keep the streaming UX realistic.
  *
- * TWO demo profiles so the app doesn't read identically for every photo: the
- * bundled "sample B" selfie (public/samples/selfie-2.jpg) fingerprints to a
- * distinct COOL "Cool Summer" profile (different scores + palette + undertone),
- * everything else uses the original WARM profile. The rendered face/body assets
- * are captured from the warm sample, so the cool profile is intentionally
- * selfie-only (no apparel render, no face-mask overlay) — it exercises the
- * honest "add a full-body photo" path instead of pasting one person's render
- * onto another.
+ * TWO demo profiles so the app doesn't read identically for every photo: the bundled
+ * "sample B" selfie (public/samples/selfie-2.jpg) fingerprints to a COOL profile,
+ * everything else uses the WARM profile.
+ *
+ * PROVENANCE — which of these numbers are real. Checked 2026-08-10 against the live
+ * API, receipts committed under hackathon/receipts/:
+ *
+ *   COOL skin scores     CAPTURED. A real skin-analysis run on samples/selfie-2.jpg.
+ *   COOL overlay         CAPTURED. That same run's dark-circle mask, of that same
+ *                        face — public/fixtures/skin-overlay-cool.jpg.
+ *   WARM colour profile  CAPTURED. A real skin-tone run on samples/full-body.jpg
+ *                        (skin #b7947d, hair "Auburn"). Undertone, depth and palette
+ *                        are derived from that hex by the app's own rules.
+ *   WARM skin scores     ILLUSTRATIVE, not captured. The live API rejects
+ *                        samples/selfie.jpg with error_src_face_too_small, so no real
+ *                        read of that face exists.
+ *   COOL colour profile  ILLUSTRATIVE, not captured. The API rejects selfie-2.jpg for
+ *                        skin-tone with error_face_not_forward_facing.
+ *
+ * WARM HAS NO OVERLAY ON PURPOSE. public/fixtures/skin-overlay.jpg was a DIFFERENT
+ * PERSON's face. Serving it next to samples/selfie.jpg made the comparator label one
+ * man "your photo" and another "what YouCam sees" — a picture that asserts the API
+ * changed someone's face. Removed 2026-08-10. The comparator already degrades to the
+ * selfie alone, and an honest empty state beats a lie that looks like a match.
  */
 const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
@@ -54,30 +69,35 @@ const SKIN_SCORES: Record<DemoProfile, Record<string, number>> = {
     redness: 99,
     acne: 99,
   },
-  // Cool sample (public/samples/selfie-2.jpg) — a different person, so a
-  // genuinely different read: lowest = redness, then moisture.
+  // Cool sample (public/samples/selfie-2.jpg) — CAPTURED, not composed. These are the
+  // ui_score values a real skin-analysis run returned for this exact photo on
+  // 2026-08-10; see hackathon/receipts/. Lowest two are dark circles and moisture,
+  // which is what the plan then prioritises.
   cool: {
-    redness: 61,
-    moisture: 64,
-    pore: 70,
-    texture: 73,
-    oiliness: 76,
-    dark_circle_v2: 80,
-    firmness: 82,
-    wrinkle: 85,
-    age_spot: 88,
-    acne: 95,
+    dark_circle_v2: 68,
+    moisture: 68,
+    wrinkle: 82,
+    firmness: 83,
+    pore: 84,
+    texture: 86,
+    age_spot: 91,
+    acne: 99,
+    oiliness: 99,
+    redness: 99,
   },
 };
 
 const COLOR_PROFILE: Record<DemoProfile, ColorProfile> = {
+  // CAPTURED. Real skin-tone run on samples/full-body.jpg, 2026-08-10 — the API
+  // returned skin #b7947d, eye #000000, lip #986861, eyebrow #3e3834, hair "Auburn",
+  // with face_quality good on every axis. Receipt in hackathon/receipts/.
   warm: {
     undertone: "warm",
     depth: "medium",
     season: "Warm Spring",
-    detected: { skin: "#a88670", eye: "#130f0a", eyeName: "Brown", lip: "#874e46", eyebrow: "#543931" },
+    detected: { skin: "#b7947d", eye: "#000000", eyeName: "Brown", lip: "#986861", eyebrow: "#3e3834" },
     paletteHex: ["#C46A3F", "#D9A441", "#7E8B4E", "#8C4B2F", "#E9D6A8"],
-    raw: { fixture: true },
+    raw: { fixture: true, captured: "2026-08-10 skin-tone-analysis on samples/full-body.jpg" },
   },
   cool: {
     undertone: "cool",
@@ -95,9 +115,10 @@ export async function fixtureSkin(input?: ImageInput): Promise<SkinAnalysis> {
   const scores = SKIN_SCORES[profile];
   return {
     concerns: Object.entries(scores).map(([name, score]) => ({ name, score })),
-    // Only the warm sample has a captured AR mask that matches its face; the
-    // cool sample shows the selfie alone (no fabricated overlay).
-    overlayUrl: profile === "warm" ? "/fixtures/skin-overlay.jpg" : undefined,
+    // Only the COOL sample has a mask captured from its own face. The warm sample gets
+    // none — see the provenance note at the top of this file. Never serve a mask taken
+    // from a different person beside a photo labelled "your photo".
+    overlayUrl: profile === "cool" ? "/fixtures/skin-overlay-cool.jpg" : undefined,
     raw: { fixture: true },
   };
 }

@@ -46,6 +46,10 @@ next-env.d.ts
 
 # Submission media: the reel lives on YouTube/Vimeo, not in git (13 MB of takes).
 # The text drafts beside them ARE tracked — they existed only on one machine.
+# Match at any depth: a single-level glob let submission/archive-old-cuts/*.mp4
+# through, which briefly committed 12 MB of retired cuts — including one carrying a
+# banned word — into a public repo.
+submission/**/*.mp4
 submission/*.mp4
 submission/*.mov
 submission/*.webm

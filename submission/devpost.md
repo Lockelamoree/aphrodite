@@ -18,6 +18,7 @@
 | **0** API units to look | every public path is fixture-served, and the page says so on screen |
 | **89** tests in 10 files | `tsc` / `lint` / `build` green too, measured 2026-08-10 |
 | **8** APIs declared, **4** that render | the honest surface — see "YouCam APIs used" below |
+| **88 s** demo video | inside the 1–3 minute window, cut from a production build |
 
 No signup, no key, nothing to install. The bundled *"Wedding · full-body"* sample drives
 the complete loop. What you see is **captured YouCam renders**, and the announcement bar
@@ -29,10 +30,18 @@ State is checkable from outside at
 judging code is in the *Testing instructions* field of this submission; redeem it at
 `/unlock`. Not published in the repo — a code in a public repo is no gate.
 
-> **Not yet measured, stated plainly:** the live YouCam path is not exercised on any
-> publicly reachable route, so this submission carries **no committed live-run receipt**
-> with a Perfect Corp `task_id`. The four-step client in `lib/youcam/client.ts` is real
-> first-party work and it is dormant for an anonymous visitor. Judge it as what it is.
+> **What is proven, and what is not — stated plainly.** On 2026-08-10 one approved
+> units-on session put real traffic through the API and the receipts are committed at
+> `hackathon/receipts/`, failures included: **Apparel Try-On** and **Photo Lighting**
+> each returned a real render with a genuine Perfect Corp `task_id` (hash-verified, one
+> image committed byte-for-byte), and **Skin-Tone** returned real detections. The
+> four-step client contract is confirmed against the live API.
+>
+> Not proven: **no single live run has traversed all four steps**, because the live
+> analysis endpoints reject the bundled sample photos (`error_src_face_too_small`,
+> `error_face_angle_downward`). And on the publicly reachable route nothing calls YouCam
+> at all — every visitor gets captured renders, and the page says so. Judge it as what
+> it is.
 
 ---
 
@@ -50,13 +59,13 @@ Most virtual try-on demos stop at "here's a garment on you." Before a wedding or
 - **Plans the occasion.** A skincare countdown that changes in *kind* with how far off the event is — weeks out it front-loads active ingredients and tapers; a day out it stops new actives and switches to hydration and de-puffing so nothing flares on the day.
 - **Dresses you for your coloring.** Your detected undertone drives the outfit pick (a cool read leans to cool-flattering pieces), with explicit guards + tests so the styling is never mis-gendered — and the garment is rendered on you, not just described.
 - **Completes the look.** One cross-category, priced basket — skincare + garment + matched accessories — with an on-screen **provenance ledger** naming which YouCam API produced each result.
-- **Keeps going.** Save an **image-free** plan (no photo, mask, or raw API response stored) and return for a glow check-in that diffs your scores against the saved run. A studio lets you try a new hair color, hairstyle, or makeup on the same selfie (live with a YouCam key).
+- **Keeps going.** Save an **image-free** plan (no photo, mask, or raw API response stored) and return for a glow check-in that diffs your scores against the saved run. A studio for hair color, hairstyle and makeup is wired but **not shipped** — see "YouCam APIs used".
 
 ## How I built it
 
 - **Next.js 16 / React 19 / TypeScript / Tailwind v4**, streamed over Server-Sent Events. The whole concierge is one streamed route plus one client component.
 - **Two engines, one event stream.** An **agentic** engine (Claude *or* GPT) orchestrates the YouCam REST APIs via typed function-calling tools, reasoning over your scores; and a **guided** rule engine produces the *same* board with no LLM at all. They emit an identical event stream, so the UI doesn't care which drove the run. The app works on a YouCam key alone; the LLM is a pure upgrade.
-- **YouCam / Perfect Corp AI API** drives every render over REST: Skin Analysis, Skin-Tone / Facial Color, Apparel Try-On, AI Photo Lighting — plus AI Hair Color, AI Hairstyle, and AI Makeup in the studio.
+- **YouCam / Perfect Corp AI API** drives every render over REST: Skin Analysis, Skin-Tone / Facial Color, Apparel Try-On and AI Photo Lighting. Three further endpoints are wired but render nothing, and are not counted — see "YouCam APIs used".
 - **Cost-safe demo mode.** A fixture/replay layer serves real captured YouCam outputs so the entire app — plan, try-on, refine, save, check-in — runs with **zero API units and no keys**, and the UI labels itself *"demo mode · sample renders"* so nothing over-claims.
 - **Hardened boundary.** zod request validation, per-IP rate limiting, a payload-size cap, and raw provider fields stripped out of the stream. 89 Vitest tests in 10 files (occasion parsing, garment selection incl. mis-gender guards, the cut preference, the access gate, the provenance ledger, request validation, raw-field stripping, rate limiting); `tsc` / `lint` / `build` green — all four measured 2026-08-10.
 
@@ -76,7 +85,7 @@ The **special-category** goal — Skin AI **and** Apparel VTO fused into one exp
 
 - **Coherence across horizons.** Making the countdown differ in *kind* (weeks vs. a day out) instead of just restating scores took real rule design, and keeping every "→ product" chip resolvable to a priced basket row.
 - **Not mis-gendering the styling.** Undertone-driven selection kept defaulting to one wardrobe; fixing it meant reworking the scoring and expanding the catalog, locked down with regression tests.
-- **Honesty under demo constraints.** Because the demo runs on captured fixtures, I had to be careful that copy never promises a live render it can't show — the before/after only ever shows real YouCam output, and studio try-ons that aren't captured degrade to an honest message rather than a fabricated image.
+- **Honesty under demo constraints.** Because the demo runs on captured fixtures, I had to be careful that copy never promises a live render it can't show — the before/after only ever shows real YouCam output of the same photo it sits beside — an overlay taken from a different face was found and deleted on 2026-08-10 — and studio try-ons that aren't captured degrade to an honest message rather than a fabricated image.
 
 ## Accomplishments I'm proud of
 

@@ -112,11 +112,16 @@ export function Concierge({
   async function loadSample(which: "wedding" | "date") {
     try {
       if (which === "wedding") {
-        const [s, b] = await Promise.all([
-          fetch("/samples/selfie.jpg").then((r) => r.blob()).then(fileToDataUrl),
-          fetch("/samples/full-body.jpg").then((r) => r.blob()).then(fileToDataUrl),
-        ]);
-        setSelfie(s);
+        // ONE PERSON, deliberately. This preset used to bundle samples/selfie.jpg for
+        // the face and samples/full-body.jpg for the body — two different men — and the
+        // board then showed one man's skin read beside the other man's try-on render as
+        // though they were the same user. The apparel fixture is a genuine YouCam render
+        // of full-body.jpg, and the captured colour read is from that same photo, so
+        // using it for both makes every panel on this path the same person's own data.
+        const b = await fetch("/samples/full-body.jpg")
+          .then((r) => r.blob())
+          .then(fileToDataUrl);
+        setSelfie(b);
         setBody(b);
         setGarmentPreference("surprise");
         // The bundled wedding sample is a masculine-presenting person, so the

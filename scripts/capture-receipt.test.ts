@@ -209,8 +209,15 @@ describe.skipIf(!ENABLED)("live YouCam receipt capture", () => {
       // question. It also relit the apparel render instead of the person, which the
       // app never does, and got error_download_image. Both were capture bugs, not
       // product bugs, and they cost units. Hence this comment.
-      const person = readFileSync("public/samples/selfie.jpg");
-      const bodyShot = readFileSync("public/samples/full-body.jpg");
+      // Overridable so a candidate sample photo can be screened against the live
+      // analysis APIs before it is wired into the product — the cheapest way to find
+      // out whether a face is large and frontal enough is to ask the API.
+      const person = readFileSync(
+        process.env.APHRODITE_RECEIPT_PERSON ?? "public/samples/selfie.jpg",
+      );
+      const bodyShot = readFileSync(
+        process.env.APHRODITE_RECEIPT_BODY ?? "public/samples/full-body.jpg",
+      );
       const garment = GARMENT_CATALOG.find((g) => g.id === "slate-suit");
       if (!garment) throw new Error("slate-suit missing from the catalog");
 
