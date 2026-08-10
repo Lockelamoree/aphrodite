@@ -216,12 +216,12 @@
       "repoUrl": "https://github.com/Lockelamoree/aphrodite.git",
       "vps": "152.53.229.182, ssh alias 'blastradius', root, Caddy already fronting other sites"
     },
-    "_dns": "A record aphrodite.max-gutowski.de -> 152.53.229.182 — OPERATOR TASK, not yet set as of 2026-08-09.",
+    "_dns": "A record aphrodite.max-gutowski.de -> 152.53.229.182 — SET and resolving, verified 2026-08-10 with getent hosts.",
     "verifyLocally": "npm run dev, then GET /healthz and drive the bundled 'Wedding · full-body' sample end to end in fixture mode (zero API units).",
     "deployedAt": "2026-08-09",
     "deployNotes": "deploy/deploy.sh on the VPS: fresh clone into an immutable release, build in place (Next.js records its absolute project root at build time, so building elsewhere and copying does not work), health gate asserting revision == built SHA and no key_present_unverified, then an atomic symlink flip. Fails closed.",
     "liveRunBudget": 8,
-    "_liveRunBudgetNote": "8 runs, ~32-40 YouCam tasks. Deliberately conservative because the remaining unit balance is still unknown — no documented endpoint exposes it. Raise it once the real number is known.",
+    "_liveRunBudgetNote": "8 runs, ~32-40 YouCam tasks. The unit balance is no longer unknown — see youcam.unitBalance (584 as of 2026-08-10) — but the budget is deliberately left at 8 until the operator decides how to split those 584 between judge-facing live runs, a fixture capture session and a video re-record. Raising it is a config change plus APHRODITE_LIVE_RUN_BUDGET on the host.",
     "verifiedLive": "2026-08-09 against the deployed site: an anonymous run returns mode=deterministic, three /fixtures/ URLs, an honest YouCam narration, and the ledger file is never created. With the judge cookie the same request switches to mode=agentic and the demo banner correctly disappears. /healthz reports public_demo_mode separately from demo_mode so both are checkable from outside."
   },
   "testCommand": "npm test",
@@ -265,6 +265,14 @@
     "claimProofMap": "hackathon/CLAIM_PROOF_MAP.md",
     "submissionCopy": "hackathon/SUBMISSION_COPY.md"
   },
+  "youcam": {
+    "unitBalance": 584,
+    "unitBalanceAsOf": "2026-08-10",
+    "unitBalanceSource": "stated by the operator. NOT machine-readable: no documented YouCam endpoint exposes the remaining balance, so this number cannot be re-verified from the app and must be refreshed by hand after any units-on session.",
+    "unitCostPerRun": "~4-5 units for a full concierge run (skin analysis, facial colour, apparel try-on, photo lighting).",
+    "allocation": "UNDECIDED as of 2026-08-10 — the operator splits the 584 after review 002. Candidates: judge-facing live runs (APHRODITE_LIVE_RUN_BUDGET, currently 8), a studio/menswear fixture capture session, a video re-record.",
+    "fixtureDefault": "YOUCAM_FIXTURES=1 is the committed default and costs zero units."
+  },
   "llm": {
     "provider": "openai",
     "model": "gpt-5",
@@ -278,6 +286,16 @@
       "title": "Menswear catalog gap",
       "detail": "One masculine garment exists (slate-suit, formal, flatters cool). A masculine-presenting shopper has no smart or casual option and no warm-undertone option, so the app correctly declines to claim a colour match for the warm wedding sample. Widening this needs verified front-facing reference imagery, and the render quality of any new reference cannot be confirmed without spending YouCam units.",
       "blockedOn": "verified imagery + one units-on capture session"
+    },
+    {
+      "title": "The deployed revision is behind origin/main",
+      "detail": "/healthz reported revision edb01c2 on 2026-08-10 while origin/main is 22b86cc — one commit (the machine-contract record) has not been rolled out. A judge who compares the running revision against the public default branch sees drift, and the health gate's revision == built SHA assertion cannot catch it because it only checks the release it just built.",
+      "blockedOn": "one deploy/deploy.sh run on the VPS"
+    },
+    {
+      "title": "Documented test count understates the suite",
+      "detail": "README, HACKATHON.md and the project notes say 57 tests in 8 files. Measured 2026-08-10: 89 tests in 10 files, all passing. Undersold rather than oversold, but it is still an unmeasured number in submission-adjacent copy.",
+      "blockedOn": "nothing — fix in the doc pass"
     },
     {
       "title": "Demo video not uploaded",
