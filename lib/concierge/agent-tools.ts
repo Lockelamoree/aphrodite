@@ -147,6 +147,7 @@ export async function executeTool(
             garment: { kind: "url", url: garment.imageUrl },
             category: garment.category,
             renderHint: garment.wardrobe,
+          garmentId: garment.id,
           },
           { timeoutMs: 60_000 },
         );

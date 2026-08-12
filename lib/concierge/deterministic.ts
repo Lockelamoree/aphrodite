@@ -100,6 +100,7 @@ export async function* runDeterministic(
           garment: { kind: "url", url: garment.imageUrl },
           category: garment.category,
           renderHint: garment.wardrobe,
+          garmentId: garment.id,
         },
         // Fail fast (interactive budget) so a slow render doesn't block the
         // finish + board behind the full 120s poll timeout.
@@ -206,7 +207,8 @@ export async function* runRefineDeterministic(
     try {
       yield step(TOOL.tryOnApparel);
       const img = await tryOnApparel(
-        { person: body, garment: { kind: "url", url: garment.imageUrl }, category: garment.category, renderHint: garment.wardrobe },
+        { person: body, garment: { kind: "url", url: garment.imageUrl }, category: garment.category, renderHint: garment.wardrobe,
+          garmentId: garment.id },
         { timeoutMs: 60_000 },
       );
       yield { type: "image", slot: "apparel", url: img.url };

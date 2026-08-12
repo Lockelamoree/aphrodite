@@ -239,7 +239,9 @@ export const GARMENT_CATALOG: CatalogGarment[] = [
   // "formal" so it wins interview's formality target and clears the men's suit;
   // sized XS–XL as a true separates set. Appended last so existing tie-break
   // order is untouched. Image eyeball-verified as a clean navy blazer+trouser
-  // shot; live VTO runs through the "separates" -> apparel-top.jpg fixture.
+  // shot. In demo mode this garment has NO captured render (the "separates"
+  // fixture depicted a third person and was deleted 2026-08-12), so the try-on
+  // slot shows its honest empty state until a render of this pair is captured.
   {
     id: "navy-blazer-set",
     name: "Navy Blazer & Trouser Set",

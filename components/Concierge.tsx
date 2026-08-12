@@ -479,6 +479,7 @@ export function Concierge({
           occasion={occasion}
           refine={refine}
           baseline={baseline}
+          ownPhoto={!usingSample}
           onSave={() => {
             if (!state.board || !state.skin) return false;
             savePlan({
@@ -556,12 +557,18 @@ function Results({
   refine,
   baseline,
   onSave,
+  ownPhoto,
 }: {
   state: ConciergeState;
   occasion: string;
   refine: (adjust: RefineAdjust) => void;
   baseline: SavedPlan | null;
   onSave: () => boolean;
+  /** True when the visitor supplied the photo themselves rather than clicking a
+   * bundled sample. In demo mode that combination is the one review 001 flagged:
+   * the numbers on screen are captured sample data and were NOT read from this
+   * face, so each data panel has to say so where the reader is looking. */
+  ownPhoto: boolean;
 }) {
   const board = state.board;
   const boardRef = useRef<HTMLDivElement>(null);
@@ -580,15 +587,33 @@ function Results({
       ? "We couldn't finish your look board"
       : "Putting your plan together…");
 
-  const apparelEmpty = state.hasBody
-    ? "The outfit render didn't come through this time."
-    : "Add a full-body photo to see the outfit rendered on you.";
+  const sampleData = state.demo && ownPhoto;
+
+  const apparelEmpty = !state.hasBody
+    ? "Add a full-body photo to see the outfit rendered on you."
+    : sampleData
+      ? "No captured try-on render exists for this photo. Demo mode will not put a stranger's render under your name — unlock live mode to render your own."
+      : "The outfit render didn't come through this time.";
 
   // The finish is a YouCam Photo-Lighting relight of the selfie — a warm,
   // camera-ready pass. (It re-lights; it doesn't re-crop into a headshot, so we
   // don't claim one.)
   const finishTitle = "Occasion lighting";
   const finishCaption = "YouCam AI Photo Lighting · relight";
+  const finishEmpty = sampleData
+    ? "No captured relight exists for this photo — demo mode renders no face but the ones it has."
+    : "No lighting pass this run.";
+
+  // The board's editorial hero was the relight, and the relight is the render
+  // least likely to exist: only one face has a captured one. Fall back to the
+  // try-on render, which is a real render of a real photo, and caption whichever
+  // one is actually on screen instead of always claiming lighting.
+  const heroUrl = state.images.finish ?? state.images.apparel;
+  const heroKind: "finish" | "apparel" | undefined = state.images.finish
+    ? "finish"
+    : state.images.apparel
+      ? "apparel"
+      : undefined;
 
   return (
     <section className="aura-fade-up space-y-8">
@@ -631,7 +656,9 @@ function Results({
             board={board}
             demo={state.demo}
             outfitRendered={outfitRendered}
-            heroUrl={state.images.finish}
+            heroUrl={heroUrl}
+            heroKind={heroKind}
+            sampleData={sampleData}
           />
           <RefineBar refine={refine} disabled={state.phase === "running"} hasColor={!!state.color} />
         </div>
@@ -677,7 +704,7 @@ function Results({
                   url={state.images.finish}
                   phase={state.phase}
                   busyLabel="Adding YouCam occasion lighting…"
-                  emptyLabel="No lighting pass this run."
+                  emptyLabel={finishEmpty}
                   caption={finishCaption}
                 />
               )}
@@ -1081,16 +1108,32 @@ function LookBoardPanel({
   demo,
   outfitRendered,
   heroUrl,
+  heroKind,
+  sampleData,
 }: {
   board: LookBoard;
   demo?: boolean;
   outfitRendered?: boolean;
   heroUrl?: string;
+  /** Which render is actually in the hero slot, so the caption names that one. */
+  heroKind?: "finish" | "apparel";
+  /** Demo mode on a photo the visitor supplied: the plan is built from captured
+   * sample data and did not read this face. Said here, not only in the bar at the
+   * top of the page, because this is where the reader is looking. */
+  sampleData?: boolean;
 }) {
   const products = board.shopping.filter((s) => typeof s.price === "number");
   const total = products.reduce((sum, p) => sum + (p.price ?? 0), 0);
   return (
     <div className="aura-reveal space-y-6 rounded-[var(--radius-card)] border border-primary/25 bg-surface p-6 shadow-sm">
+      {sampleData && (
+        <p className="rounded-[var(--radius-card)] border border-rose/40 bg-rose/5 px-4 py-3 text-sm text-ink">
+          <strong className="font-medium">This plan is built from captured sample data.</strong>{" "}
+          Demo mode did not read your photo — the scores and the colour read below belong to a
+          bundled sample, and no render of your face was produced. Unlock live mode to have YouCam
+          read the photo you uploaded.
+        </p>
+      )}
       {/* Editorial spread: the finished render carries the visual weight on the
           left; the narrative reads as a serif pull-quote beside it. Stacks on
           small screens, where the image leads. */}
@@ -1100,11 +1143,17 @@ function LookBoardPanel({
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={heroUrl}
-              alt="Your finished look, relit for the occasion"
+              alt={
+                heroKind === "finish"
+                  ? "The photo from this run, relit by YouCam AI Photo Lighting"
+                  : "The photo from this run, wearing the chosen garment, rendered by the YouCam Apparel VTO API"
+              }
               className="w-full rounded-[calc(var(--radius-card)-0.35rem)] border border-line object-cover"
             />
             <figcaption className="mt-2 text-xs text-muted">
-              Occasion lighting · rendered by YouCam AI
+              {heroKind === "finish"
+                ? "Occasion lighting · rendered by YouCam AI"
+                : "Apparel try-on · rendered by the YouCam Apparel VTO API"}
             </figcaption>
           </figure>
         )}

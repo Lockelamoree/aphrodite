@@ -16,7 +16,7 @@
 | **4** YouCam APIs chained in one run | Skin Analysis → Skin-Tone → Apparel Try-On → Photo Lighting |
 | **~4.5 s** for the whole loop | measured on the hosted instance |
 | **0** API units to look | every public path is fixture-served, and the page says so on screen |
-| **102** tests in 11 files | `tsc` / `lint` / `build` green too, measured 2026-08-12 |
+| **112** tests in 12 files | `tsc` / `lint` / `build` green too, measured 2026-08-12 |
 | **8** APIs declared, **4** that render | the honest surface — see "YouCam APIs used" below |
 | **88 s** demo video | inside the 1–3 minute window, cut from a production build |
 
@@ -67,7 +67,7 @@ Most virtual try-on demos stop at "here's a garment on you." Before a wedding or
 - **Two engines, one event stream.** An **agentic** engine (Claude *or* GPT) orchestrates the YouCam REST APIs via typed function-calling tools, reasoning over your scores; and a **guided** rule engine produces the *same* board with no LLM at all. They emit an identical event stream, so the UI doesn't care which drove the run. The app works on a YouCam key alone; the LLM is a pure upgrade.
 - **YouCam / Perfect Corp AI API** drives every render over REST: Skin Analysis, Skin-Tone / Facial Color, Apparel Try-On and AI Photo Lighting. Three further endpoints are wired but render nothing, and are not counted — see "YouCam APIs used".
 - **Cost-safe demo mode.** A fixture/replay layer serves real captured YouCam outputs so the entire app — plan, try-on, refine, save, check-in — runs with **zero API units and no keys**, and the UI labels itself *"demo mode · sample renders"* so nothing over-claims.
-- **Hardened boundary.** zod request validation, per-IP rate limiting, a payload-size cap, and raw provider fields stripped out of the stream. 102 Vitest tests in 11 files (occasion parsing, garment selection incl. mis-gender guards, the cut preference, the access gate, the provenance ledger, request validation, raw-field stripping, rate limiting, and the evidence route); `tsc` / `lint` / `build` green — all four measured 2026-08-12.
+- **Hardened boundary.** zod request validation, per-IP rate limiting, a payload-size cap, and raw provider fields stripped out of the stream. 112 Vitest tests in 12 files (occasion parsing, garment selection incl. mis-gender guards, the cut preference, the access gate, the provenance ledger, request validation, raw-field stripping, rate limiting, and the evidence route); `tsc` / `lint` / `build` green — all four measured 2026-08-12.
 
 ## YouCam APIs used
 

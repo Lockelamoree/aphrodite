@@ -12,7 +12,7 @@ Most virtual try-on demos stop at "here's a garment on you." I wanted the thing 
 |---|---|
 | **4** YouCam APIs chained in one run | Skin Analysis → Skin-Tone → Apparel Try-On → Photo Lighting |
 | **~4.5 s** end to end | measured on the hosted instance, fixture-served |
-| **102** tests in 11 files | `npm test`, measured 2026-08-12; `tsc` / `lint` / `build` also green |
+| **112** tests in 12 files | `npm test`, measured 2026-08-12; `tsc` / `lint` / `build` also green |
 | **0** API units to look | every publicly reachable path is fixture-served, and the page says so |
 | **11 / 17** catalogue | garments / skincare SKUs, cross-checkable at [`/healthz`](https://aphrodite.max-gutowski.de/healthz) |
 
@@ -183,13 +183,23 @@ the evidence reachable without making a page refresh expensive.
 
 This is a hackathon entry, and being straight with the user matters to me. The app never passes a sample render off as a live one; the before/after only ever shows real YouCam output; the saved plan keeps no image or raw API data; image processing sits behind an explicit consent step; and every bit of skin guidance is cosmetic, not medical.
 
+**A render is a claim about whose face is in it.** So in demo mode every captured
+render is keyed to the person it actually depicts — by content fingerprint — and to the
+garment it actually shows. Two such renders exist, and for every other photo or garment
+the app says no captured render exists rather than substituting one. That rule was
+written the hard way: three of the four render fixtures turned out to depict three
+different people, and one of them carried the look board as its hero under the caption
+"Occasion lighting · rendered by YouCam AI". The consequence is visible and deliberate —
+on the sample path the provenance ledger names **three** APIs, not four, because no
+relight of that face has been captured.
+
 ## Testing
 
 ```bash
 npm test
 ```
 
-**102 tests in 11 files, all passing** (measured 2026-08-12). Vitest covers occasion parsing, the catalog and garment selection (including guards against mis-gendered styling), the cut preference and the catalogue's 9:1:1 shape, the access gate, the provenance ledger, request validation, rate limiting, stripping raw provider fields out of the stream, and the evidence route — including an assertion that its free mode reaches no network at all, and one that every row of the pinned API contract still matches the receipt it was transcribed from. The API route validates the request body (zod), caps payload size, and rate-limits per IP.
+**112 tests in 12 files, all passing** (measured 2026-08-12). Vitest covers occasion parsing, the catalog and garment selection (including guards against mis-gendered styling), the cut preference and the catalogue's 9:1:1 shape, the access gate, the provenance ledger, request validation, rate limiting, stripping raw provider fields out of the stream, and the evidence route — including an assertion that its free mode reaches no network at all, and one that every row of the pinned API contract still matches the receipt it was transcribed from. The API route validates the request body (zod), caps payload size, and rate-limits per IP.
 
 The four gates this project holds itself to, all green as of 2026-08-10:
 

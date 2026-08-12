@@ -42,10 +42,19 @@ export async function tryOnApparel(
     /** Demo-only: which captured fixture render to serve (by wardrobe kind).
      * Ignored by the live API. */
     renderHint?: string;
+    /** Demo-only: the catalogue id, so a captured render is served ONLY for the
+     * person-and-garment pair it was actually captured for. Ignored live. */
+    garmentId?: string;
   },
   opts?: { intervalMs?: number; timeoutMs?: number },
 ): Promise<RenderedImage> {
-  if (fixturesActive()) return fixtureApparel(args.category, args.renderHint);
+  if (fixturesActive())
+    return fixtureApparel({
+      person: args.person,
+      garmentId: args.garmentId,
+      category: args.category,
+      renderHint: args.renderHint,
+    });
   const { file, task } = endpointsFor("apparelVto");
   const [src, ref] = await Promise.all([
     resolveImage(args.person, file, "src"),

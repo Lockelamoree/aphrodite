@@ -37,9 +37,27 @@ const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 type DemoProfile = "warm" | "cool";
 
-/** FNV-1a fingerprint of public/samples/selfie-2.jpg (content-based, so it
- * survives renames; recompute if that asset is re-encoded). */
-const SAMPLE_B_FNV = 3352317811;
+/**
+ * WHO is in the photo, by content fingerprint.
+ *
+ * Scores and palettes can be labelled illustrative and still be useful. A RENDER
+ * cannot: a picture of a face is a claim about whose face it is. So every captured
+ * render is keyed to the person it actually depicts, and an unrecognised photo gets
+ * no render at all — the honest empty state — instead of a stranger's.
+ *
+ * Fingerprints are content-based, so they survive a rename; recompute them if an
+ * asset is re-encoded.
+ */
+type SamplePerson = "sampleA" | "sampleSelfie" | "sampleB" | "unknown";
+
+const FNV = {
+  /** public/samples/full-body.jpg — the "Wedding · full-body" preset. */
+  sampleA: 3557748833,
+  /** public/samples/selfie.jpg — bundled, no longer used by a preset. */
+  sampleSelfie: 2573357407,
+  /** public/samples/selfie-2.jpg — the selfie-only preset. */
+  sampleB: 3352317811,
+} as const;
 
 function fnv1a(bytes: Uint8Array): number {
   let h = 0x811c9dc5 >>> 0;
@@ -50,9 +68,17 @@ function fnv1a(bytes: Uint8Array): number {
   return h >>> 0;
 }
 
+function personOf(input?: ImageInput): SamplePerson {
+  if (input?.kind !== "bytes") return "unknown";
+  const h = fnv1a(input.data);
+  for (const [who, fp] of Object.entries(FNV) as [SamplePerson, number][]) {
+    if (h === fp) return who;
+  }
+  return "unknown";
+}
+
 function profileFor(input?: ImageInput): DemoProfile {
-  if (input?.kind === "bytes" && fnv1a(input.data) === SAMPLE_B_FNV) return "cool";
-  return "warm";
+  return personOf(input) === "sampleB" ? "cool" : "warm";
 }
 
 const SKIN_SCORES: Record<DemoProfile, Record<string, number>> = {
@@ -128,41 +154,70 @@ export async function fixtureColor(input?: ImageInput): Promise<ColorProfile> {
   return COLOR_PROFILE[profileFor(input)];
 }
 
+/**
+ * Every captured try-on render, keyed to BOTH the person and the garment.
+ *
+ * Keying on the garment kind alone was the bug: `renderHint: "dresses"` served a
+ * render of a stranger in a red gown to whoever asked, under the title "Your
+ * outfit" and the caption "see it on before you buy". Three of the four render
+ * fixtures depicted three different people, none of whom was the visitor — the
+ * same defect class as public/fixtures/skin-overlay.jpg, deleted 2026-08-10 for
+ * showing another man's face beside a photo labelled "your photo", and the P0 that
+ * review 001 raised for uploads and that was only half closed.
+ *
+ * One captured pair survives, because one is all that was ever captured: the
+ * wedding sample wearing the Slate Blue Three-Piece Suit. That table has exactly
+ * as many rows as there are real renders, and the empty states elsewhere are the
+ * honest shape of a demo built on one captured VTO.
+ */
+const CAPTURED_APPAREL: { person: SamplePerson; garmentId: string; url: string; provenance: string }[] = [
+  {
+    person: "sampleA",
+    garmentId: "slate-suit",
+    url: "/fixtures/apparel-suit.jpg",
+    provenance: "live cloth-v3 render of samples/full-body.jpg, receipts/000-misaimed-attempt",
+  },
+];
+
+/**
+ * Every captured relight, keyed to the person.
+ *
+ * public/fixtures/finish.jpg was a FOURTH stranger and carried the whole board as
+ * its editorial hero, under alt text reading "Your finished look, relit for the
+ * occasion". Deleted. What replaces it is the relight YouCam actually returned on
+ * 2026-08-10 — the bytes committed at hackathon/receipts/001/photo_lighting.render.jpg
+ * — served only to the face it belongs to.
+ */
+const CAPTURED_LIGHTING: { person: SamplePerson; url: string; provenance: string }[] = [
+  {
+    person: "sampleSelfie",
+    url: "/fixtures/finish-selfie.jpg",
+    provenance: "live lighting render of samples/selfie.jpg, receipts/001, sha256 44cd13b0…",
+  },
+];
+
 export async function fixtureApparel(
-  category?: ApparelCategory,
-  renderHint?: string,
+  args: { person?: ImageInput; garmentId?: string; category?: ApparelCategory; renderHint?: string },
 ): Promise<RenderedImage> {
   await delay(1500);
-  // Prefer the WARDROBE render hint so the fixture matches what the garment
-  // actually is (a "separates" blazer set must not show the grey men's suit,
-  // even though its VTO category is "full"); fall back to category.
-  const byWardrobe =
-    renderHint === "dresses"
-      ? "/fixtures/apparel-gown.jpg"
-      : renderHint === "separates"
-        ? "/fixtures/apparel-top.jpg"
-        : renderHint === "suits"
-          ? "/fixtures/apparel-suit.jpg"
-          : undefined;
-  const byCategory =
-    category === "dress"
-      ? "/fixtures/apparel-gown.jpg"
-      : category === "top"
-        ? "/fixtures/apparel-top.jpg"
-        : "/fixtures/apparel-suit.jpg";
-  return { url: byWardrobe ?? byCategory, raw: { fixture: true } };
+  const who = personOf(args.person);
+  const hit = CAPTURED_APPAREL.find((r) => r.person === who && r.garmentId === args.garmentId);
+  if (!hit) {
+    // Refuse rather than substitute. The caller turns this into "no captured
+    // render for this photo", which is true, where a substituted render would be
+    // a picture asserting the API dressed someone it never saw.
+    throw new Error("fixture: no captured try-on render for this photo and garment");
+  }
+  return { url: hit.url, raw: { fixture: true, captured: hit.provenance } };
 }
 
 export async function fixtureLighting(input?: ImageInput): Promise<RenderedImage> {
   await delay(900);
-  // The finish is a relit version of the selfie. The cool sample has no captured
-  // relight — so rather than pass off the untouched upload as a "relight" (which
-  // would undercut the honesty story on the very journey that showcases it), we
-  // signal "no lighting pass this run" and let the UI show its honest empty state.
-  if (profileFor(input) === "cool") {
-    throw new Error("fixture: no captured relight for this sample");
+  const hit = CAPTURED_LIGHTING.find((r) => r.person === personOf(input));
+  if (!hit) {
+    throw new Error("fixture: no captured relight for this photo");
   }
-  return { url: "/fixtures/finish.jpg", raw: { fixture: true } };
+  return { url: hit.url, raw: { fixture: true, captured: hit.provenance } };
 }
 
 /**

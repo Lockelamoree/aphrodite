@@ -20,7 +20,7 @@ claiming "45 Vitest tests" against a measured 89.
 
 | Claim | Value | How it was measured | When | Appears in |
 |---|---|---|---|---|
-| Test suite | **102 tests in 11 files, all passing** | `npm test` (vitest 4.1.10) — "Test Files 11 passed (11), Tests 102 passed (102)" | 2026-08-12 | README "Testing", devpost "Hardened boundary" |
+| Test suite | **112 tests in 12 files, all passing** | `npm test` (vitest 4.1.10) — "Test Files 12 passed (12), Tests 112 passed (112)" | 2026-08-12 | README "Testing", devpost "Hardened boundary" |
 | Type check | clean, exit 0 | `npx tsc --noEmit` | 2026-08-10 | README, devpost |
 | Lint | clean, exit 0, no output | `npm run lint` (eslint) | 2026-08-10 | README, devpost |
 | Build | succeeds, 8 routes emitted | `npm run build` | 2026-08-10 | README, devpost |
@@ -35,7 +35,9 @@ claiming "45 Vitest tests" against a measured 89.
 | Unit cost of a live run | **4–5 units** | four task calls per run, one per chained API | 2026-07 | README "Judge mode", `config.json` |
 | Remaining unit balance | **584** | operator-stated. **Not machine-verifiable** — no documented YouCam endpoint exposes a balance | 2026-08-10 | `HACKATHON.md`, `config.json` |
 | Demo video length | **88.0 s**, 1280×932 | `ffprobe` on `submission/aphrodite-demo-2026-08-10.mp4` | 2026-08-10 | the submission, once uploaded. Inside the published 1–3 min window |
-| Screenshot gallery | 9 stills, production build, demo mode | captured headlessly at 1440×900@2×, downscaled to 1600 px; `submission/screenshots/` | 2026-08-10 | the Devpost screenshots field |
+| Screenshot gallery | **10 stills**, production build, demo mode, gate configured | `node scripts/capture-screenshots.mjs` against `npm start`, headless at 1440×900@2×; `submission/screenshots/` | 2026-08-12 | the Devpost screenshots field |
+| Captured renders in demo mode | **2** — one try-on (`sampleA` + `slate-suit`) and one relight (`sampleSelfie`) | the tables in `lib/youcam/fixtures.ts`, pinned by `tests/fixture-identity.test.ts`; every other person-or-garment combination refuses and the UI shows an honest empty state | 2026-08-12 | the product UI, README "Honesty and privacy" |
+| APIs with a visible render on the wedding path | **3** of 4 — skin, colour, apparel | the on-screen provenance ledger reads "3 Perfect Corp APIs produced these samples"; Photo Lighting is absent because no relight of that face has been captured | 2026-08-12 | `submission/screenshots/07-provenance-ledger.jpg` |
 | Captured cool skin scores | dark circles 68, moisture 68, fine lines 82, firmness 83, pore 84, texture 86, age spots 91, acne 99, oiliness 99, redness 99 | a real skin-analysis run on `samples/selfie-2.jpg`; these values now drive the fixture and the on-screen plan | 2026-08-10 | the product UI on the selfie-only path |
 | Captured cool overlay | the dark-circle mask of that same face | same run's `mask_urls`, downloaded and committed as `public/fixtures/skin-overlay-cool.jpg` | 2026-08-10 | the comparator on the selfie-only path |
 | Captured warm colour read | skin `#b7947d`, eye `#000000`, lip `#986861`, eyebrow `#3e3834`, hair "Auburn" | a real skin-tone run on `samples/full-body.jpg`, `face_quality` good on every axis | 2026-08-10 | the palette panel on the wedding path |
@@ -68,6 +70,8 @@ errors, and all seven are committed including the failures.
 | Any retail metric (conversion, return rate) | Perfect Corp publishes such figures; this project has measured none of its own and must not borrow theirs as if it had. | devpost "Built for retail", README |
 | Studio try-ons (hair colour, hairstyle, makeup) | Two of three slugs never verified, no captured fixture, nothing renders. | README surface table, devpost "wired but not shipped" |
 | The warm sample's skin scores | **Illustrative, not captured.** The live API rejects `samples/selfie.jpg` and `samples/full-body.jpg` for skin analysis with `error_src_face_too_small`, so no real read of that person's skin exists. | `lib/youcam/fixtures.ts` provenance header |
+| A relight of the wedding sample | **Does not exist.** `finish.jpg` was a render of a fourth person and was deleted on 2026-08-12; the only captured relight belongs to `samples/selfie.jpg`. One lighting task (~1 unit) on `samples/full-body.jpg` would restore the fourth API on the flagship path. | the lighting slot's empty state, `hackathon/config.json` knownGaps |
+| A second captured try-on render | **Does not exist.** One person-and-garment pair is captured, so two faces cannot yet be seen producing two different garments — the tiebreaker's falsifiability test. | `HACKATHON.md` tiebreaker section |
 | The cool sample's colour profile | **Illustrative, not captured.** `samples/selfie-2.jpg` is rejected for skin-tone with `error_face_not_forward_facing`. | `lib/youcam/fixtures.ts` provenance header |
 | A spoken voiceover on the demo video | Not produced: no TTS on the machine that cut the reel. The narration lines are burned in as captions instead. | `submission/demo-video-script.md` header |
 | Whether the *garment* changes with the face | Partly closed: the two samples now return genuinely different skin reads (one captured, one illustrative) and different plans, but only one apparel render is captured, so a judge still cannot watch two faces produce two different garments. | `HACKATHON.md` tiebreaker section |
