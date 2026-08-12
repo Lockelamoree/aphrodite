@@ -5,6 +5,7 @@ import { parseConciergeRequest } from "@/lib/concierge/request-schema";
 import { sanitizeEvent } from "@/lib/concierge/sanitize";
 import type { AgenticBrain, ConciergeEvent, ConciergeMode } from "@/lib/concierge/types";
 import { env } from "@/lib/env";
+import { readCookie } from "@/lib/http/cookies";
 import { createRateLimiter } from "@/lib/http/rate-limit";
 import { LIVE_COOKIE_NAME, gateEnabled, liveAllowed } from "@/lib/auth/gate";
 import { claim as claimLiveRun } from "@/lib/live/ledger";
@@ -147,16 +148,4 @@ export async function POST(req: Request): Promise<Response> {
       Connection: "keep-alive",
     },
   });
-}
-
-/** Read one cookie without pulling in a parser — the header is tiny and typed here. */
-function readCookie(req: Request, name: string): string | undefined {
-  const header = req.headers.get("cookie");
-  if (!header) return undefined;
-  for (const part of header.split(";")) {
-    const eq = part.indexOf("=");
-    if (eq < 0) continue;
-    if (part.slice(0, eq).trim() === name) return decodeURIComponent(part.slice(eq + 1).trim());
-  }
-  return undefined;
 }

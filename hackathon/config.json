@@ -238,7 +238,7 @@
     "_videoRules": "Published requirement, verified 2026-08-10: a 1-3 minute demo video showing the project functioning on the intended device and explaining which YouCam API is used. It must be hosted on YouTube (preferred) or Vimeo (the event page also lists Youku) with a public link, and must carry no unauthorised third-party trademarks or copyrighted material. Judges are not required to watch past three minutes. A file served from our own VPS does NOT satisfy this.",
     "_screenshotsRequired": "Screenshots are a REQUIRED submission field, not optional. The existing six PNGs in ~/aphrodite-demo/screenshots/ are dated 2026-07-26, live outside the repo and show a pre-gate, pre-cycle-6 UI — they must be re-captured from the corrected hosted build.",
     "_testingAccessRule": "The project must be available free of charge for testing through the end of the submission period, and login credentials must be supplied if the site is private. Our public path is keyless; the paths that spend money need the role code, so that code belongs in the Devpost testing-instructions field.",
-    "videoUrl": "UNKNOWN — first cut exists untracked at submission/aphrodite-demo.mp4 (~90 s), not uploaded",
+    "videoUrl": "NOT UPLOADED — the canonical cut is submission/aphrodite-demo-2026-08-10.mp4 (88 s, captions, no audio). The two earlier cuts under submission/archive-old-cuts/ must not be published: one carries a banned word in a burned-in subtitle and the retired four-tick ledger. Paste the YouTube/Vimeo URL here and into Devpost.",
     "fields": [
       "tagline",
       "elevator_pitch",
@@ -296,11 +296,6 @@
       "blockedOn": "verified imagery + one units-on capture session"
     },
     {
-      "title": "The deployed revision is behind origin/main",
-      "detail": "/healthz reported revision edb01c2 on 2026-08-10 while origin/main is 22b86cc — one commit (the machine-contract record) has not been rolled out. A judge who compares the running revision against the public default branch sees drift, and the health gate's revision == built SHA assertion cannot catch it because it only checks the release it just built.",
-      "blockedOn": "one deploy/deploy.sh run on the VPS"
-    },
-    {
       "title": "The bundled wedding selfie cannot be analysed live",
       "detail": "public/samples/selfie.jpg — the selfie the flagship 'Wedding · full-body' preset sends, and the first thing a judge clicks — was rejected by BOTH analysis APIs on 2026-08-10: skin analysis returned error_src_face_too_small and skin-tone returned error_face_angle_downward. Receipts in hackathon/receipts/001/. Fixtures hide this completely, so the demo looks perfect while the same click with units on returns nothing. The colour API succeeds on samples/full-body.jpg, so the API is fine and the sample photo is not. Consequence: closing kill-gate 2 needs a suitable sample image, not just approval to spend.",
       "blockedOn": "a sample photo with a larger, frontal face, then one more units-on run"
@@ -314,6 +309,11 @@
       "title": "What the live API accepts as a face is not what its error strings imply",
       "detail": "Five images screened against skin-tone-analysis 2026-08-10. Only samples/full-body.jpg passed - the image with the SMALLEST face. A tight frontal headshot was rejected error_face_angle_downward, a three-quarter portrait error_face_not_forward_facing, and a frontal eye-level headshot error_face_position_too_small at both 900x900 and 2000x2500 with margin. The API is deterministic per image, but 'bigger and more frontal' is demonstrably not the criterion, so choosing a sample that satisfies both analysis endpoints costs one unit per attempt.",
       "blockedOn": "trial and error against the live API, budgeted in units"
+    },
+    {
+      "title": "The receipts folder does not account for every live task the docs cite",
+      "detail": "CLAIM_PROOF_MAP.md states 'seven tasks, ~7 units ... all seven are committed', and the two receipt files carry exactly seven. But the same file cites live results with no committed receipt: a SUCCESSFUL skin-analysis run on samples/selfie-2.jpg (the captured cool scores and the committed mask), that photo's error_face_not_forward_facing skin-tone rejection, and two headshot screenings at 900x900 and 2000x2500. That is at least four further tasks. Either the seven-task total understates the real spend - which also makes the ~577 remaining-balance arithmetic wrong - or those runs happened outside the receipt harness and were never recorded. The receipts README's claim that nothing was quietly dropped is in tension with either reading. Found 2026-08-12 by transcribing the receipts into lib/youcam/contract.ts and finding cited results with no task_id behind them.",
+      "blockedOn": "operator: reconcile the spend against the Perfect Corp console, then correct whichever number is wrong. Not to be resolved by deleting the citations."
     }
   ],
   "closedGaps": [
@@ -339,6 +339,18 @@
       "title": "Screenshots were stale and outside the repo",
       "closed": "2026-08-10",
       "how": "Nine stills captured from a production build of the corrected code, committed at submission/screenshots/ with a note on what each one proves. Screenshots are a REQUIRED Devpost field; the old six PNGs from 2026-07-26 showed a pre-gate UI that no longer exists."
+    },
+    {
+      "title": "The deployed revision was behind origin/main",
+      "closed": "2026-08-12",
+      "how": "/healthz reports revision e791a7e, equal to origin/main, re-read from outside. The live HTML was re-checked in the same pass: zero hits for the two retired hero over-claims, one /unlock link, one 'Demo mode' marker.",
+      "costOfGettingThere": "Nothing. The gap closed itself when the 2026-08-10 work was deployed; what it cost was the two days it sat in this file unverified."
+    },
+    {
+      "title": "The kill gate cited an endpoint that 404'd in production",
+      "closed": "2026-08-12",
+      "how": "/api/dev/verify no longer keys off NODE_ENV. It has two modes split by what they COST: the default replays the request/response contract pinned from the committed receipts and spends zero units, and ?spend=1 makes real calls metered by the same ledger as the product. Both sit behind the role cookie when the gate is configured. Driven against a production build: 401 anonymous, 200 with a redeemed judge cookie, 400 for spend=1 without an image, 409 when the budget is exhausted, 503 with no key - and the ledger file was never written.",
+      "costOfGettingThere": "The obvious fix - deleting the NODE_ENV guard - would have opened a live YouCam harness to anyone holding a code, where one page refresh costs units. The route had to be split before it could be un-404'd."
     }
   ]
 }

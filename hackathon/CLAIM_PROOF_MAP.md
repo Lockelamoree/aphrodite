@@ -20,7 +20,7 @@ claiming "45 Vitest tests" against a measured 89.
 
 | Claim | Value | How it was measured | When | Appears in |
 |---|---|---|---|---|
-| Test suite | **89 tests in 10 files, all passing** | `npm test` (vitest 4.1.10) — "Test Files 10 passed (10), Tests 89 passed (89)" | 2026-08-10 | README "Testing", devpost "Hardened boundary" |
+| Test suite | **102 tests in 11 files, all passing** | `npm test` (vitest 4.1.10) — "Test Files 11 passed (11), Tests 102 passed (102)" | 2026-08-12 | README "Testing", devpost "Hardened boundary" |
 | Type check | clean, exit 0 | `npx tsc --noEmit` | 2026-08-10 | README, devpost |
 | Lint | clean, exit 0, no output | `npm run lint` (eslint) | 2026-08-10 | README, devpost |
 | Build | succeeds, 8 routes emitted | `npm run build` | 2026-08-10 | README, devpost |
@@ -40,7 +40,9 @@ claiming "45 Vitest tests" against a measured 89.
 | Captured cool overlay | the dark-circle mask of that same face | same run's `mask_urls`, downloaded and committed as `public/fixtures/skin-overlay-cool.jpg` | 2026-08-10 | the comparator on the selfie-only path |
 | Captured warm colour read | skin `#b7947d`, eye `#000000`, lip `#986861`, eyebrow `#3e3834`, hair "Auburn" | a real skin-tone run on `samples/full-body.jpg`, `face_quality` good on every axis | 2026-08-10 | the palette panel on the wedding path |
 | DNS | `aphrodite.max-gutowski.de` → `152.53.229.182` | `getent hosts` | 2026-08-10 | README, devpost |
-| Deployed revision | see `/healthz` | `GET /healthz` on the hosted instance | 2026-08-10 | `/healthz` |
+| Deployed revision | `e791a7e`, **equal to `origin/main`** | `GET /healthz` on the hosted instance, compared against `git rev-parse origin/main` | 2026-08-12 | `/healthz` |
+| Judging-time evidence route | `/api/dev/verify` answers **200** in production behind the role cookie, **401** without it, and its default mode spends **0 units** | driven against a production build (`npm start`, `NODE_ENV=production`) on 2026-08-12: 401 anonymous, 200 with a redeemed judge cookie, ledger file never written; `tests/verify-route.test.ts` fails the suite if the free path touches the network | 2026-08-12 | `config.json` kill gate 2, README, devpost |
+| Pinned contract matches the receipts | every row of `lib/youcam/contract.ts` matches the receipt it names, by `task_id`, endpoint pair, duration and render hash | `tests/verify-route.test.ts` — "the pinned contract matches the committed receipts" reads `hackathon/receipts/*/receipt.json` and compares field by field | 2026-08-12 | `/api/dev/verify` |
 
 ## Measured against the live API, 2026-08-10 — `hackathon/receipts/`
 
@@ -75,5 +77,6 @@ errors, and all seven are committed including the failures.
 | Contradiction | State |
 |---|---|
 | `/healthz` reports `youcam_apis_wired: 8` while the honest figure to judge on is 4 | documented in README and devpost; the fix is to drop `lookVto` (0 call sites) and report the rendering count separately |
-| Live revision `edb01c2` is behind `origin/main` | declared in `config.json` `knownGaps`; both intervening commits touch only `hackathon/`, so product code is at parity |
-| The hero stat block in `components/Concierge.tsx` claims 4 fired APIs in demo mode | **open defect**, review 002 fatal flaw 1 — a code fix, not a copy fix |
+| ~~Live revision `edb01c2` is behind `origin/main`~~ | **closed 2026-08-12.** `/healthz` reports `e791a7e`, equal to `origin/main`. Re-verified from outside |
+| ~~The hero stat block claims 4 fired APIs in demo mode~~ | **closed** in `bc1ef29`, re-verified in the live HTML on 2026-08-12: 0 hits for "APIs chained in one run" and 0 for "read from your own photo", 1 link to `/unlock`, 1 "Demo mode" |
+| The receipts folder does not account for every live task this file cites | **open, and it cuts against us.** This file says "seven tasks, ~7 units … all seven are committed", and the two receipt files do carry exactly seven. But rows above also cite live results with **no committed receipt**: the captured cool skin scores and mask (a successful `skin-analysis` run on `samples/selfie-2.jpg`), that same photo's `error_face_not_forward_facing` skin-tone rejection, and two headshot screenings at 900×900 and 2000×2500. Those are at least four further tasks. So either the "seven tasks / ~7 units" total understates the real spend — which would also make the ~577 remaining-balance arithmetic wrong — or those runs happened outside the receipt harness and were never written down. Operator call: reconcile against the Perfect Corp console, then correct whichever number is wrong. Do not resolve it by deleting the citations |

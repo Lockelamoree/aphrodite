@@ -16,7 +16,7 @@
 | **4** YouCam APIs chained in one run | Skin Analysis → Skin-Tone → Apparel Try-On → Photo Lighting |
 | **~4.5 s** for the whole loop | measured on the hosted instance |
 | **0** API units to look | every public path is fixture-served, and the page says so on screen |
-| **89** tests in 10 files | `tsc` / `lint` / `build` green too, measured 2026-08-10 |
+| **102** tests in 11 files | `tsc` / `lint` / `build` green too, measured 2026-08-12 |
 | **8** APIs declared, **4** that render | the honest surface — see "YouCam APIs used" below |
 | **88 s** demo video | inside the 1–3 minute window, cut from a production build |
 
@@ -67,7 +67,7 @@ Most virtual try-on demos stop at "here's a garment on you." Before a wedding or
 - **Two engines, one event stream.** An **agentic** engine (Claude *or* GPT) orchestrates the YouCam REST APIs via typed function-calling tools, reasoning over your scores; and a **guided** rule engine produces the *same* board with no LLM at all. They emit an identical event stream, so the UI doesn't care which drove the run. The app works on a YouCam key alone; the LLM is a pure upgrade.
 - **YouCam / Perfect Corp AI API** drives every render over REST: Skin Analysis, Skin-Tone / Facial Color, Apparel Try-On and AI Photo Lighting. Three further endpoints are wired but render nothing, and are not counted — see "YouCam APIs used".
 - **Cost-safe demo mode.** A fixture/replay layer serves real captured YouCam outputs so the entire app — plan, try-on, refine, save, check-in — runs with **zero API units and no keys**, and the UI labels itself *"demo mode · sample renders"* so nothing over-claims.
-- **Hardened boundary.** zod request validation, per-IP rate limiting, a payload-size cap, and raw provider fields stripped out of the stream. 89 Vitest tests in 10 files (occasion parsing, garment selection incl. mis-gender guards, the cut preference, the access gate, the provenance ledger, request validation, raw-field stripping, rate limiting); `tsc` / `lint` / `build` green — all four measured 2026-08-10.
+- **Hardened boundary.** zod request validation, per-IP rate limiting, a payload-size cap, and raw provider fields stripped out of the stream. 102 Vitest tests in 11 files (occasion parsing, garment selection incl. mis-gender guards, the cut preference, the access gate, the provenance ledger, request validation, raw-field stripping, rate limiting, and the evidence route); `tsc` / `lint` / `build` green — all four measured 2026-08-12.
 
 ## YouCam APIs used
 
@@ -106,7 +106,9 @@ How much of a "wow" try-on demo is actually *product coherence* — timing, prov
 **The fastest path is the hosted instance — https://aphrodite.max-gutowski.de — no
 install, no key, zero units.** Pick the *"Wedding · full-body"* sample. For live renders
 and the agentic engine, redeem the code from the *Testing instructions* field at
-[`/unlock`](https://aphrodite.max-gutowski.de/unlock).
+[`/unlock`](https://aphrodite.max-gutowski.de/unlock). With that cookie,
+[`/api/dev/verify`](https://aphrodite.max-gutowski.de/api/dev/verify) replays the live
+API contract from committed receipts — including the failures — at zero units.
 
 Or run it locally:
 
@@ -132,6 +134,16 @@ To judge the paths that spend money (live YouCam renders + the GPT-5 agentic eng
   2. enter the judging code:  <PASTE THE JUDGE CODE HERE — NOT IN THE PUBLIC REPO>
   3. that sets a 12-hour cookie; live runs are metered by a ledger and the remaining
      budget is visible at /healthz
+
+With that same cookie, the API evidence is readable without spending anything:
+  https://aphrodite.max-gutowski.de/api/dev/verify
+It replays the Perfect Corp request/response contract exactly as the live API
+answered it on 2026-08-10 — real task ids, the four-step call sequence, the sha256 of
+the images YouCam returned, and the two tasks that FAILED, including the one that
+rejects our own bundled wedding selfie. Every row is transcribed from a receipt
+committed in the repo under hackathon/receipts/, and serving it calls nothing, so you
+can refresh it. Append &spend=1&image=<https url> to make real calls instead; that
+path is metered by the same ledger.
 
 State is checkable from outside without a key:
   https://aphrodite.max-gutowski.de/healthz

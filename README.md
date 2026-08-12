@@ -12,7 +12,7 @@ Most virtual try-on demos stop at "here's a garment on you." I wanted the thing 
 |---|---|
 | **4** YouCam APIs chained in one run | Skin Analysis → Skin-Tone → Apparel Try-On → Photo Lighting |
 | **~4.5 s** end to end | measured on the hosted instance, fixture-served |
-| **89** tests in 10 files | `npm test`, measured 2026-08-10; `tsc` / `lint` / `build` also green |
+| **102** tests in 11 files | `npm test`, measured 2026-08-12; `tsc` / `lint` / `build` also green |
 | **0** API units to look | every publicly reachable path is fixture-served, and the page says so |
 | **11 / 17** catalogue | garments / skincare SKUs, cross-checkable at [`/healthz`](https://aphrodite.max-gutowski.de/healthz) |
 
@@ -157,6 +157,28 @@ The LLM probe is a `GET /v1/models` call, so a health check never costs money. Y
 is deliberately *not* probed, because every YouCam task call spends units from a
 finite tier.
 
+### The API evidence, without spending anything
+
+`GET /api/dev/verify` answers the question a judge cannot otherwise settle: does this
+project really talk to Perfect Corp, and what does the wire look like?
+
+It has two modes, split by what they **cost**:
+
+| Request | What it does | Units |
+|---|---|---|
+| `/api/dev/verify` | replays the pinned request/response contract, transcribed from receipts committed under `hackathon/receipts/` — the four-step call sequence, real `task_id`s, the sha256 and byte count of the images YouCam returned, and the terminal poll envelopes **including the two tasks that failed** | **0** |
+| `/api/dev/verify?spend=1&image=<https url>` | makes real calls, metered by the same ledger as the product and refused when the budget is out | 1 per step |
+
+Both sit behind the role code redeemed at `/unlock` whenever the gate is configured;
+with no gate configured, local development and CI reach them freely. The free mode is
+the one that matters for judging: it is refreshable, it names the failures, and
+`tests/verify-route.test.ts` fails the suite if that path ever touches the network or
+if a pinned row stops matching the receipt it claims to come from.
+
+The route used to `404` in production, on purpose — it was born as a live harness, and
+a live harness open on the internet is a money leak. Splitting it by cost is what made
+the evidence reachable without making a page refresh expensive.
+
 ## Honesty and privacy
 
 This is a hackathon entry, and being straight with the user matters to me. The app never passes a sample render off as a live one; the before/after only ever shows real YouCam output; the saved plan keeps no image or raw API data; image processing sits behind an explicit consent step; and every bit of skin guidance is cosmetic, not medical.
@@ -167,7 +189,7 @@ This is a hackathon entry, and being straight with the user matters to me. The a
 npm test
 ```
 
-**89 tests in 10 files, all passing** (measured 2026-08-10). Vitest covers occasion parsing, the catalog and garment selection (including guards against mis-gendered styling), the cut preference and the catalogue's 9:1:1 shape, the access gate, the provenance ledger, request validation, rate limiting, and stripping raw provider fields out of the stream. The API route validates the request body (zod), caps payload size, and rate-limits per IP.
+**102 tests in 11 files, all passing** (measured 2026-08-12). Vitest covers occasion parsing, the catalog and garment selection (including guards against mis-gendered styling), the cut preference and the catalogue's 9:1:1 shape, the access gate, the provenance ledger, request validation, rate limiting, stripping raw provider fields out of the stream, and the evidence route — including an assertion that its free mode reaches no network at all, and one that every row of the pinned API contract still matches the receipt it was transcribed from. The API route validates the request body (zod), caps payload size, and rate-limits per IP.
 
 The four gates this project holds itself to, all green as of 2026-08-10:
 
