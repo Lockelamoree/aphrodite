@@ -18,7 +18,7 @@
 | **0** API units to look | every public path is fixture-served, and the page says so on screen |
 | **117** tests in 12 files | `tsc` / `lint` / `build` green too, measured 2026-08-12 |
 | **8** APIs declared, **4** rendering on a reachable path | the honest surface — see "YouCam APIs used" below |
-| **88 s** demo video | inside the 1–3 minute window, cut from a production build |
+| **88 s** demo video, spoken narration | inside the 1–3 min window, cut from a production build; rebuildable from `submission/narration.txt` |
 
 No signup, no key, nothing to install. The bundled *"Wedding · full-body"* sample drives
 the complete loop. What you see is **captured YouCam renders**, and the announcement bar

@@ -1,0 +1,21 @@
+# Narration for the demo reel — one line per beat, spoken in order.
+#
+# Lines starting with # are comments. A beat's footage is recorded by
+# scripts/record-demo.mjs under the same id; scripts/build-demo-video.mjs synthesises
+# each line with Piper and holds the footage for exactly as long as the line takes,
+# so editing a line here re-times the cut without touching the footage.
+#
+# The vocabulary law in hackathon/VOCABULARY.md is binding here too: no camouflage,
+# flawless, glowing, perfect skin, flaws, simulated. "Glow" is avoided entirely — it is
+# one inflection from a banned word and this is the artifact a grep cannot audit.
+
+b1-landing | An occasion, and one selfie. Aphrodite reads your skin, plans the days before it, and dresses you for the day itself.
+b2-skin | This is the bundled wedding sample. The YouCam Skin Analysis API returns ten scores, and the plan leads with the lowest of them.
+b3-colour | YouCam Skin-Tone Analysis reads the colour of this face — undertone, depth, a palette — and that reading is what chooses the garment.
+b4-tryon | The YouCam Apparel Try-On API puts the Slate Blue Three-Piece Suit on this photo. Photo Lighting then relights the same photo for the evening.
+b5-ledger | Four Perfect Corp APIs, and the ledger says plainly that nothing was called just now. These are captured renders, and each one has a receipt committed in the repository.
+b6-second-face | A second face, a cooler reading, and a different garment — rendered on her own photo. That is the fused chain being shown rather than described.
+b7-countdown | The countdown changes in kind with the date. Three weeks out it front-loads actives; the night before it stops them and switches to hydration.
+b8-basket | Then one basket: the skincare, the garment, and matched accessories, priced together.
+b9-empty | There is no captured relight of this second face, so the panel says so. Renders are keyed to the person they depict — hand it a photo it has never seen and it refuses instead of showing you a stranger.
+b10-judges | For judges: the hosted instance is open and costs nothing. A code unlocks the live runs, metered by a ledger, and the pinned API contract is readable at slash api slash dev slash verify.

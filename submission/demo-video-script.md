@@ -1,31 +1,48 @@
-# Aphrodite — demo video shot-script (target ≤ 2:50)
+# Aphrodite — demo video shot-script
 
-> **Recorded 2026-08-10 → `submission/aphrodite-demo-2026-08-10.mp4`, 88 s, 1280×932.**
-> Cut from a production build in demo mode, zero YouCam units. What shipped differs
-> from the plan below in three ways, all deliberate:
+> **Superseded by a reproducible pipeline on 2026-08-12.** The reel is no longer hand-cut:
 >
-> 1. **Captions, no voiceover.** The TTS environment the earlier takes used
->    (`edge-tts`) no longer exists on this machine, so the narration lines are burned in
->    as on-screen captions instead of spoken. The Devpost rule requires the video to
->    show the product working and name the YouCam API used — captions do both — but a
->    spoken track would score better on presentation. Re-recording the audio needs only
->    a TTS and the lines below.
-> 2. **Two segments, because honesty forces it.** The wedding path carries the fused
->    chain and the Apparel VTO render. The selfie-only path carries the *captured* skin
->    overlay — the only mask in the repo taken from the face it is shown beside — plus
->    the honest empty state where a render would otherwise be invented.
-> 3. **No comparator on the wedding path.** Its mask was a different person's face and
->    was removed; see `lib/youcam/fixtures.ts`.
+> - **Narration** lives in `submission/narration.txt`, one line per beat.
+> - **Footage** is recorded by `scripts/record-demo.mjs`, one frame directory per beat,
+>   driving the real app in demo mode at zero units.
+> - **The cut** is assembled by `scripts/build-demo-video.mjs`: it synthesises each line
+>   with Piper, then holds that beat's footage for exactly as long as the line takes.
 >
-> Every caption is anchored to the element it describes. An earlier cut captioned "the
-> outfit is rendered on the body" over the basket list, which is exactly the kind of
-> small lie this project refuses elsewhere.
+> So the narration is the clock. Re-wording a line re-times the cut with no re-recording,
+> and `VOICE_MODEL=…onnx` re-voices the whole reel without touching a caption by hand.
 >
-> **Two older cuts are archived, not published:** `submission/archive-old-cuts/`. The
-> 87 s cut carries a banned word in its burned-in subtitle at ~0:52 and a pre-fix
-> provenance ledger at ~0:30; the 122 s cut predates the gate entirely. Neither may be
-> uploaded.
+> ```bash
+> npm run build && YOUCAM_FIXTURES=1 PORT=3317 APHRODITE_LIVE_CODES=judge:CODE \
+>   APHRODITE_AUTH_SECRET=secret npm start &
+> APHRODITE_SHOT_CODE=CODE node scripts/record-demo.mjs http://localhost:3317 /tmp/footage
+> PIPER=/path/to/venv/bin/python VOICE_MODEL=/path/to/en_US-hfc_female-medium.onnx \
+>   node scripts/build-demo-video.mjs /tmp/footage submission/aphrodite-demo-2026-08-12-voiced.mp4
+> ```
+>
+> **Current cut:** `submission/aphrodite-demo-2026-08-12-voiced.mp4`, 88.4 s, 1280×800,
+> spoken narration (`en_US-hfc_female-medium`, local, no text leaves the machine) with
+> burned captions in the same words.
+>
+> **Two things this pipeline fixed, both found by watching the output:**
+>
+> 1. The first build recorded each sample run *inside* the beat that described its
+>    result. A beat is trimmed to the length of its narration, from the front, so the
+>    footage that survived showed the form filling in while the voice described a render
+>    further down the page. The run is now driven before recording starts.
+> 2. Beat 4 scrolled to the wrong panel: its anchor text `Your outfit` also appears in
+>    the basket blurb ("your outfit is rendered on you with YouCam AI"), so the try-on
+>    beat framed the shopping list. Anchors are now unique strings.
+>
+> Both are the same class of defect as the captions this project has caught before —
+> words describing something that is not on screen — and neither is visible from the
+> code.
+>
+> **Do not publish** the captions-only cut of 2026-08-10 or anything under
+> `submission/archive-old-cuts/`: one carries a banned word in a burned-in subtitle at
+> ~0:52 and a retired provenance ledger at ~0:30, the other predates the access gate.
 
+The original hand-cut plan follows, kept because its beat structure is still the shape
+of the reel.
 
 > The Devpost rule: a 1–3 min video that shows **YouCam API integration** + on-device
 > (app-running) footage. Record in **demo mode** (`YOUCAM_FIXTURES=1`) so it costs

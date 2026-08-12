@@ -34,7 +34,8 @@ claiming "45 Vitest tests" against a measured 89.
 | Units per public visit | **0** | `live_runs_used` held at 0/8 on the hosted instance across every run review 002 drove | 2026-08-10 | README, devpost, product UI |
 | Unit cost of a live run | **4–5 units** | four task calls per run, one per chained API | 2026-07 | README "Judge mode", `config.json` |
 | Remaining unit balance | **584** | operator-stated. **Not machine-verifiable** — no documented YouCam endpoint exposes a balance | 2026-08-10 | `HACKATHON.md`, `config.json` |
-| Demo video length | **88.0 s**, 1280×932 | `ffprobe` on `submission/aphrodite-demo-2026-08-10.mp4` | 2026-08-10 | the submission, once uploaded. Inside the published 1–3 min window |
+| Demo video length | **88.4 s**, 1280×800, h264 + aac | `ffprobe` on `submission/aphrodite-demo-2026-08-12-voiced.mp4` | 2026-08-12 | the submission, once uploaded. Inside the published 1–3 min window |
+| Demo video narration | **spoken**, local Piper `en_US-hfc_female-medium`, captions carrying the same words | `scripts/build-demo-video.mjs` synthesises each line in `submission/narration.txt` and holds its footage to that length; the caption is drawn from the same string | 2026-08-12 | the reel |
 | Screenshot gallery | **10 stills**, production build, demo mode, gate configured | `node scripts/capture-screenshots.mjs` against `npm start`, headless at 1440×900@2×; `submission/screenshots/` | 2026-08-12 | the Devpost screenshots field |
 | Captured renders in demo mode | **4** — two try-ons (`sampleA` + `slate-suit`, `sampleB` + `sky-wrap-maxi`) and two relights (`sampleSelfie`, `sampleA`) | the tables in `lib/youcam/fixtures.ts`, pinned by `tests/fixture-identity.test.ts`; every other person-or-garment combination refuses and the UI shows an honest empty state | 2026-08-12 | the product UI, README "Honesty and privacy" |
 | APIs with a visible render on the wedding path | **4** of 4 | the on-screen provenance ledger; the relight was captured 2026-08-12 (`receipts/002`) | 2026-08-12 | `submission/screenshots/07-provenance-ledger.jpg` |
@@ -74,7 +75,6 @@ errors, and all seven are committed including the failures.
 | The warm sample's skin scores | **Illustrative, not captured.** The live API rejects `samples/selfie.jpg` and `samples/full-body.jpg` for skin analysis with `error_src_face_too_small`, so no real read of that person's skin exists. | `lib/youcam/fixtures.ts` provenance header |
 | A render for an uploaded photo in demo mode | **Not captured, and refused rather than substituted.** Four captured renders exist, all keyed to the face they depict; any other photo gets an honest "no captured render for this photo". | the try-on and lighting empty states |
 | The cool sample's colour profile | **Illustrative, not captured.** `samples/selfie-2.jpg` is rejected for skin-tone with `error_face_not_forward_facing`. | `lib/youcam/fixtures.ts` provenance header |
-| A spoken voiceover on the demo video | Not produced: no TTS on the machine that cut the reel. The narration lines are burned in as captions instead. | `submission/demo-video-script.md` header |
 | Whether the *garment* changes with the face | Partly closed: the two samples now return genuinely different skin reads (one captured, one illustrative) and different plans, but only one apparel render is captured, so a judge still cannot watch two faces produce two different garments. | `HACKATHON.md` tiebreaker section |
 
 ## Known contradictions still open

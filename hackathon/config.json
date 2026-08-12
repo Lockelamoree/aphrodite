@@ -238,7 +238,7 @@
     "_videoRules": "Published requirement, verified 2026-08-10: a 1-3 minute demo video showing the project functioning on the intended device and explaining which YouCam API is used. It must be hosted on YouTube (preferred) or Vimeo (the event page also lists Youku) with a public link, and must carry no unauthorised third-party trademarks or copyrighted material. Judges are not required to watch past three minutes. A file served from our own VPS does NOT satisfy this.",
     "_screenshotsRequired": "Screenshots are a REQUIRED submission field, not optional. The existing six PNGs in ~/aphrodite-demo/screenshots/ are dated 2026-07-26, live outside the repo and show a pre-gate, pre-cycle-6 UI — they must be re-captured from the corrected hosted build.",
     "_testingAccessRule": "The project must be available free of charge for testing through the end of the submission period, and login credentials must be supplied if the site is private. Our public path is keyless; the paths that spend money need the role code, so that code belongs in the Devpost testing-instructions field.",
-    "videoUrl": "NOT UPLOADED — the canonical cut is submission/aphrodite-demo-2026-08-10.mp4 (88 s, captions, no audio). The two earlier cuts under submission/archive-old-cuts/ must not be published: one carries a banned word in a burned-in subtitle and the retired four-tick ledger. Paste the YouTube/Vimeo URL here and into Devpost.",
+    "videoUrl": "NOT UPLOADED — the canonical cut is submission/aphrodite-demo-2026-08-12-voiced.mp4 (88.4 s, 1280x800, h264+aac, SPOKEN narration via local Piper en_US-hfc_female-medium, burned captions matching the spoken lines word for word). Rebuild or re-voice with scripts/record-demo.mjs + scripts/build-demo-video.mjs; the lines live in submission/narration.txt. Earlier cuts (captions-only 88 s, and the two under submission/archive-old-cuts/) must not be published. Paste the YouTube/Vimeo URL here and into Devpost.",
     "fields": [
       "tagline",
       "elevator_pitch",
@@ -305,7 +305,7 @@
     },
     {
       "title": "Demo video recorded but not uploaded",
-      "detail": "submission/aphrodite-demo-2026-08-10.mp4, 88 s, cut 2026-08-10 from a production build in demo mode. Inside the published 1-3 minute window, every caption anchored to the panel it describes, each YouCam API named as it appears. It carries CAPTIONS AND NO AUDIO: the TTS environment the earlier takes used no longer exists on the workstation, so the narration lines are burned in rather than spoken. Two older cuts are archived under submission/archive-old-cuts/ and must not be published.",
+      "detail": "submission/aphrodite-demo-2026-08-12-voiced.mp4, 88.4 s, 1280x800, cut 2026-08-12 from a production build in demo mode at zero units. SPOKEN narration (local Piper en_US-hfc_female-medium) with burned captions carrying the same words, so what is heard and what is read cannot drift. Every beat records only the state its line describes - the run is driven before recording starts, because a beat is trimmed to the length of its narration and the first cut therefore showed a form filling in while the voice described a render further down the page. Reproducible: scripts/record-demo.mjs then scripts/build-demo-video.mjs, with the lines in submission/narration.txt; swapping VOICE_MODEL re-voices the whole reel. The captions-only cut of 2026-08-10 and the two cuts under submission/archive-old-cuts/ must not be published.",
       "blockedOn": "operator: upload to YouTube or Vimeo, paste the URL here and into Devpost"
     },
     {
