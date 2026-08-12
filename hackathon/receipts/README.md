@@ -90,3 +90,33 @@ replace.
 
 Result URLs inside the JSON are presigned and expire after two hours — the committed
 hashes and the committed render are what remain checkable.
+
+---
+
+## 002 and 003 — the two tasks of 2026-08-12
+
+Captured with explicit operator approval against `main` @ `cd90fa2`, **two tasks, two
+successes**, after the render fixtures were keyed to the person they depict and the
+project found itself one relight and one try-on short of an honest demo.
+
+| Receipt | API | Input | Result |
+|---|---|---|---|
+| `002` | Photo Lighting `/s2s/v2.0/task/lighting` | `samples/full-body.jpg` — the face the flagship preset actually sends | **success**, 158,838 bytes, `sha256 28237262…`, 10.3 s. Bytes committed as `002/photo_lighting.render.jpg` and re-verified after download |
+| `003` | Apparel VTO `/s2s/v2.0/task/cloth-v3` | `samples/selfie-2.jpg` + the Sky Wrap Maxi Dress reference | **success**, 306,170 bytes, `sha256 40ba8d1d…`, 16.5 s. Bytes committed as `003/apparel_vto.render.jpg` |
+
+**Why these two and not others.** `002` replaces `finish.jpg`, which was deleted the same
+day because it showed a fourth person under the caption "Occasion lighting · rendered by
+YouCam AI" — the fourth API now renders on the flagship path with a receipt behind it
+instead of a borrowed face. `003` is the tiebreaker: the special category asks for Skin AI
+and Apparel VTO fused into one experience, and a judge cannot watch a skin read decide
+anything if only one face ever produces a garment. Two faces now produce two different
+garments, each on its own photo.
+
+`samples/selfie-2.jpg` is a portrait, so the render shows the dress at the neckline rather
+than a full outfit. That is what the API returned for that crop, and it is what the panel
+shows — the input was not upgraded after the fact to make the output look better.
+
+**Balance.** Two tasks spent here. The remaining-unit figure in `HACKATHON.md` is
+operator-stated and still not machine-verifiable, and `hackathon/config.json` carries an
+open gap about tasks this repo cites without a receipt. These two are not part of that
+gap: both are committed in full, including their inputs.

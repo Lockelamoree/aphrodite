@@ -279,7 +279,10 @@
     "unitBalanceSource": "stated by the operator. NOT machine-readable: no documented YouCam endpoint exposes the remaining balance, so this number cannot be re-verified from the app and must be refreshed by hand after any units-on session.",
     "unitCostPerRun": "~4-5 units for a full concierge run (skin analysis, facial colour, apparel try-on, photo lighting).",
     "allocation": "UNDECIDED as of 2026-08-10 — the operator splits the 584 after review 002. Candidates: judge-facing live runs (APHRODITE_LIVE_RUN_BUDGET, currently 8), a studio/menswear fixture capture session, a video re-record.",
-    "fixtureDefault": "YOUCAM_FIXTURES=1 is the committed default and costs zero units."
+    "fixtureDefault": "YOUCAM_FIXTURES=1 is the committed default and costs zero units.",
+    "unitsSpentLog": [
+      "2026-08-12: 2 tasks (receipts/002 lighting on full-body.jpg, receipts/003 cloth-v3 on selfie-2.jpg), both success"
+    ]
   },
   "llm": {
     "provider": "openai",
@@ -314,11 +317,6 @@
       "title": "The receipts folder does not account for every live task the docs cite",
       "detail": "CLAIM_PROOF_MAP.md states 'seven tasks, ~7 units ... all seven are committed', and the two receipt files carry exactly seven. But the same file cites live results with no committed receipt: a SUCCESSFUL skin-analysis run on samples/selfie-2.jpg (the captured cool scores and the committed mask), that photo's error_face_not_forward_facing skin-tone rejection, and two headshot screenings at 900x900 and 2000x2500. That is at least four further tasks. Either the seven-task total understates the real spend - which also makes the ~577 remaining-balance arithmetic wrong - or those runs happened outside the receipt harness and were never recorded. The receipts README's claim that nothing was quietly dropped is in tension with either reading. Found 2026-08-12 by transcribing the receipts into lib/youcam/contract.ts and finding cited results with no task_id behind them.",
       "blockedOn": "operator: reconcile the spend against the Perfect Corp console, then correct whichever number is wrong. Not to be resolved by deleting the citations."
-    },
-    {
-      "title": "No captured relight of the flagship sample, so the fourth API renders nothing a judge reaches",
-      "detail": "public/fixtures/finish.jpg was deleted on 2026-08-12 because it depicted someone who appears in no sample. The only captured relight belongs to samples/selfie.jpg, which no preset sends, so on the wedding path the provenance ledger now honestly reads '3 Perfect Corp APIs' instead of four. ONE lighting task on samples/full-body.jpg (~1 unit) restores it, and a second cloth-v3 task on a different sample would additionally make the fusion falsifiable: two faces, two garments.",
-      "blockedOn": "operator: approve ~2 units — one lighting render of samples/full-body.jpg, one try-on render for a second face"
     }
   ],
   "closedGaps": [
@@ -362,6 +360,12 @@
       "closed": "2026-08-12",
       "how": "Render fixtures are now keyed to the PERSON by content fingerprint, and try-on renders additionally to the garment id. apparel-gown.jpg, apparel-top.jpg and finish.jpg are deleted; the one genuine pair (samples/full-body.jpg in the Slate Blue suit) and the relight YouCam actually returned for samples/selfie.jpg (byte-identical to receipts/001) are all that remain. Every other combination refuses and the UI states that no captured render exists for this photo. tests/fixture-identity.test.ts pins the rule and fails if a fallback render returns.",
       "costOfGettingThere": "finish.jpg carried the whole look board as its editorial hero under alt text reading 'Your finished look, relit for the occasion', and it shipped that way into the 2026-08-10 Devpost screenshot gallery. Review 001 raised this defect class for uploads on 2026-08-09; the 2026-08-10 pass closed it for the skin mask only. Found by rendering the strip of sample and fixture images side by side and looking at it."
+    },
+    {
+      "title": "The fourth API rendered nothing a judge reached, and only one face ever produced a garment",
+      "closed": "2026-08-12",
+      "how": "Two approved tasks, both successful, both committed with their bytes: a Photo Lighting render of samples/full-body.jpg (receipts/002) and a cloth-v3 render putting the Sky Wrap Maxi Dress on samples/selfie-2.jpg (receipts/003). The wedding path now shows all four APIs with a receipt behind each render, and two faces visibly produce two different garments - the falsifiability the special category asks for. Both renders are keyed to the person they depict, so neither can leak onto another photo.",
+      "costOfGettingThere": "Two units. The second render is a portrait crop, so the dress shows at the neckline rather than as a full outfit - the input was not swapped afterwards to flatter the output."
     }
   ]
 }

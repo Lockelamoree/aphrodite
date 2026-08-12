@@ -58,6 +58,19 @@ describe("captured try-on renders are keyed to the person and the garment", () =
   it("never serves one sample's render to another sample", async () => {
     await expect(fixtureApparel({ person: SAMPLE_B, garmentId: "slate-suit" })).rejects.toThrow();
     await expect(fixtureApparel({ person: SAMPLE_SELFIE, garmentId: "slate-suit" })).rejects.toThrow();
+    await expect(fixtureApparel({ person: SAMPLE_A, garmentId: "sky-wrap-maxi" })).rejects.toThrow();
+  });
+
+  it("serves the second face its own captured render — the tiebreaker pair", async () => {
+    const img = await fixtureApparel({ person: SAMPLE_B, garmentId: "sky-wrap-maxi" });
+    expect(img.url).toBe("/fixtures/apparel-sky-maxi.jpg");
+    expect((img.raw as { captured?: string }).captured).toMatch(/selfie-2\.jpg/);
+  });
+
+  it("two faces yield two different garment renders", async () => {
+    const a = await fixtureApparel({ person: SAMPLE_A, garmentId: "slate-suit" });
+    const b = await fixtureApparel({ person: SAMPLE_B, garmentId: "sky-wrap-maxi" });
+    expect(a.url).not.toBe(b.url);
   });
 });
 
@@ -68,8 +81,13 @@ describe("captured relights are keyed to the person", () => {
     expect((img.raw as { captured?: string }).captured).toMatch(/selfie\.jpg/);
   });
 
-  it("refuses for every other face, including the flagship sample", async () => {
-    await expect(fixtureLighting(SAMPLE_A)).rejects.toThrow(/no captured relight/);
+  it("serves the flagship sample its own relight, captured 2026-08-12", async () => {
+    const img = await fixtureLighting(SAMPLE_A);
+    expect(img.url).toBe("/fixtures/finish-wedding.jpg");
+    expect((img.raw as { captured?: string }).captured).toMatch(/full-body\.jpg/);
+  });
+
+  it("refuses for every face without one", async () => {
     await expect(fixtureLighting(SAMPLE_B)).rejects.toThrow(/no captured relight/);
     await expect(fixtureLighting(STRANGER)).rejects.toThrow(/no captured relight/);
     await expect(fixtureLighting(undefined)).rejects.toThrow(/no captured relight/);
@@ -82,7 +100,12 @@ describe("the fixture assets on disk match what the tables claim", () => {
    * broken image. And the three deleted stranger renders must stay deleted.
    */
   it("every referenced fixture exists", () => {
-    for (const f of ["public/fixtures/apparel-suit.jpg", "public/fixtures/finish-selfie.jpg"]) {
+    for (const f of [
+      "public/fixtures/apparel-suit.jpg",
+      "public/fixtures/finish-selfie.jpg",
+      "public/fixtures/finish-wedding.jpg",
+      "public/fixtures/apparel-sky-maxi.jpg",
+    ]) {
       expect(() => readFileSync(f)).not.toThrow();
     }
   });
@@ -98,9 +121,11 @@ describe("the fixture assets on disk match what the tables claim", () => {
     }
   });
 
-  it("the committed relight fixture is byte-identical to the receipt it came from", () => {
-    const fixture = readFileSync("public/fixtures/finish-selfie.jpg");
-    const receipt = readFileSync("hackathon/receipts/001/photo_lighting.render.jpg");
-    expect(Buffer.compare(fixture, receipt)).toBe(0);
+  it.each([
+    ["public/fixtures/finish-selfie.jpg", "hackathon/receipts/001/photo_lighting.render.jpg"],
+    ["public/fixtures/finish-wedding.jpg", "hackathon/receipts/002/photo_lighting.render.jpg"],
+    ["public/fixtures/apparel-sky-maxi.jpg", "hackathon/receipts/003/apparel_vto.render.jpg"],
+  ])("%s is byte-identical to the receipt it came from", (fixture, receipt) => {
+    expect(Buffer.compare(readFileSync(fixture), readFileSync(receipt))).toBe(0);
   });
 });

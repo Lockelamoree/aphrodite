@@ -1,0 +1,101 @@
+{
+  "_what": "One real YouCam run, captured as evidence for kill-gate 2. Nothing here is synthesised: every task id and poll envelope is the provider's own answer, and every sha256 is of the image the provider returned.",
+  "capturedAt": "2026-08-12T18:03:52.969Z",
+  "apiBase": "https://yce-api-01.perfectcorp.com",
+  "gitRevision": "cd90fa2",
+  "deployedHealthz": {
+    "status": "ok",
+    "revision": "cd90fa2",
+    "demo_mode": false,
+    "public_demo_mode": true,
+    "auth_enabled": true,
+    "live_runs_used": 0,
+    "live_runs_budget": 8,
+    "live_runs_remaining": 8,
+    "garments": 11,
+    "skincare_skus": 17,
+    "youcam_apis_wired": 8,
+    "agent_tools": 4,
+    "agentic_engine": "live",
+    "agentic_engine_reason": "gpt-5 available",
+    "agentic_model": "gpt-5",
+    "youcam": "key_present_unverified",
+    "youcam_reason": "key present; not probed because every YouCam task call costs units",
+    "degraded": true
+  },
+  "unitsSpent": "1 task",
+  "inputs": {
+    "person": "public/samples/full-body.jpg",
+    "body": "public/samples/full-body.jpg",
+    "garmentId": "slate-suit",
+    "garmentCategory": "full_body"
+  },
+  "chain": [
+    "photo_lighting"
+  ],
+  "steps": [
+    {
+      "feature": "photo_lighting",
+      "fileEndpoint": "/s2s/v2.0/file/lighting",
+      "taskEndpoint": "/s2s/v2.0/task/lighting",
+      "requestBody": {
+        "src_file_id": "4bVuZhoe76yoJP9mO9Z+5XDCw6wEDNMqc+MhvhzMYrULbKfeLEmuXUa9yH4wuc2K"
+      },
+      "taskId": "jl3N_OctDbvNVAL6b-KTFiA66ip0SLpR_kd4QQ5MWwym2xD24cRv09GIGI-kNOPd48ehKpCnHn2JO8fePoCoFMsnhxo6ltRYThN3rBMVvr8",
+      "pollEnvelopes": [
+        {
+          "status": 200,
+          "data": {
+            "error": null,
+            "results": null,
+            "task_status": "running"
+          }
+        },
+        {
+          "status": 200,
+          "data": {
+            "error": null,
+            "results": null,
+            "task_status": "running"
+          }
+        },
+        {
+          "status": 200,
+          "data": {
+            "error": null,
+            "results": null,
+            "task_status": "running"
+          }
+        },
+        {
+          "status": 200,
+          "data": {
+            "error": null,
+            "results": null,
+            "task_status": "running"
+          }
+        },
+        {
+          "status": 200,
+          "data": {
+            "error": null,
+            "results": {
+              "url": "https://yce-us.s3-accelerate.amazonaws.com/ttl30/481807048493763962/116964224468/v2/aeMNNB0KmUIP8rnQ996tC5Q/87d41ed5-03af-4d74-bf93-ca9e548f8dfc.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20260812T180352Z&X-Amz-SignedHeaders=host&X-Amz-Expires=7200&X-Amz-Credential=AKIARB77EV5Y5D7DAE3S%2F20260812%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Signature=226748a5910ae98e4a99ef4f7a3e2e581e040d3cec2d1c8092e4b005339cbd49"
+            },
+            "task_status": "success"
+          }
+        }
+      ],
+      "startedAt": "2026-08-12T18:03:42.561Z",
+      "finalStatus": "success",
+      "resultUrl": "https://yce-us.s3-accelerate.amazonaws.com/ttl30/481807048493763962/116964224468/v2/aeMNNB0KmUIP8rnQ996tC5Q/87d41ed5-03af-4d74-bf93-ca9e548f8dfc.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20260812T180352Z&X-Amz-SignedHeaders=host&X-Amz-Expires=7200&X-Amz-Credential=AKIARB77EV5Y5D7DAE3S%2F20260812%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Signature=226748a5910ae98e4a99ef4f7a3e2e581e040d3cec2d1c8092e4b005339cbd49",
+      "render": {
+        "sha256": "2823726249d36b5825c0b86ad0b1a3953e34461cd7e3208d25948262415ddf87",
+        "bytes": 158838,
+        "contentType": "image/jpeg"
+      },
+      "finishedAt": "2026-08-12T18:03:52.836Z",
+      "durationMs": 10275
+    }
+  ]
+}

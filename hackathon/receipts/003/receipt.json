@@ -1,0 +1,127 @@
+{
+  "_what": "One real YouCam run, captured as evidence for kill-gate 2. Nothing here is synthesised: every task id and poll envelope is the provider's own answer, and every sha256 is of the image the provider returned.",
+  "capturedAt": "2026-08-12T18:05:08.288Z",
+  "apiBase": "https://yce-api-01.perfectcorp.com",
+  "gitRevision": "cd90fa2",
+  "deployedHealthz": {
+    "status": "ok",
+    "revision": "cd90fa2",
+    "demo_mode": false,
+    "public_demo_mode": true,
+    "auth_enabled": true,
+    "live_runs_used": 0,
+    "live_runs_budget": 8,
+    "live_runs_remaining": 8,
+    "garments": 11,
+    "skincare_skus": 17,
+    "youcam_apis_wired": 8,
+    "agent_tools": 4,
+    "agentic_engine": "live",
+    "agentic_engine_reason": "gpt-5 available",
+    "agentic_model": "gpt-5",
+    "youcam": "key_present_unverified",
+    "youcam_reason": "key present; not probed because every YouCam task call costs units",
+    "degraded": true
+  },
+  "unitsSpent": "1 task",
+  "inputs": {
+    "person": "public/samples/selfie.jpg",
+    "body": "public/samples/selfie-2.jpg",
+    "garmentId": "sky-wrap-maxi",
+    "garmentCategory": "full_body"
+  },
+  "chain": [
+    "apparel_vto_cloth_v3"
+  ],
+  "steps": [
+    {
+      "feature": "apparel_vto_cloth_v3",
+      "fileEndpoint": "/s2s/v2.0/file/cloth-v3",
+      "taskEndpoint": "/s2s/v2.0/task/cloth-v3",
+      "requestBody": {
+        "src_file_id": "CNCWwwcqQQMMpqFDqR/ZSGWHw5nBz9KZdOMnEq3Zuu8LbKfeLEmuXUa9yH4wuc2K",
+        "ref_file_url": "https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=1200&q=85&fm=jpg",
+        "garment_category": "full_body"
+      },
+      "taskId": "BQO3tZ8-hr-8ja0zXfa0u3ZPBb-_Iym3769qijkl9UKH1PQwTM0mmKybhNN5DvGbjtACwNE0Z0lSVMho0P9DcuC86Nbdmz3POozMqcvAtfg",
+      "pollEnvelopes": [
+        {
+          "status": 200,
+          "data": {
+            "error": null,
+            "results": null,
+            "task_status": "running"
+          }
+        },
+        {
+          "status": 200,
+          "data": {
+            "error": null,
+            "results": null,
+            "task_status": "running"
+          }
+        },
+        {
+          "status": 200,
+          "data": {
+            "error": null,
+            "results": null,
+            "task_status": "running"
+          }
+        },
+        {
+          "status": 200,
+          "data": {
+            "error": null,
+            "results": null,
+            "task_status": "running"
+          }
+        },
+        {
+          "status": 200,
+          "data": {
+            "error": null,
+            "results": null,
+            "task_status": "running"
+          }
+        },
+        {
+          "status": 200,
+          "data": {
+            "error": null,
+            "results": null,
+            "task_status": "running"
+          }
+        },
+        {
+          "status": 200,
+          "data": {
+            "error": null,
+            "results": null,
+            "task_status": "running"
+          }
+        },
+        {
+          "status": 200,
+          "data": {
+            "error": null,
+            "results": {
+              "url": "https://yce-us.s3-accelerate.amazonaws.com/ttl30/481807048493763962/116964294175/v2/aeMNNB0KmUIP8rnQ996tC5Q/0e6a1b86-9f4b-4381-b222-36c3a9fc3d6c.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20260812T180507Z&X-Amz-SignedHeaders=host&X-Amz-Expires=7200&X-Amz-Credential=AKIARB77EV5Y5D7DAE3S%2F20260812%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Signature=62cc515e2d8493e872f2816299e41e270c20bbe219f4589873a24c28ab5cace6"
+            },
+            "task_status": "success"
+          }
+        }
+      ],
+      "startedAt": "2026-08-12T18:04:51.683Z",
+      "finalStatus": "success",
+      "resultUrl": "https://yce-us.s3-accelerate.amazonaws.com/ttl30/481807048493763962/116964294175/v2/aeMNNB0KmUIP8rnQ996tC5Q/0e6a1b86-9f4b-4381-b222-36c3a9fc3d6c.jpg?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20260812T180507Z&X-Amz-SignedHeaders=host&X-Amz-Expires=7200&X-Amz-Credential=AKIARB77EV5Y5D7DAE3S%2F20260812%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Signature=62cc515e2d8493e872f2816299e41e270c20bbe219f4589873a24c28ab5cace6",
+      "render": {
+        "sha256": "40ba8d1d96b37a8ed72883e9dd1a17d113a909981649f955f1303c1bbbff5176",
+        "bytes": 306170,
+        "contentType": "image/jpeg"
+      },
+      "finishedAt": "2026-08-12T18:05:08.180Z",
+      "durationMs": 16497
+    }
+  ]
+}

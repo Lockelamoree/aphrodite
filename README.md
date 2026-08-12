@@ -10,9 +10,9 @@ Most virtual try-on demos stop at "here's a garment on you." I wanted the thing 
 
 | | |
 |---|---|
-| **4** YouCam APIs in the chain, **3** with a visible render on the sample path | Skin Analysis → Skin-Tone → Apparel Try-On → Photo Lighting. The relight is absent, not borrowed: no capture of that face exists, and the on-screen ledger says three |
+| **4** YouCam APIs chained in one run, each with a **committed receipt** | Skin Analysis → Skin-Tone → Apparel Try-On → Photo Lighting. Every render in demo mode is a real capture of the face it is shown on — `hackathon/receipts/` carries the provider's own task ids and hashes |
 | **~4.5 s** end to end | measured on the hosted instance, fixture-served |
-| **112** tests in 12 files | `npm test`, measured 2026-08-12; `tsc` / `lint` / `build` also green |
+| **117** tests in 12 files | `npm test`, measured 2026-08-12; `tsc` / `lint` / `build` also green |
 | **0** API units to look | every publicly reachable path is fixture-served, and the page says so |
 | **11 / 17** catalogue | garments / skincare SKUs, cross-checkable at [`/healthz`](https://aphrodite.max-gutowski.de/healthz) |
 
@@ -199,7 +199,7 @@ relight of that face has been captured.
 npm test
 ```
 
-**112 tests in 12 files, all passing** (measured 2026-08-12). Vitest covers occasion parsing, the catalog and garment selection (including guards against mis-gendered styling), the cut preference and the catalogue's 9:1:1 shape, the access gate, the provenance ledger, request validation, rate limiting, stripping raw provider fields out of the stream, and the evidence route — including an assertion that its free mode reaches no network at all, and one that every row of the pinned API contract still matches the receipt it was transcribed from. The API route validates the request body (zod), caps payload size, and rate-limits per IP.
+**117 tests in 12 files, all passing** (measured 2026-08-12). Vitest covers occasion parsing, the catalog and garment selection (including guards against mis-gendered styling), the cut preference and the catalogue's 9:1:1 shape, the access gate, the provenance ledger, request validation, rate limiting, stripping raw provider fields out of the stream, and the evidence route — including an assertion that its free mode reaches no network at all, and one that every row of the pinned API contract still matches the receipt it was transcribed from. The API route validates the request body (zod), caps payload size, and rate-limits per IP.
 
 The four gates this project holds itself to, all green as of 2026-08-10:
 

@@ -13,11 +13,11 @@
 
 | | |
 |---|---|
-| **4** YouCam APIs in the chain, **3** with a visible render on the sample path | Skin Analysis → Skin-Tone → Apparel Try-On → Photo Lighting. The relight is absent, not borrowed: no capture of that face exists, and the on-screen ledger says three |
+| **4** YouCam APIs chained in one run, each with a **committed receipt** | Skin Analysis → Skin-Tone → Apparel Try-On → Photo Lighting. Every render in demo mode is a real capture of the face it is shown on — `hackathon/receipts/` carries the provider's own task ids and hashes |
 | **~4.5 s** for the whole loop | measured on the hosted instance |
 | **0** API units to look | every public path is fixture-served, and the page says so on screen |
-| **112** tests in 12 files | `tsc` / `lint` / `build` green too, measured 2026-08-12 |
-| **8** APIs declared, **3** rendering on a reachable path | the honest surface — see "YouCam APIs used" below |
+| **117** tests in 12 files | `tsc` / `lint` / `build` green too, measured 2026-08-12 |
+| **8** APIs declared, **4** rendering on a reachable path | the honest surface — see "YouCam APIs used" below |
 | **88 s** demo video | inside the 1–3 minute window, cut from a production build |
 
 No signup, no key, nothing to install. The bundled *"Wedding · full-body"* sample drives
@@ -67,22 +67,26 @@ Most virtual try-on demos stop at "here's a garment on you." Before a wedding or
 - **Two engines, one event stream.** An **agentic** engine (Claude *or* GPT) orchestrates the YouCam REST APIs via typed function-calling tools, reasoning over your scores; and a **guided** rule engine produces the *same* board with no LLM at all. They emit an identical event stream, so the UI doesn't care which drove the run. The app works on a YouCam key alone; the LLM is a pure upgrade.
 - **YouCam / Perfect Corp AI API** drives every render over REST: Skin Analysis, Skin-Tone / Facial Color, Apparel Try-On and AI Photo Lighting. Three further endpoints are wired but render nothing, and are not counted — see "YouCam APIs used".
 - **Cost-safe demo mode.** A fixture/replay layer serves real captured YouCam outputs so the entire app — plan, try-on, refine, save, check-in — runs with **zero API units and no keys**, and the UI labels itself *"demo mode · sample renders"* so nothing over-claims.
-- **Hardened boundary.** zod request validation, per-IP rate limiting, a payload-size cap, and raw provider fields stripped out of the stream. 112 Vitest tests in 12 files (occasion parsing, garment selection incl. mis-gender guards, the cut preference, the access gate, the provenance ledger, request validation, raw-field stripping, rate limiting, and the evidence route); `tsc` / `lint` / `build` green — all four measured 2026-08-12.
+- **Hardened boundary.** zod request validation, per-IP rate limiting, a payload-size cap, and raw provider fields stripped out of the stream. 117 Vitest tests in 12 files (occasion parsing, garment selection incl. mis-gender guards, the cut preference, the access gate, the provenance ledger, request validation, raw-field stripping, rate limiting, and the evidence route); `tsc` / `lint` / `build` green — all four measured 2026-08-12.
 
 ## YouCam APIs used
 
-**Four are chained in the run; three render on the sample path a judge drives:** Skin
-Analysis · Skin-Tone / Facial Color Analysis · Apparel (Cloth) Try-On. AI Photo Lighting
-is the fourth link and it has a real captured render — but of a different bundled photo,
-so on the sample path the slot shows an honest empty state and the on-screen ledger says
-three. Demo-mode renders are keyed to the person they actually depict; the app would
-rather show nothing than put someone else's face under your name.
+**Four render on the sample path a judge drives:** Skin Analysis · Skin-Tone / Facial
+Color Analysis · Apparel (Cloth) Try-On · AI Photo Lighting.
+
+Every render you see in demo mode is a **real capture of the photo it is shown on**, and
+each one has a committed receipt under `hackathon/receipts/` with the provider's own task
+id, poll envelopes and a sha256 of the bytes YouCam returned. Renders are keyed to the
+person they depict: hand the app a photo it has no capture for and it says so rather than
+showing you someone else. **Two faces, two garments** — the wedding sample is rendered in
+the Slate Blue Three-Piece Suit, the second sample in the Sky Wrap Maxi Dress her own
+colour read selects, both real cloth-v3 renders of their own photos.
 
 **Wired but not shipped, so not claimed:** AI Hair Color (slug verified, no captured
 fixture), AI Makeup and AI Hairstyle (slugs never verified — the key 401s on those
 features). The studio tiles that would call them return an honest empty state instead of
 an image, and this submission does not count them. Declared endpoints: 8. With a calling
-module: 7. Slug-verified: 5. Rendering live: **4**. Rendering on a reachable demo path: **3**.
+module: 7. Slug-verified: 5. Rendering, with a committed receipt each: **4**.
 
 The **special-category** goal — Skin AI **and** Apparel VTO fused into one experience — is the core loop: the same skin read that drives the skincare countdown also feeds the coloring that drives the outfit that gets rendered on you.
 
@@ -105,7 +109,7 @@ How much of a "wow" try-on demo is actually *product coherence* — timing, prov
 - Capture the studio try-on fixtures + a cool-tone full-body render so the fully-fused chain renders on screen in the zero-cost demo.
 - Point the catalog at a real retailer's live products so the shoppable basket becomes a live storefront.
 - Widen the menswear catalogue past its single garment.
-- Spend two more API tasks: a relight of the wedding sample restores the fourth API on the flagship path, and one more try-on render lets two faces visibly produce two different garments — the fused chain becoming falsifiable rather than narrated.
+- Widen the captured set so any uploaded photo can be answered with its own render rather than an honest refusal — today that needs live units, which is exactly what the access code unlocks.
 
 ## How to test it (zero API units)
 

@@ -218,8 +218,14 @@ describe.skipIf(!ENABLED)("live YouCam receipt capture", () => {
       const bodyShot = readFileSync(
         process.env.APHRODITE_RECEIPT_BODY ?? "public/samples/full-body.jpg",
       );
-      const garment = GARMENT_CATALOG.find((g) => g.id === "slate-suit");
-      if (!garment) throw new Error("slate-suit missing from the catalog");
+      // Which garment, and which VTO category. Overridable because a captured render
+      // is only ever served for the person-and-garment pair it was captured for
+      // (lib/youcam/fixtures.ts), so the pair has to be the one the app actually
+      // picks on the path a judge drives — measured locally first, then captured.
+      const garmentId = process.env.APHRODITE_RECEIPT_GARMENT ?? "slate-suit";
+      const garment = GARMENT_CATALOG.find((g) => g.id === garmentId);
+      if (!garment) throw new Error(`${garmentId} missing from the catalog`);
+      const garmentCategory = process.env.APHRODITE_RECEIPT_CATEGORY ?? "full_body";
 
       // Which steps to spend on. Defaults to the whole chain; narrow it to re-capture
       // a single step without paying for the ones that already succeeded.
@@ -258,7 +264,7 @@ describe.skipIf(!ENABLED)("live YouCam receipt capture", () => {
             return {
               src_file_id: up.fileId,
               ref_file_url: garment.imageUrl,
-              garment_category: "full_body",
+              garment_category: garmentCategory,
             };
           }),
         );
@@ -286,7 +292,13 @@ describe.skipIf(!ENABLED)("live YouCam receipt capture", () => {
         apiBase: youcamConfig.base,
         gitRevision: execSync("git rev-parse --short HEAD").toString().trim(),
         deployedHealthz: healthz,
-        unitsSpent: `${steps.length} tasks (~4-5 units)`,
+        unitsSpent: `${steps.length} task${steps.length === 1 ? "" : "s"}`,
+        inputs: {
+          person: process.env.APHRODITE_RECEIPT_PERSON ?? "public/samples/selfie.jpg",
+          body: process.env.APHRODITE_RECEIPT_BODY ?? "public/samples/full-body.jpg",
+          garmentId,
+          garmentCategory,
+        },
         chain: steps.map((s) => s.feature),
         steps,
       };

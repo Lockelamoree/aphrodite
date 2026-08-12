@@ -134,7 +134,13 @@ export function Concierge({
       } else {
         const s = await fetch("/samples/selfie-2.jpg").then((r) => r.blob()).then(fileToDataUrl);
         setSelfie(s);
-        setBody(undefined);
+        // ONE PERSON here too, and now with a captured try-on render of her own photo
+        // (2026-08-12, receipts/003). Before that capture this path deliberately sent no
+        // body image, because the only try-on render in the repo was of someone else;
+        // an honest empty state beat a stranger's body. It is a portrait, so the render
+        // shows the neckline rather than a full outfit — which is what the API returned
+        // for it, and what the panel therefore shows.
+        setBody(s);
         setGarmentPreference("dresses");
         setCutPreference("feminine");
         setUsingSample(true);

@@ -27,6 +27,13 @@ import type { ColorProfile, ImageInput, RenderedImage, SkinAnalysis } from "@/li
  *   COOL colour profile  ILLUSTRATIVE, not captured. The API rejects selfie-2.jpg for
  *                        skin-tone with error_face_not_forward_facing.
  *
+ *   WARM RELIGHT         CAPTURED 2026-08-12. A real lighting run on samples/full-body.jpg
+ *                        (receipts/002). Replaces the deleted finish.jpg, which showed a
+ *                        fourth person.
+ *   COOL TRY-ON          CAPTURED 2026-08-12. A real cloth-v3 run putting the Sky Wrap
+ *                        Maxi Dress on samples/selfie-2.jpg (receipts/003) — the second
+ *                        face, wearing what its own colour read selects.
+ *
  * WARM HAS NO OVERLAY ON PURPOSE. public/fixtures/skin-overlay.jpg was a DIFFERENT
  * PERSON's face. Serving it next to samples/selfie.jpg made the comparator label one
  * man "your photo" and another "what YouCam sees" — a picture that asserts the API
@@ -177,6 +184,15 @@ const CAPTURED_APPAREL: { person: SamplePerson; garmentId: string; url: string; 
     url: "/fixtures/apparel-suit.jpg",
     provenance: "live cloth-v3 render of samples/full-body.jpg, receipts/000-misaimed-attempt",
   },
+  {
+    // Captured 2026-08-12 on approval, for the tiebreaker: two faces have to be seen
+    // producing two different garments, not merely described as doing so. This is the
+    // second face wearing the dress her own colour read selects.
+    person: "sampleB",
+    garmentId: "sky-wrap-maxi",
+    url: "/fixtures/apparel-sky-maxi.jpg",
+    provenance: "live cloth-v3 render of samples/selfie-2.jpg, receipts/003, sha256 40ba8d1d…",
+  },
 ];
 
 /**
@@ -193,6 +209,13 @@ const CAPTURED_LIGHTING: { person: SamplePerson; url: string; provenance: string
     person: "sampleSelfie",
     url: "/fixtures/finish-selfie.jpg",
     provenance: "live lighting render of samples/selfie.jpg, receipts/001, sha256 44cd13b0…",
+  },
+  {
+    // Captured 2026-08-12 on approval. This is the render the deleted finish.jpg
+    // pretended to be: the fourth API, on the face the flagship sample actually sends.
+    person: "sampleA",
+    url: "/fixtures/finish-wedding.jpg",
+    provenance: "live lighting render of samples/full-body.jpg, receipts/002, sha256 28237262…",
   },
 ];
 
