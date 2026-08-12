@@ -13,11 +13,11 @@
 
 | | |
 |---|---|
-| **4** YouCam APIs chained in one run | Skin Analysis → Skin-Tone → Apparel Try-On → Photo Lighting |
+| **4** YouCam APIs in the chain, **3** with a visible render on the sample path | Skin Analysis → Skin-Tone → Apparel Try-On → Photo Lighting. The relight is absent, not borrowed: no capture of that face exists, and the on-screen ledger says three |
 | **~4.5 s** for the whole loop | measured on the hosted instance |
 | **0** API units to look | every public path is fixture-served, and the page says so on screen |
 | **112** tests in 12 files | `tsc` / `lint` / `build` green too, measured 2026-08-12 |
-| **8** APIs declared, **4** that render | the honest surface — see "YouCam APIs used" below |
+| **8** APIs declared, **3** rendering on a reachable path | the honest surface — see "YouCam APIs used" below |
 | **88 s** demo video | inside the 1–3 minute window, cut from a production build |
 
 No signup, no key, nothing to install. The bundled *"Wedding · full-body"* sample drives
@@ -71,13 +71,18 @@ Most virtual try-on demos stop at "here's a garment on you." Before a wedding or
 
 ## YouCam APIs used
 
-**Four render in every run:** Skin Analysis · Skin-Tone / Facial Color Analysis · Apparel (Cloth) Try-On · AI Photo Lighting.
+**Four are chained in the run; three render on the sample path a judge drives:** Skin
+Analysis · Skin-Tone / Facial Color Analysis · Apparel (Cloth) Try-On. AI Photo Lighting
+is the fourth link and it has a real captured render — but of a different bundled photo,
+so on the sample path the slot shows an honest empty state and the on-screen ledger says
+three. Demo-mode renders are keyed to the person they actually depict; the app would
+rather show nothing than put someone else's face under your name.
 
 **Wired but not shipped, so not claimed:** AI Hair Color (slug verified, no captured
 fixture), AI Makeup and AI Hairstyle (slugs never verified — the key 401s on those
 features). The studio tiles that would call them return an honest empty state instead of
 an image, and this submission does not count them. Declared endpoints: 8. With a calling
-module: 7. Slug-verified: 5. Rendering: **4**.
+module: 7. Slug-verified: 5. Rendering live: **4**. Rendering on a reachable demo path: **3**.
 
 The **special-category** goal — Skin AI **and** Apparel VTO fused into one experience — is the core loop: the same skin read that drives the skincare countdown also feeds the coloring that drives the outfit that gets rendered on you.
 
@@ -85,7 +90,7 @@ The **special-category** goal — Skin AI **and** Apparel VTO fused into one exp
 
 - **Coherence across horizons.** Making the countdown differ in *kind* (weeks vs. a day out) instead of just restating scores took real rule design, and keeping every "→ product" chip resolvable to a priced basket row.
 - **Not mis-gendering the styling.** Undertone-driven selection kept defaulting to one wardrobe; fixing it meant reworking the scoring and expanding the catalog, locked down with regression tests.
-- **Honesty under demo constraints.** Because the demo runs on captured fixtures, I had to be careful that copy never promises a live render it can't show — the before/after only ever shows real YouCam output of the same photo it sits beside — an overlay taken from a different face was found and deleted on 2026-08-10 — and studio try-ons that aren't captured degrade to an honest message rather than a fabricated image.
+- **Honesty under demo constraints.** A render is a claim about whose face is in it, and that turned out to be the hardest constraint in the build. Captured fixtures were keyed by *kind* of garment, so an uploaded photo got a stranger's render under "Your outfit", and the board's hero image was a fourth person captioned "rendered by YouCam AI". Both were found by looking at the frames, not by reading the code. Fixtures are now keyed to the person by content fingerprint and to the garment by id; everything else refuses and says so. The visible cost is that the sample path credits three APIs instead of four — which is the point.
 
 ## Accomplishments I'm proud of
 
@@ -99,7 +104,8 @@ How much of a "wow" try-on demo is actually *product coherence* — timing, prov
 
 - Capture the studio try-on fixtures + a cool-tone full-body render so the fully-fused chain renders on screen in the zero-cost demo.
 - Point the catalog at a real retailer's live products so the shoppable basket becomes a live storefront.
-- Widen the menswear catalogue past its single garment, and commit a live-run receipt with a real Perfect Corp `task_id` so the integration is provable without an access code.
+- Widen the menswear catalogue past its single garment.
+- Spend two more API tasks: a relight of the wedding sample restores the fourth API on the flagship path, and one more try-on render lets two faces visibly produce two different garments — the fused chain becoming falsifiable rather than narrated.
 
 ## How to test it (zero API units)
 

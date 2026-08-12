@@ -10,7 +10,7 @@ Most virtual try-on demos stop at "here's a garment on you." I wanted the thing 
 
 | | |
 |---|---|
-| **4** YouCam APIs chained in one run | Skin Analysis → Skin-Tone → Apparel Try-On → Photo Lighting |
+| **4** YouCam APIs in the chain, **3** with a visible render on the sample path | Skin Analysis → Skin-Tone → Apparel Try-On → Photo Lighting. The relight is absent, not borrowed: no capture of that face exists, and the on-screen ledger says three |
 | **~4.5 s** end to end | measured on the hosted instance, fixture-served |
 | **112** tests in 12 files | `npm test`, measured 2026-08-12; `tsc` / `lint` / `build` also green |
 | **0** API units to look | every publicly reachable path is fixture-served, and the page says so |
