@@ -1,0 +1,23 @@
+{
+  "_what": "Camera moves for the demo reel, one entry per narration beat id. Read by scripts/build-demo-video.mjs; a beat that is absent here gets the gentle default push (zoom 1.1, centred).",
+  "_how": "zoom is the peak factor reached at the end of the beat, eased in with a smoothstep. cx/cy are the focus point in 0..1 of the frame, so 0.5/0.5 is centre and lower cy favours the top of the screen. Frames are captured at 2560x1440 and delivered at 1920x1080, so anything up to about 1.33 still resolves at or above 1:1 — past that it starts to soften.",
+  "_rule": "Beats that carry a glide of their own get a small move; beats where the point is READING something on screen get the biggest, because legibility is the job.",
+  "beats": {
+    "b01-why": { "zoom": 1.06, "cx": 0.5, "cy": 0.5, "_why": "the slider sweep is already the motion" },
+    "b02-promise": { "zoom": 1.1, "cx": 0.5, "cy": 0.4, "_why": "settle onto the headline" },
+    "b03-input": { "zoom": 1.08, "cx": 0.5, "cy": 0.45, "_why": "typing and the cut question carry it" },
+    "b04-run": { "zoom": 1.05, "cx": 0.5, "cy": 0.5, "_why": "the stream filling in is the motion; do not compete with it" },
+    "b05-board": { "zoom": 1.04, "cx": 0.5, "cy": 0.5, "_why": "a long glide down the whole board" },
+    "b06-skin": { "zoom": 1.18, "cx": 0.5, "cy": 0.42, "_why": "the ten scores have to be readable" },
+    "b07-colour": { "zoom": 1.22, "cx": 0.5, "cy": 0.45, "_why": "swatches are small" },
+    "b08-tryon": { "zoom": 1.2, "cx": 0.5, "cy": 0.45, "_why": "the render is the evidence" },
+    "b09-countdown": { "zoom": 1.12, "cx": 0.5, "cy": 0.4, "_why": "timeline rows, read while gliding" },
+    "b10-second-face": { "zoom": 1.22, "cx": 0.5, "cy": 0.45, "_why": "the tiebreaker: a second person, a different garment" },
+    "b11-honest-limit": { "zoom": 1.26, "cx": 0.5, "cy": 0.4, "_why": "the whole beat is one sentence of on-screen copy" },
+    "b12-refuse": { "zoom": 1.24, "cx": 0.5, "cy": 0.42, "_why": "the honest empty state has to be legible or the self-catch is hearsay" },
+    "b13-ledger": { "zoom": 1.2, "cx": 0.5, "cy": 0.42, "_why": "the ledger names each API; that text is the claim" },
+    "b14-verify": { "zoom": 1.04, "cx": 0.45, "cy": 0.5, "_why": "the browser is already zoomed to 2x for this beat so the response text is readable; a second crop on top would only lose the left edge where task_id starts" },
+    "b15-engines": { "zoom": 1.15, "cx": 0.5, "cy": 0.4, "_why": "the engine badge is small" },
+    "b16-close": { "zoom": 1.03, "cx": 0.5, "cy": 0.5, "_why": "end calm; let the end card do the work" }
+  }
+}

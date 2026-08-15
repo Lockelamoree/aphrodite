@@ -37,23 +37,42 @@ export function budget(): number {
   return Number.isFinite(raw) && raw >= 0 ? raw : DEFAULT_BUDGET;
 }
 
+/** Set when the ledger file exists but cannot be read — reported, never swallowed. */
+let unreadable = false;
+
+/** Has the ledger become unreadable? `/healthz` surfaces this so it is externally visible. */
+export function ledgerUnreadable(): boolean {
+  return unreadable;
+}
+
 function readUsed(): number {
   try {
     const parsed = JSON.parse(readFileSync(path(), "utf8")) as { used?: unknown };
     const n = Number(parsed.used);
     return Number.isFinite(n) && n >= 0 ? n : 0;
-  } catch {
-    // Missing or unreadable ledger means nothing has been spent yet. Deliberately
-    // NOT fail-closed: a permissions mistake on the state file must not silently
-    // turn the live demo off during judging, and the provider-side spend cap is
-    // the real backstop for money.
-    return 0;
+  } catch (err) {
+    // Missing ledger means nothing has been spent yet — that is the first-run case
+    // and it is genuinely 0.
+    //
+    // But an UNREADABLE ledger is a different thing, and treating both as 0 was a
+    // silent hole: if the state file ever became unwritable, every request would
+    // read 0 used, the 8-run cap would never engage, and /healthz would keep
+    // reporting 0/8 — the very reading used to prove nothing was spent. Review 003
+    // named it. The distinction is cheap to make, so make it.
+    const code = (err as { code?: string } | null)?.code;
+    if (code === "ENOENT") return 0;
+    unreadable = true;
+    return Number.POSITIVE_INFINITY;
   }
 }
 
 export function read(): LedgerState {
   const b = budget();
   const used = readUsed();
+  // An unreadable ledger reports the budget as fully consumed, so the live path
+  // degrades to captured fixtures and says so on screen, rather than spending
+  // without a counter.
+  if (!Number.isFinite(used)) return { used: b, budget: b, remaining: 0 };
   return { used, budget: b, remaining: Math.max(0, b - used) };
 }
 

@@ -43,6 +43,58 @@ One honest sentence instead of three different API counts: **8 endpoints are dec
 
 The last four are why the studio tiles return an honest empty state rather than an image. `/healthz` reports the declared figure as `youcam_apis_wired: 8`; the number to judge the product on is **4**.
 
+## The chain, and where the trust boundary sits
+
+One diagram, because the differentiator here is architectural and a judge should not
+have to reconstruct it from prose. Solid arrows are data actually flowing; the dashed
+box is everything that costs money, and it is closed to the public by default.
+
+```mermaid
+flowchart TB
+  subgraph client["Browser · one client component, SSE"]
+    P["One selfie<br/>+ occasion + date"]
+    B["Look board:<br/>countdown · try-on · priced basket"]
+  end
+
+  subgraph engine["Server · one event stream, two engines"]
+    A["Agentic engine<br/>LLM calls the APIs as typed tools"]
+    R["Rule engine<br/>no LLM key needed"]
+  end
+
+  subgraph gated["COSTS MONEY — behind a role code + a run ledger"]
+    S["YouCam Skin Analysis<br/>10 scores + masks"]
+    C["YouCam Skin-Tone<br/>undertone · palette"]
+    V["YouCam Apparel VTO<br/>garment on your photo"]
+    L["YouCam Photo Lighting<br/>relight"]
+  end
+
+  F["Captured renders<br/>keyed to the person + garment<br/>3 of 4 byte-identical to a receipt"]
+
+  P --> A
+  P --> R
+  A --> S
+  R --> S
+  S -->|"lowest scores"| C
+  C -->|"undertone decides the garment"| V
+  V -->|"the rendered photo"| L
+  L --> B
+  S -->|"scores set the countdown's KIND"| B
+  gated -.->|"public visitor: replaced by"| F
+  F --> B
+
+  classDef money stroke-dasharray: 6 4
+  class gated money
+```
+
+**Read the two edges that matter.** `S → C → V` is the fused chain the special
+category asks for: the skin read produces the undertone, and the undertone is one of
+the weighted factors that picks the garment that gets rendered — the board prints
+those factors, including the runs where the undertone was *outweighed* by occasion
+formality. And `gated -.-> F` is the honesty boundary: an anonymous visitor never
+crosses into the paid box, so what they see are captured renders, each one keyed to
+the face it belongs to, and the page says so in the announcement bar and the
+provenance ledger.
+
 ## Two engines, one stream
 
 There are two ways to run the concierge, and they emit the *same* event stream, so the interface doesn't care which one drove the run:

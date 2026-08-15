@@ -1,0 +1,54 @@
+name: verify
+
+# Standing order 4 of HACKATHON.md is "all four green": tsc, tests, lint, build.
+# Until now they were green only on the author's machine, so every number in the
+# judge-facing copy — "125 tests in 12 files" — was operator-attested with no external
+# anchor. Review 003 scored that. This runs the same four commands on every push, so a
+# judge can check the claim instead of taking it.
+#
+# It deliberately needs NO secrets: the app runs on captured fixtures by default, so
+# nothing here can call YouCam or an LLM, and nothing here can spend a unit.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - run: npm ci
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Tests
+        run: npm test
+
+      - name: Build
+        run: npm run build
+        env:
+          # The committed default. Named explicitly so a future change to
+          # .env.example cannot make CI start reaching for a real key.
+          YOUCAM_FIXTURES: '1'
+
+      - name: Assert no YouCam or LLM key reached this job
+        # A green build that quietly had credentials would prove less than it appears
+        # to. This fails loudly if one is ever added.
+        run: |
+          for v in YOUCAM_API_KEY OPENAI_API_KEY ANTHROPIC_API_KEY; do
+            if [ -n "${!v:-}" ]; then echo "$v is set in CI — this workflow must stay keyless"; exit 1; fi
+          done
+          echo "keyless: confirmed"

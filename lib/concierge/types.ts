@@ -26,6 +26,25 @@ export interface LookBoard {
   shopping: ShoppingItem[];
   /** Catalog id of the rendered garment (drives "try another" refinement). */
   garmentId?: string;
+  /**
+   * Why THIS garment, in the order the picker actually weighted the factors.
+   *
+   * Added 2026-08-15. Review 003 found the fusion "narrated rather than watchable":
+   * the chain exists, but nothing on screen showed the reading causing the choice —
+   * and the video went further and claimed the colour read chose the garment when
+   * formality (weight 4-6) dominates undertone (2). So this carries the real
+   * factors, including when the undertone did NOT match, rather than a flattering
+   * summary.
+   */
+  garmentWhy?: GarmentFactor[];
+}
+
+/** One weighted reason behind the garment choice. */
+export interface GarmentFactor {
+  label: string;
+  detail: string;
+  /** How much it actually moved the decision, for honest ordering on screen. */
+  weight: "decisive" | "filter" | "tiebreak" | "none";
 }
 
 /** A "shop the look" line — a product category or a specific catalog SKU. */

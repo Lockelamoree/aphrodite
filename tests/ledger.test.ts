@@ -4,7 +4,7 @@ import { join } from "node:path";
 
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { budget, claim, read } from "@/lib/live/ledger";
+import { budget, claim, ledgerUnreadable, read } from "@/lib/live/ledger";
 
 /**
  * The ledger is the second schranke: an access code says who may spend, this says
@@ -79,9 +79,34 @@ describe("counting", () => {
     expect(read().remaining).toBe(3);
   });
 
-  it("treats a corrupt ledger as nothing spent rather than crashing the demo", () => {
+  /**
+   * BEHAVIOUR CHANGED 2026-08-15, and this test now pins the opposite of what it
+   * used to.
+   *
+   * It used to assert that a corrupt ledger reads as nothing spent, so the demo
+   * could not be turned off by a bad state file. Review 003 pointed out what that
+   * buys: if the file ever becomes unreadable, every request reads 0 used, the cap
+   * never engages, and /healthz keeps reporting 0/8 — which is the exact reading
+   * used to prove nothing was spent. A meter that fails open is not a meter.
+   *
+   * So an unreadable-but-present ledger now reports the budget as fully consumed.
+   * The demo does NOT break: the live path degrades to captured fixtures and says so
+   * on screen, which is the same honest degradation used everywhere else. A MISSING
+   * file still reads 0, because that is genuinely the first run.
+   */
+  it("fails closed on a corrupt ledger — an uncountable run must not be granted", () => {
     writeFileSync(process.env.APHRODITE_LEDGER_PATH!, "{ not json");
+    const state = read();
+    expect(state.used).toBe(state.budget);
+    expect(state.remaining).toBe(0);
+    expect(claim().granted).toBe(false);
+    expect(ledgerUnreadable()).toBe(true);
+  });
+
+  it("still reads a MISSING ledger as nothing spent — that is the first run", () => {
+    rmSync(process.env.APHRODITE_LEDGER_PATH!, { force: true });
     expect(read().used).toBe(0);
+    expect(read().remaining).toBeGreaterThan(0);
   });
 
   it("treats a negative or non-numeric count as zero", () => {

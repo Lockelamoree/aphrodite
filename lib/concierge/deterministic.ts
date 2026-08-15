@@ -25,6 +25,7 @@ import type {
   SkinGoal,
   StyleTrack,
   CutPreference,
+  GarmentFactor,
 } from "@/lib/concierge/types";
 import { analyzeColorProfile } from "@/lib/youcam/color";
 import { analyzeSkin } from "@/lib/youcam/skin";
@@ -126,7 +127,7 @@ export async function* runDeterministic(
 
   // --- assemble board ---
   yield step(TOOL.presentLookBoard);
-  yield { type: "board", board: buildBoard(req.occasion, type, daysUntil, focus, color, garment, track, req.skinGoal) };
+  yield { type: "board", board: buildBoard(req.occasion, type, daysUntil, focus, color, garment, track, req.skinGoal, req.cutPreference ?? "any") };
 }
 
 const REFINE_LEAD: Record<RefineAdjust, string> = {
@@ -224,7 +225,7 @@ export async function* runRefineDeterministic(
   // still applies (the client keeps it) — re-running would waste a unit.
 
   yield step(TOOL.presentLookBoard);
-  yield { type: "board", board: buildBoard(req.occasion, type, daysUntil, focus, color, garment, track, req.skinGoal) };
+  yield { type: "board", board: buildBoard(req.occasion, type, daysUntil, focus, color, garment, track, req.skinGoal, req.cutPreference ?? "any") };
 }
 
 /* ---------------- rule tables ---------------- */
@@ -403,6 +404,7 @@ function buildBoard(
   garment: CatalogGarment | undefined,
   track: StyleTrack = "style",
   goal?: SkinGoal,
+  cut: CutPreference = "any",
 ): LookBoard {
   // Build the countdown once and hand it to buildShopping so every "→ category"
   // pointer the countdown shows resolves to a real basket row (no orphan chips).
@@ -415,7 +417,58 @@ function buildBoard(
     countdown,
     shopping: buildShopping(focus, garment, color, daysUntil, track, countdown),
     garmentId: garment?.id,
+    garmentWhy: garment ? explainGarment(garment, type, color, cut, track) : undefined,
   };
+}
+
+/**
+ * The factors behind the garment, ordered by how much they actually weighed.
+ *
+ * Deliberately not a sales pitch. `pickGarment` scores formality-fit at 4 (6 after
+ * an explicit shift) and an undertone match at 2, and the cut preference is a hard
+ * filter applied before scoring — so "your colour read chose this" is false on any
+ * run where formality decided it. When the undertone does not match the garment,
+ * this says so, because a chain that only ever reports agreement is not evidence of
+ * a chain.
+ */
+function explainGarment(
+  g: CatalogGarment,
+  type: OccasionType | undefined,
+  color: ColorProfile | undefined,
+  cut: CutPreference,
+  track: StyleTrack,
+): GarmentFactor[] {
+  const out: GarmentFactor[] = [];
+  const want = type ? OCCASION_FORMALITY[type] : undefined;
+  if (want) {
+    out.push({
+      label: "Occasion",
+      detail: `${titleCase(type as string)} wants ${want}; this is ${g.formality}`,
+      weight: "decisive",
+    });
+  }
+  const effectiveCut: CutPreference = track === "grooming" ? "masculine" : cut;
+  if (effectiveCut !== "any") {
+    out.push({
+      label: "Cut you chose",
+      detail: `${effectiveCut} — filtered before scoring, never inferred from your photo`,
+      weight: "filter",
+    });
+  }
+  const u = color?.undertone?.toLowerCase();
+  if (u) {
+    const matched = (g.flatters === "warm" && u.includes("warm")) || (g.flatters === "cool" && u.includes("cool"));
+    out.push({
+      label: "YouCam undertone",
+      detail: matched
+        ? `${color?.undertone} matches this piece (flatters ${g.flatters})`
+        : g.flatters === "neutral"
+          ? `${color?.undertone}; this piece is neutral, so it works either way`
+          : `${color?.undertone} does NOT match this piece (flatters ${g.flatters}) — occasion fit outweighed it`,
+      weight: matched || g.flatters === "neutral" ? "tiebreak" : "none",
+    });
+  }
+  return out;
 }
 
 /** How far away the event is — governs countdown KIND, narrative, and shopping. */

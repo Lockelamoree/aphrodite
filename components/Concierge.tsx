@@ -18,6 +18,7 @@ import type {
   SkinGoal,
   StyleTrack,
   CutPreference,
+  GarmentFactor,
 } from "@/lib/concierge/types";
 import type { SkinAnalysis } from "@/lib/youcam/types";
 
@@ -614,11 +615,18 @@ function Results({
   // least likely to exist: only one face has a captured one. Fall back to the
   // try-on render, which is a real render of a real photo, and caption whichever
   // one is actually on screen instead of always claiming lighting.
-  const heroUrl = state.images.finish ?? state.images.apparel;
-  const heroKind: "finish" | "apparel" | undefined = state.images.finish
-    ? "finish"
-    : state.images.apparel
-      ? "apparel"
+  // The APPAREL render leads, not the relight.
+  //
+  // It used to be the other way round, and review 003 caught what that produced: on
+  // the wedding sample the board's hero was the man relit in his own t-shirt and
+  // joggers, captioned "Occasion lighting", centimetres from a narrative promising
+  // the Slate Blue Three-Piece Suit — which existed, demoted to the evidence grid
+  // below. The payoff frame has to show the payoff.
+  const heroUrl = state.images.apparel ?? state.images.finish;
+  const heroKind: "finish" | "apparel" | undefined = state.images.apparel
+    ? "apparel"
+    : state.images.finish
+      ? "finish"
       : undefined;
 
   return (
@@ -665,6 +673,7 @@ function Results({
             heroUrl={heroUrl}
             heroKind={heroKind}
             sampleData={sampleData}
+            garmentWhy={board.garmentWhy}
           />
           <RefineBar refine={refine} disabled={state.phase === "running"} hasColor={!!state.color} />
         </div>
@@ -1116,6 +1125,7 @@ function LookBoardPanel({
   heroUrl,
   heroKind,
   sampleData,
+  garmentWhy,
 }: {
   board: LookBoard;
   demo?: boolean;
@@ -1123,6 +1133,8 @@ function LookBoardPanel({
   heroUrl?: string;
   /** Which render is actually in the hero slot, so the caption names that one. */
   heroKind?: "finish" | "apparel";
+  /** The weighted reasons behind the garment, decisive first. */
+  garmentWhy?: GarmentFactor[];
   /** Demo mode on a photo the visitor supplied: the plan is built from captured
    * sample data and did not read this face. Said here, not only in the bar at the
    * top of the page, because this is where the reader is looking. */
@@ -1161,6 +1173,35 @@ function LookBoardPanel({
                 ? "Occasion lighting · rendered by YouCam AI"
                 : "Apparel try-on · rendered by the YouCam Apparel VTO API"}
             </figcaption>
+            {garmentWhy && garmentWhy.length > 0 && (
+              /* The causal edge, on screen. The fusion was readable in the prose and
+                 invisible as a mechanism; these are the factors the picker actually
+                 weighted, decisive first, including the ones that did NOT agree. */
+              <div className="mt-3">
+                <h4 className="text-xs font-medium uppercase tracking-wide text-muted">
+                  Why this garment
+                </h4>
+                <ul className="mt-2 space-y-1.5">
+                  {garmentWhy.map((f) => (
+                    <li key={f.label} className="flex flex-wrap items-baseline gap-x-2 text-xs">
+                      <span
+                        className={`rounded-full px-2 py-0.5 font-medium ${
+                          f.weight === "decisive"
+                            ? "bg-primary/15 text-ink"
+                            : f.weight === "none"
+                              ? "border border-line text-muted"
+                              : "bg-primary-soft text-ink"
+                        }`}
+                      >
+                        {f.label}
+                        {f.weight === "decisive" ? " · decisive" : f.weight === "none" ? " · outweighed" : ""}
+                      </span>
+                      <span className="min-w-0 text-muted">{f.detail}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </figure>
         )}
         <div className="space-y-6">
@@ -1478,11 +1519,26 @@ function Uploader({
           )}
         </span>
       )}
+      {/* VISUALLY hidden, not display:none.
+          `className="hidden"` was display:none, which removes the input from the tab
+          order — and a <label> is not focusable either, so a keyboard-only visitor
+          could not reach "upload your own selfie" at all. Review 001 raised it, and
+          it was still open at review 003, on the flagship control of a product whose
+          entire premise is "give me one photo".
+
+          The sr-only pattern keeps the input in the accessibility tree and in the tab
+          order while the styled label stays the visible target; `peer-focus-visible`
+          on the wrapper draws the ring, because the focused element is invisible. */}
       <input
         type="file"
         accept="image/jpeg,image/png,image/webp"
-        className="hidden"
+        aria-label={`${label}${required ? " (required)" : ""} — choose an image file`}
+        className="peer absolute h-px w-px overflow-hidden opacity-0"
         onChange={(e) => void take(e.target.files?.[0])}
+      />
+      <span
+        aria-hidden
+        className="pointer-events-none absolute inset-0 rounded-lg peer-focus-visible:ring-2 peer-focus-visible:ring-primary peer-focus-visible:ring-offset-2"
       />
     </label>
   );

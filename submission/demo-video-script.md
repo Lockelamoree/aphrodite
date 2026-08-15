@@ -1,98 +1,109 @@
-# Aphrodite — demo video shot-script
+# Aphrodite — demo reel
 
-> **Superseded by a reproducible pipeline on 2026-08-12.** The reel is no longer hand-cut:
->
-> - **Narration** lives in `submission/narration.txt`, one line per beat.
-> - **Footage** is recorded by `scripts/record-demo.mjs`, one frame directory per beat,
->   driving the real app in demo mode at zero units.
-> - **The cut** is assembled by `scripts/build-demo-video.mjs`: it synthesises each line
->   with Piper, then holds that beat's footage for exactly as long as the line takes.
->
-> So the narration is the clock. Re-wording a line re-times the cut with no re-recording,
-> and `VOICE_MODEL=…onnx` re-voices the whole reel without touching a caption by hand.
->
-> ```bash
-> npm run build && YOUCAM_FIXTURES=1 PORT=3317 APHRODITE_LIVE_CODES=judge:CODE \
->   APHRODITE_AUTH_SECRET=secret npm start &
-> APHRODITE_SHOT_CODE=CODE node scripts/record-demo.mjs http://localhost:3317 /tmp/footage
-> PIPER=/path/to/venv/bin/python VOICE_MODEL=/path/to/en_US-hfc_female-medium.onnx \
->   node scripts/build-demo-video.mjs /tmp/footage submission/aphrodite-demo-2026-08-12-voiced.mp4
-> ```
->
-> **Current cut:** `submission/aphrodite-demo-2026-08-12-voiced.mp4`, 88.4 s, 1280×800,
-> spoken narration (`en_US-hfc_female-medium`, local, no text leaves the machine) with
-> burned captions in the same words.
->
-> **Two things this pipeline fixed, both found by watching the output:**
->
-> 1. The first build recorded each sample run *inside* the beat that described its
->    result. A beat is trimmed to the length of its narration, from the front, so the
->    footage that survived showed the form filling in while the voice described a render
->    further down the page. The run is now driven before recording starts.
-> 2. Beat 4 scrolled to the wrong panel: its anchor text `Your outfit` also appears in
->    the basket blurb ("your outfit is rendered on you with YouCam AI"), so the try-on
->    beat framed the shopping list. Anchors are now unique strings.
->
-> Both are the same class of defect as the captions this project has caught before —
-> words describing something that is not on screen — and neither is visible from the
-> code.
->
-> **Do not publish** the captions-only cut of 2026-08-10 or anything under
-> `submission/archive-old-cuts/`: one carries a banned word in a burned-in subtitle at
-> ~0:52 and a retired provenance ledger at ~0:30, the other predates the access gate.
+The reel is not hand-cut. Three files are the whole source of truth:
 
-The original hand-cut plan follows, kept because its beat structure is still the shape
-of the reel.
+| File | Holds |
+|---|---|
+| `submission/narration.txt` | the spoken script, one line per beat, grouped into five acts |
+| `submission/edl.json` | the camera move for each beat — peak zoom and focus point |
+| `scripts/record-demo.mjs` | what each beat *shows*, driving the real app at zero units |
+| `scripts/build-demo-video.mjs` | the cut: synthesise, hold footage to the voice, dissolve, deliver |
 
-> The Devpost rule: a 1–3 min video that shows **YouCam API integration** + on-device
-> (app-running) footage. Record in **demo mode** (`YOUCAM_FIXTURES=1`) so it costs
-> **zero units** and can't flake — the UI already labels itself "demo mode · sample
-> renders," which keeps the reel honest. Use the **WARM "Wedding · full-body" sample**
-> only: it renders end-to-end (skin overlay + outfit VTO + lighting). Avoid the cool
-> selfie-only sample on camera (it intentionally shows honest empty states), and avoid
-> the hair/color/makeup studio taps unless you've captured those fixtures first.
+**The narration is the clock.** Each line is synthesised first and its footage is then held
+for exactly that long, freezing on the last frame if the footage runs short. So rewording a
+line re-times the cut with no re-recording, and changing the voice re-voices the whole reel
+without touching a caption or a timing by hand.
 
-## Setup before recording
-- `cp .env.example .env.local` (demo mode already on) · `npm run dev` · full-screen the browser at 1280×800.
-- Clear any saved runway first (so "Save" → "check-in" is a clean arc), then re-save mid-reel for Beat 5.
-- Optional captions: `ffmpeg` screen capture + `faster-whisper` for burned-in subtitles.
+```bash
+# footage — against the DEPLOYED instance, so the reel shows the build a judge drives
+APHRODITE_SHOT_CODE=<judge code> \
+  node scripts/record-demo.mjs https://aphrodite.max-gutowski.de ~/aphrodite-footage
 
-## The 5 beats
+# cut
+TTS_PROVIDER=openai TTS_VOICE=marin \
+  node scripts/build-demo-video.mjs ~/aphrodite-footage submission/aphrodite-demo-<date>.mp4
+```
 
-**Beat 0 — Hook + product on screen (0:00–0:20).**
-On camera: Aphrodite loaded. Type/pick the occasion ("An evening wedding in 3 weeks"), click the **"Wedding · full-body"** sample, tick the consent box, click **Build my look.**
-VO: *"Before a big occasion I want three things from one selfie — what to do with my skin, what to wear for my coloring, and where to buy it. Aphrodite answers all three with YouCam AI."*
+Delivery: **1920×1080 at 30 fps**, cross-dissolved, burned captions carrying the spoken
+words verbatim, audio normalised to −14 LUFS, a 2 s title card and a 3.6 s end card
+holding the live URL. Target runtime ~2:45 against the event's 3:00 cap.
 
-**Beat 1 — The read (0:20–1:00).** *Fuse point #1: Skin AI.*
-On camera: the stream fills in — **Skin Analysis** scores appear; drag the before/after slider on the AR overlay ("what YouCam sees"). Then **undertone + palette** from Skin-Tone / Color analysis.
-VO: *"YouCam Skin Analysis scores ten concerns zero-to-a-hundred — it focuses the lowest. Its color read gives my undertone and a palette."*
-Stills: `S1` skin scores + overlay mid-drag · `S2` undertone + palette.
+## The five acts
 
-**Beat 2 — Plan + try-on (1:00–1:40).** *Fuse point #2: Apparel VTO on the same person.*
-On camera: the **countdown** timed to the day (call out that a 3-week plan front-loads actives and tapers vs. a day-of plan). Then the **Apparel Try-On** — the outfit rendered on the sample — and the **AI Photo Lighting** finish.
-VO: *"The prep countdown changes with how far off the day is. Then the outfit is rendered on me — not just described — and a lighting pass finishes the shot."*
-Stills: `S3` countdown · `S4` outfit rendered on model · `S5` lighting before/after.
+| Act | Window | What it has to do |
+|---|---|---|
+| 1 — Why | 0:00–0:24 | The three questions nobody answers in one place. Product on screen by 0:20. |
+| 2 — The loop | 0:24–0:58 | Occasion, one selfie, the cut question, and the board arriving. |
+| 3 — Highlights | 0:58–1:52 | The fused chain where it is real — and the one place it is not. |
+| 4 — The self-catch | 1:52–2:24 | It refuses a render it cannot back. The ledger and the receipts. |
+| 5 — Built, and close | 2:24–2:50 | Two engines on one stream, the tests, the live URL. |
 
-**Beat 3 — One shoppable board + provenance (1:40–2:15).**
-On camera: scroll the **look board** — one priced, cross-category basket (skincare + garment + accessories); hover the **provenance ledger** showing which YouCam API produced each result; tap **Refine → reroll / cooler** to show the outfit restyle live.
-VO: *"Everything lands in one basket, and a ledger names exactly which YouCam API produced each piece. I can restyle on the fly."*
-Stills: `S6` basket + ledger · `S7` a refined outfit.
+Act 3 ends on `b11-honest-limit` and act 4 is built around `b12-refuse` on purpose. A demo
+that agrees with an easy correct case proves the engine runs; one that visibly declines to
+render a person it has no captured render for proves it discriminates. The second is what a
+skeptical judge scores, and it is the only kind of moment a competitor cannot fake.
 
-**Beat 4 — It remembers (2:15–2:40).**
-On camera: **Save** the plan → reload to show the "Welcome back … no photo stored" band → **glow check-in** showing score deltas vs. the saved run.
-VO: *"I can save an image-free plan — no photo or raw data kept — and check back in to see my skin tracking against the baseline."*
-Stills: `S8` saved-runway band ("no photo stored") · `S9` check-in deltas.
+## Claim discipline
 
-**Beat 5 — Two engines + close (2:40–2:50).**
-On camera: the **Agentic / Guided** toggle + brain badge; end on the board.
-VO: *"Same experience whether an LLM orchestrates the APIs or a rule engine does — it runs on a YouCam key alone. That's Aphrodite: Skin AI and try-on, fused into one occasion."*
-Still: `S10` engine toggle + badge.
+Every number spoken has a row in `hackathon/CLAIM_PROOF_MAP.md`. The vocabulary law in
+`hackathon/VOCABULARY.md` binds the voiceover **and** the burned-in captions.
 
-## Stills checklist (grab from the same run)
-S1 skin+overlay · S2 palette · S3 countdown · S4 VTO on model · S5 lighting · S6 basket+ledger · S7 refine · S8 saved band · S9 check-in delta · S10 engine toggle.
-→ 4–5 of these double as the Devpost screenshot gallery (S1, S4, S6, S9 are the strongest).
+Three lines were written, checked, and corrected before a single frame was recorded, because
+each was false in a way only measurement catches:
 
-## Claim discipline (say / don't say)
-- ✅ "rendered on me," "scores 0–100," "which API produced each result," "runs with zero units in demo."
-- ⚠️ Say "demo mode · sample renders" once, on camera, so the captured-vs-live line is explicit.
-- ❌ Don't cite conversion/return-rate numbers (no source in-repo). Don't claim the studio hair/makeup try-ons render in demo (they need a captured fixture or a live key).
+- *"that reading is what chooses the garment"* — the old `b3`, and review 003 was right to
+  kill it. On the wedding path `slate-suit` is `flatters: "cool"` (`catalog.ts:100`) against a
+  warm live read, undertone scores **2** against formality's **4** (`deterministic.ts:369-374`),
+  and the masculine cut filter leaves **one** of eleven garments standing. The reading is
+  arithmetically incapable of choosing there. `b10` now makes the causal claim only for the
+  second face, where nine feminine cuts give it room, and `b11` states the limit outright.
+- *"the screen says as much"* — it does not. `garmentColorClause` returns `""` on a mismatch
+  (`deterministic.ts:445-453`), so the copy reads *"right for a wedding"* and says nothing
+  about colour at all. The honest thing on screen is a **silence**, and `b11` now describes
+  the silence rather than crediting a sentence that was never written.
+- *"four YouCam APIs in one run, about four and a half seconds"* — the 4.5 s is the demo-mode
+  fixture loop; a live run takes roughly ninety. `b04` now attributes the number to demo mode
+  in the same breath.
+
+Nine feminine, one masculine, one neutral: eleven garments, counted from `GARMENT_CATALOG`
+and cross-checked against `/healthz`'s `garments: 11`. An earlier grep said ten feminine and
+was wrong.
+
+## Voice
+
+`TTS_PROVIDER=openai` (default) uses `gpt-4o-mini-tts`. The delivery brief lives in
+`TTS_INSTRUCTIONS` in the build script rather than in whoever ran the build, because a
+steerable voice is only reproducible if the steering is in version control. Lines are cached
+against their own text, so editing one line re-synthesises one line.
+
+> **The narration is no longer local.** The previous cut used Piper and this file used to say
+> no text left the machine. With the OpenAI provider the narration lines are sent to OpenAI.
+> They are submission copy, not private data, so the trade is deliberate — but the old
+> sentence had to go rather than sit here being false. `TTS_PROVIDER=piper` is still the
+> offline path; the voice model is at `~/aphrodite-tts/voices/`, moved out of a `/tmp`
+> scratchpad where it had been the single point of failure for a promise of reproducibility.
+
+Free voice tiers were considered and rejected: they grant no commercial rights and require
+attribution, which is a rights defect in the one artifact the judges actually watch. A
+metered API call costing cents is the cheaper option, not the more expensive one.
+
+## Do not publish
+
+`submission/archive-old-cuts/` and the captions-only cut of 2026-08-10. One of them carries a
+banned word in a burned-in subtitle, which no re-dub can fix, and a retired provenance ledger
+showing four green ticks during a fixture run. The 2026-08-12 voiced cut is superseded by this
+one and also carries the two false narration lines above.
+
+## Defects this pipeline has caught, kept here so they are not re-introduced
+
+1. A run recorded *inside* the beat that described its result. Beats are trimmed from the
+   front, so what survived was a form filling in while the voice described a render further
+   down the page. Runs are now driven before recording — except `b04-run`, whose line is
+   about watching it work, so it records the stream deliberately.
+2. `b4` scrolled to the wrong panel: its anchor `Your outfit` also appears in the basket
+   blurb. Anchors must be unique strings.
+3. One-frame beats. Chrome's screencast only emits on repaint, so a beat that scrolled once
+   and then waited produced a still — `b3-colour` was **one frame held for nine seconds**.
+   Every beat now glides for its full length, and the build warns on any beat under 20 frames.
+4. Never drive a run after unlocking. An unlocked session leaves demo mode and a run outside
+   demo mode spends real units, so the judge beat is recorded last and nothing follows it.
