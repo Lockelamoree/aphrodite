@@ -143,7 +143,7 @@ function duration(file) {
 }
 
 /** One caption line, wrapped so it never runs off frame. */
-function wrap(text, perLine = 68) {
+function wrap(text, perLine = 78) {
   const words = text.split(/\s+/);
   const lines = [];
   let line = "";
@@ -270,9 +270,9 @@ for (const [i, beat] of beats.entries()) {
   const caption = wrap(beat.text)
     .map(
       (line, n, all) =>
-        `drawtext=fontfile=${FONT}:text='${esc(line)}':fontcolor=white:fontsize=34:` +
-        `box=1:boxcolor=${INK}@0.74:boxborderw=18:x=(w-text_w)/2:` +
-        `y=h-124-${(all.length - 1 - n) * 54}`,
+        `drawtext=fontfile=${FONT}:text='${esc(line)}':fontcolor=white:fontsize=30:` +
+        `box=1:boxcolor=${INK}@0.74:boxborderw=16:x=(w-text_w)/2:` +
+        `y=h-116-${(all.length - 1 - n) * 48}`,
     )
     .join(",");
   const footer =
@@ -369,6 +369,28 @@ console.log(
     `(${W}x${H} @ ${FPS}, voice ${PROVIDER}${PROVIDER === "openai" ? `/${TTS_VOICE}` : ""}, ` +
     `${spoken.toFixed(1)}s narrated)`,
 );
+// The event's cap is a disqualifier, not a style note, and the voice sets the length —
+// so a wording change or a slower voice can push a compliant reel over it without anyone
+// looking. Fail here rather than at upload time.
+const CAP = (() => {
+  try {
+    return JSON.parse(readFileSync("hackathon/config.json", "utf8")).submission.videoMaxSeconds;
+  } catch {
+    return 180;
+  }
+})();
+const finalDur = duration(OUT);
+if (finalDur > CAP) {
+  console.error(
+    `\nFAIL — ${finalDur.toFixed(1)}s exceeds the ${CAP}s cap. Shorten lines in ` +
+      `submission/narration.txt (the narration is the clock) and rebuild; cached lines are reused.`,
+  );
+  process.exit(1);
+}
+if (finalDur > CAP - 10) {
+  console.warn(`\nNOTE — ${finalDur.toFixed(1)}s leaves under 10s of margin against the ${CAP}s cap.`);
+}
+
 if (thin.length) {
   console.warn(
     `\nWARNING — beats with under ${MIN_FRAMES} captured frames, i.e. a near-still held for the ` +

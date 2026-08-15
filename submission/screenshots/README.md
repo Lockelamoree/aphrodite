@@ -1,6 +1,6 @@
 # Screenshot gallery
 
-Captured **2026-08-12** (second pass, after two approved units-on captures) from a **production build** in demo mode (`YOUCAM_FIXTURES=1`,
+Captured **2026-08-15** (fourth pass, after the review-003 fixes) from a **production build** in demo mode (`YOUCAM_FIXTURES=1`,
 access gate configured), driven headlessly at 1440×900 on a 2× display. Zero YouCam
 units were spent taking them.
 
@@ -26,9 +26,14 @@ configured, which is not what a judge meets on the hosted instance.
    appears in none of the samples**, captioned "Occasion lighting · rendered by YouCam
    AI" beside a narrative about a different person's suit. The frame asserted the API
    had relit a face it never saw. Found by looking at the file, not by reading code.
-3. This one, taken after the render fixtures were keyed to the person they depict **and**
-   after two approved live tasks filled the two gaps that keying exposed: a relight of the
+3. Ten stills from **2026-08-12**, after the render fixtures were keyed to the person they
+   depict and two approved live tasks filled the gaps that keying exposed: a relight of the
    wedding sample (`receipts/002`) and a try-on for the second face (`receipts/003`).
+4. This one, **2026-08-15**, because review 003 changed two things a screenshot shows.
+   The look board's hero is now the try-on render rather than the relight — the payoff
+   frame shows the payoff — and the board carries a new panel, `11-why-this-garment.jpg`,
+   which is the frame this gallery was missing: the factors the picker actually weighted,
+   in weight order, including the one that did **not** agree.
 
 | File | What it shows | Why it earns a slot |
 |---|---|---|
@@ -36,9 +41,10 @@ configured, which is not what a judge meets on the hosted instance.
 | `02-apparel-vto.jpg` | The hero comparator | Same person, same wall, same light — it cannot be mistaken for a stock pair |
 | `03-skin-scores.jpg` | The 0–100 skin read, lowest first | Scores framed as priority areas, never as defects |
 | `04-colour-palette.jpg` | Undertone and palette | Derived from the colour hex the API actually detected on this photo (`#b7947d`) |
-| `05-countdown.jpg` | The look board | The hero is the **YouCam relight of the photo in the run** — captured live on 2026-08-12, receipt `hackathon/receipts/002`. The countdown differs in *kind* by how far off the date is |
+| `05-countdown.jpg` | The look board | The hero is now the **try-on render** — the garment the plan promises, on the photo from this run. The countdown differs in *kind* by how far off the date is |
 | `06-priced-basket.jpg` | One cross-category priced basket | The retail case on screen rather than asserted |
 | `07-provenance-ledger.jpg` | The provenance ledger | Reads "**4** Perfect Corp APIs produced these samples. Nothing was called just now." All four, each backed by a committed receipt — and it still says plainly that nothing was called during this run |
 | `08-render-pair.jpg` | The try-on panel | The render, captioned with the API that made it |
 | `09-skin-overlay-captured.jpg` | The comparator with a **captured** YouCam mask | Both halves are the same photo — this face's own dark-circle mask from a real run |
 | `10-judge-unlock.jpg` | The `/unlock` gate | Where a judge redeems the Devpost code, and where the run budget is stated before they spend it |
+| `11-why-this-garment.jpg` | The causal edge | The three factors behind the garment, in the order the picker weighted them — and it says out loud that the undertone was **outweighed** by occasion fit on this run. A chain that only ever reports agreement is not evidence of a chain |

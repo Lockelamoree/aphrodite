@@ -206,6 +206,9 @@ await shoot("03-skin-scores.jpg", { anchor: "priority areas" });
 await shoot("04-colour-palette.jpg", { anchor: "Your colors" });
 await shoot("05-countdown.jpg", { anchor: "Skin-prep countdown" });
 await shoot("06-priced-basket.jpg", { anchor: "Build your basket", maxHeight: 1200 });
+// The causal edge, added 2026-08-15: the factors the picker actually weighted, which is
+// what turns the fused chain from something a judge reads into something they can check.
+await shoot("11-why-this-garment.jpg", { anchor: "Why this garment", maxHeight: 620 });
 await shoot("07-provenance-ledger.jpg", { anchor: "Captured from" });
 await shoot("08-render-pair.jpg", { anchor: "see it on before you buy", maxHeight: 1200 });
 

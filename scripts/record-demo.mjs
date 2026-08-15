@@ -174,11 +174,21 @@ const findY = (text, bias = 0.28) => evaluate(`(() => {
  * old rig produced one-frame beats is that it scrolled once and then slept.
  */
 const glide = (y, ms) => evaluate(`new Promise((res) => {
+  // app/globals.css sets scroll-behavior: smooth, which turns EVERY scrollTo below into
+  // its own animation. Sixty of those a second fight each other, so the page drifts
+  // continuously without ever arriving — beats kept framing the panel after the one
+  // their line described while still producing plenty of frames, which is why this was
+  // invisible in the frame counts. The rAF loop owns the easing, so the CSS easing has
+  // to be off while it runs.
+  const root = document.documentElement;
+  const prev = root.style.scrollBehavior;
+  root.style.scrollBehavior = 'auto';
   const startY = window.scrollY, dy = ${y} - startY, t0 = performance.now();
   const step = (t) => {
     const p = Math.min((t - t0) / ${ms}, 1);
     window.scrollTo(0, startY + dy * (p * p * (3 - 2 * p)));
-    if (p < 1) requestAnimationFrame(step); else res(true);
+    if (p < 1) requestAnimationFrame(step);
+    else { root.style.scrollBehavior = prev; res(true); }
   };
   requestAnimationFrame(step);
 })`);
@@ -423,20 +433,34 @@ if (!ONLY || SECOND_FACE_BEATS.includes(ONLY)) {
   await drive("First date · selfie only");
 }
 
+// Anchored on the render's OWN caption with a high bias, so the caption sits low in
+// frame and the image it describes is above it. The first take anchored on the panel
+// heading and, by the time the voice named the Sky Wrap Maxi, the frame had settled on
+// the shopping basket — the render was off screen for its own line.
 await record("b10-second-face", 21_000, async () => {
-  await glideTo("see it on before you buy", 6000);
-  await sleep(6000);
-  await glideTo("Your colors", 5000);
+  await glideTo("Apparel try-on · rendered by", 6000, 0.62);
+  await sleep(7000);
+  await glideTo("Your colors", 5000, 0.2);
   await sleep(2000);
 });
 
+// The refusal itself, verbatim from Concierge.tsx:611. NOT a fallback chain: the first
+// take fell through three catches and framed the colour palette and the studio tiles
+// while the voice described a refusal, which is the exact defect this reel keeps finding.
+// If this string is ever not on screen, the beat must fail loudly instead of framing
+// something else.
+// "No lighting pass this run." is what a BUNDLED sample shows: finishEmpty at
+// Concierge.tsx:610-612 only reaches the stronger "will not put a stranger's render
+// under your name" wording when sampleData is true, i.e. an OWN uploaded photo. The
+// narration was rewritten to the weaker, filmable truth rather than the reverse.
 await record("b12-refuse", 21_000, async () => {
-  await glideTo("No lighting pass this run", 6000).catch(() =>
-    glideTo("no captured", 6000).catch(() => glideTo("The details, seen", 6000)),
-  );
-  await sleep(5000);
-  await glideTo("What YouCam sees", 5000);
-  await sleep(3000);
+  // Frame the lighting slot HEADING, not the empty message: at bias 0.18 the heading
+  // sits high and the "No lighting pass this run." line below it is in the same frame,
+  // instead of a screen of whitespace with six words of grey text in the middle.
+  await glideTo("Occasion lighting", 6500, 0.18);
+  await sleep(6500);
+  await glideTo("What YouCam sees", 5000, 0.22);
+  await sleep(2000);
 });
 
 // ===== the judge path, LAST — an unlocked session leaves demo mode ========
