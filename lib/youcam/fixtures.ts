@@ -177,12 +177,34 @@ export async function fixtureColor(input?: ImageInput): Promise<ColorProfile> {
  * as many rows as there are real renders, and the empty states elsewhere are the
  * honest shape of a demo built on one captured VTO.
  */
-const CAPTURED_APPAREL: { person: SamplePerson; garmentId: string; url: string; provenance: string }[] = [
+type CapturedRender = {
+  person: SamplePerson;
+  url: string;
+  provenance: string;
+  /** True only when the shipped bytes are byte-identical to a committed receipt.
+   *  Asserted per row by tests/fixture-identity.test.ts, so a wrong value fails
+   *  the suite rather than sitting in a comment. */
+  receiptVerified: boolean;
+};
+
+export const CAPTURED_APPAREL: (CapturedRender & { garmentId: string })[] = [
   {
     person: "sampleA",
     garmentId: "slate-suit",
     url: "/fixtures/apparel-suit.jpg",
-    provenance: "live cloth-v3 render of samples/full-body.jpg, receipts/000-misaimed-attempt",
+    // CORRECTED 2026-08-15 after review 003 hashed it. This file is sha256
+    // 739192e8…; the cloth-v3 render in receipts/000-misaimed-attempt is
+    // 27c9d899… and 222,607 bytes. They are NOT the same image: this one was
+    // captured in the July session, three weeks before the receipt harness
+    // existed, and its signed result url expired long ago, so its bytes can never
+    // be re-derived. The provenance line used to name that receipt anyway — a
+    // claim I wrote on 2026-08-12 without hashing it, which is the same defect
+    // class this table exists to prevent. It is a genuine YouCam render of this
+    // photo; what it is not is receipt-backed, and the difference is the whole
+    // point of the receipts.
+    provenance:
+      "YouCam cloth-v3 render of samples/full-body.jpg, captured July 2026 before the receipt harness existed — NOT byte-verifiable against any committed receipt (sha256 739192e8…)",
+    receiptVerified: false,
   },
   {
     // Captured 2026-08-12 on approval, for the tiebreaker: two faces have to be seen
@@ -192,6 +214,7 @@ const CAPTURED_APPAREL: { person: SamplePerson; garmentId: string; url: string; 
     garmentId: "sky-wrap-maxi",
     url: "/fixtures/apparel-sky-maxi.jpg",
     provenance: "live cloth-v3 render of samples/selfie-2.jpg, receipts/003, sha256 40ba8d1d…",
+    receiptVerified: true,
   },
 ];
 
@@ -204,11 +227,12 @@ const CAPTURED_APPAREL: { person: SamplePerson; garmentId: string; url: string; 
  * 2026-08-10 — the bytes committed at hackathon/receipts/001/photo_lighting.render.jpg
  * — served only to the face it belongs to.
  */
-const CAPTURED_LIGHTING: { person: SamplePerson; url: string; provenance: string }[] = [
+export const CAPTURED_LIGHTING: CapturedRender[] = [
   {
     person: "sampleSelfie",
     url: "/fixtures/finish-selfie.jpg",
     provenance: "live lighting render of samples/selfie.jpg, receipts/001, sha256 44cd13b0…",
+    receiptVerified: true,
   },
   {
     // Captured 2026-08-12 on approval. This is the render the deleted finish.jpg
@@ -216,6 +240,7 @@ const CAPTURED_LIGHTING: { person: SamplePerson; url: string; provenance: string
     person: "sampleA",
     url: "/fixtures/finish-wedding.jpg",
     provenance: "live lighting render of samples/full-body.jpg, receipts/002, sha256 28237262…",
+    receiptVerified: true,
   },
 ];
 

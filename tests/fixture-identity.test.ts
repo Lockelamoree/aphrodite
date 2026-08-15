@@ -2,7 +2,12 @@ import { readFileSync } from "node:fs";
 
 import { describe, expect, it } from "vitest";
 
-import { fixtureApparel, fixtureLighting } from "@/lib/youcam/fixtures";
+import {
+  CAPTURED_APPAREL,
+  CAPTURED_LIGHTING,
+  fixtureApparel,
+  fixtureLighting,
+} from "@/lib/youcam/fixtures";
 import type { ImageInput } from "@/lib/youcam/types";
 
 /**
@@ -127,5 +132,46 @@ describe("the fixture assets on disk match what the tables claim", () => {
     ["public/fixtures/apparel-sky-maxi.jpg", "hackathon/receipts/003/apparel_vto.render.jpg"],
   ])("%s is byte-identical to the receipt it came from", (fixture, receipt) => {
     expect(Buffer.compare(readFileSync(fixture), readFileSync(receipt))).toBe(0);
+  });
+
+  /**
+   * The gap that let a false provenance ship.
+   *
+   * The list above was hand-maintained, so apparel-suit.jpg — the render on the
+   * landing hero, the first one a judge sees — sat outside it while its provenance
+   * string named a receipt whose bytes differ (739192e8… vs 27c9d899…). Review 003
+   * caught it by hashing. This test drives the tables themselves: every row that
+   * claims to be receipt-verified must name a receipt in its provenance AND match
+   * some committed receipt render byte for byte, and every row that does not claim
+   * it must say so in words. A row can no longer be verified-by-adjective.
+   */
+  it("every shipped render's receiptVerified flag matches the bytes on disk", () => {
+    const receiptRenders = [
+      "hackathon/receipts/001/photo_lighting.render.jpg",
+      "hackathon/receipts/002/photo_lighting.render.jpg",
+      "hackathon/receipts/003/apparel_vto.render.jpg",
+    ].map((p) => readFileSync(p));
+
+    const rows = [...CAPTURED_APPAREL, ...CAPTURED_LIGHTING];
+    expect(rows.length).toBeGreaterThan(0);
+
+    for (const row of rows) {
+      const bytes = readFileSync(`public${row.url}`);
+      const matches = receiptRenders.some((r) => Buffer.compare(bytes, r) === 0);
+      expect(
+        matches,
+        `${row.url} has receiptVerified=${row.receiptVerified} but ${matches ? "does" : "does NOT"} match a committed receipt render`,
+      ).toBe(row.receiptVerified);
+      if (row.receiptVerified) {
+        expect(row.provenance, `${row.url} claims verification without naming a receipt`).toMatch(
+          /receipts\/\d/,
+        );
+      } else {
+        expect(
+          row.provenance,
+          `${row.url} is not receipt-backed and must say so in its provenance`,
+        ).toMatch(/NOT byte-verifiable/i);
+      }
+    }
   });
 });

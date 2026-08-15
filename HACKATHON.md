@@ -104,7 +104,7 @@ tier also carrying a blog feature and a marketing meeting with Perfect Corp.
 |---|---|
 | Public repo + license | **done** — `github.com/Lockelamoree/aphrodite`, MIT |
 | Text description | **draft, now carrying the links** — `submission/devpost.md`: hosted URL, headline stats and a paste-ready testing field are in. The video link is the one remaining hole, and it stays open until the reel is uploaded |
-| Screenshots | **done 2026-08-10** — nine stills in `submission/screenshots/`, captured from a production build of the corrected code, each with a note on what it proves. The 2026-07-26 PNGs outside the repo are superseded |
+| Screenshots | **done 2026-08-12** — ten stills in `submission/screenshots/`, re-captured 2026-08-12 from a production build with the access gate configured, each with a note on what it proves. The 2026-07-26 PNGs outside the repo are superseded |
 | Demo video 1–3 min, shows YouCam integration | **recut with a spoken track 2026-08-12, not yet uploaded** — `submission/aphrodite-demo-2026-08-12-voiced.mp4`, 88.4 s, from a production build. Narration is spoken (local Piper `en_US-hfc_female-medium`) and burned as captions in the same words; each beat shows only the state its line names. Rebuildable and re-voiceable from `submission/narration.txt` via `scripts/record-demo.mjs` + `scripts/build-demo-video.mjs`. The captions-only cut and everything under `submission/archive-old-cuts/` must not be published |
 | Hosted, judge-testable instance | **live** — https://aphrodite.max-gutowski.de (since 2026-08-09). The public path is keyless and costs zero units; the paths that spend money are behind a role code redeemed at `/unlock` |
 

@@ -129,7 +129,30 @@ export async function POST(req: Request): Promise<Response> {
               : runConcierge
             : runDeterministic;
         await withYouCamMode({ live: liveYouCam, reason: liveReason }, async () => {
-          for await (const ev of engine(body)) send(controller, ev);
+          try {
+            for await (const ev of engine(body)) send(controller, ev);
+          } catch (err) {
+            // THE AGENTIC ENGINE MUST NOT BE ABLE TO COST A JUDGE THEIR LOOK BOARD.
+            //
+            // Until review 003 this rethrew into the outer catch, which sent
+            // {error} then {done} — no board, no plan, nothing. And it is the
+            // DEFAULT path for an unlocked judge: mode "auto" resolves to agentic
+            // whenever a key exists. /healthz was reporting the LLM probe as
+            // key_present_unverified ("This operation was aborted") at the time, so
+            // the most likely first impression was a blank result.
+            //
+            // The rule engine needs no key and produces the same event stream, so a
+            // failure here is a downgrade, not an outage. It is announced, because a
+            // silent switch would misattribute the guided engine's work to the LLM.
+            if (isRefine || mode !== "agentic") throw err;
+            const why = err instanceof Error ? err.message : String(err);
+            send(controller, { type: "mode", mode: "deterministic", demo: !liveYouCam });
+            send(controller, {
+              type: "narration",
+              text: `(The AI-driven engine did not finish — ${why}. Completing your plan with the guided engine instead; every YouCam render below is unchanged.)\n\n`,
+            });
+            for await (const ev of runDeterministic(body)) send(controller, ev);
+          }
         });
       } catch (err) {
         const message = err instanceof Error ? err.message : String(err);

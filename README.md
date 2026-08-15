@@ -189,9 +189,13 @@ garment it actually shows. Two such renders exist, and for every other photo or 
 the app says no captured render exists rather than substituting one. That rule was
 written the hard way: three of the four render fixtures turned out to depict three
 different people, and one of them carried the look board as its hero under the caption
-"Occasion lighting · rendered by YouCam AI". The consequence is visible and deliberate —
-on the sample path the provenance ledger names **three** APIs, not four, because no
-relight of that face has been captured.
+"Occasion lighting · rendered by YouCam AI". For a while the consequence was visible and deliberate — the ledger named **three** APIs
+instead of four, because no relight of that face had been captured. On 2026-08-12 that
+relight was captured (`hackathon/receipts/002`), so the sample path names four again,
+each one behind a render of the face it is shown on. Three of those four renders are
+byte-identical to a committed receipt; the fourth, the landing hero's try-on, was
+captured in July before the receipt harness existed and says so rather than borrowing a
+receipt it does not match.
 
 ## Testing
 
