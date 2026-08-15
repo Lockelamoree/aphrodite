@@ -45,6 +45,9 @@ const JUDGE_CODE = process.env.APHRODITE_SHOT_CODE ?? "";
  *  hatch capture-screenshots.mjs has. Navigation and the sample runs still happen,
  *  because a beat's screen only exists after them. */
 const ONLY = process.env.ONLY?.trim() || null;
+/** Anything not on this machine is treated as able to bill. */
+const LOCAL_BASE = /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:|\/|$)/i.test(BASE);
+const ALLOW_REMOTE_RUNS = process.env.APHRODITE_ALLOW_REMOTE_RUNS === "1";
 
 const CHROME_CANDIDATES = [
   join(homedir(), ".cache/ms-playwright/chromium_headless_shell-1234/chrome-headless-shell-linux64/chrome-headless-shell"),
@@ -318,7 +321,34 @@ console.log("recording", BASE, "->", OUT, `at ${WIDTH * SCALE}x${HEIGHT * SCALE}
  * The one beat that legitimately shows the run is b04-run, whose line is about watching
  * it work; that one records the stream on purpose.
  */
+/**
+ * HARD SPEND GUARD. A run is the only thing here that can cost YouCam units, and on
+ * 2026-08-15 the deployed ledger moved 0 -> 2 during recording sessions. Whatever the
+ * route's own logic promises about anonymous requests, footage is not worth a unit, so a
+ * run may only be triggered against a local instance unless the operator overrides it in
+ * so many words. Recording against localhost with YOUCAM_FIXTURES=1 yields identical
+ * frames, because the served fixtures are byte-identical to the committed receipts.
+ *
+ * This wraps EVERY path that submits a run — drive() and the b04-run beat, which clicks
+ * the button itself because its line is about watching the run happen.
+ */
+function assertRunAllowed(what) {
+  if (LOCAL_BASE || ALLOW_REMOTE_RUNS) return;
+  throw new Error(
+    `refusing to start a run ("${what}") against ${BASE} — it can spend YouCam units. ` +
+      `Record against a local instance (npm start with YOUCAM_FIXTURES=1), or set ` +
+      `APHRODITE_ALLOW_REMOTE_RUNS=1 to override deliberately.`,
+  );
+}
+
 async function drive(sampleLabel) {
+  // HARD SPEND GUARD. A run is the only thing here that can cost YouCam units, and on
+  // 2026-08-15 the deployed ledger moved 0 -> 2 during a recording session. Whatever the
+  // route's own logic promises about anonymous requests, footage is not worth a unit:
+  // driving a run is allowed against a local instance only, unless the operator says
+  // otherwise in so many words. Record against localhost with YOUCAM_FIXTURES=1 and the
+  // frames are identical, because the fixtures are byte-identical to the receipts.
+  assertRunAllowed(sampleLabel);
   if (!(await clickByText(sampleLabel))) throw new Error(`no sample button: ${sampleLabel}`);
   await sleep(1400);
   if (!(await clickByText("Build my look"))) throw new Error("no submit button");
@@ -356,6 +386,7 @@ await record("b03-input", 21_000, async () => {
 
 // The one beat that shows the run happening, because its line says so.
 await record("b04-run", 15_000, async () => {
+  assertRunAllowed("b04-run submit");
   await clickByText("Build my look");
   await waitFor("document.body.innerText.includes('Skin-prep countdown')", { label: "the board" });
   await sleep(2500);
@@ -482,6 +513,12 @@ await record("b12-refuse", 21_000, async () => {
 });
 
 // ===== the judge path, LAST — an unlocked session leaves demo mode ========
+// The unlock happens BEFORE recording starts, for two reasons. Its line is about what the
+// endpoint RETURNS, and a beat trimmed from the front would otherwise spend its first
+// seconds on a login form while the voice described JSON. And the unlock form carries the
+// judge access code in the input — that code is what gates real spending, so burning it
+// into a video that will be public on YouTube would hand the remaining unit budget to
+// anyone who pressed pause. Nothing that shows the code is ever recorded.
 await goto(`${BASE}/unlock`);
 if (JUDGE_CODE) {
   await evaluate(`(() => {
@@ -492,37 +529,38 @@ if (JUDGE_CODE) {
     i.dispatchEvent(new Event('input', { bubbles: true }));
     return true;
   })()`);
-  await sleep(800);
-}
-await record("b14-verify", 20_000, async () => {
-  await sleep(2000);
-  if (JUDGE_CODE) {
-    await clickByText("Unlock");
-    await sleep(2500);
-  }
-  // Free by construction: the default path replays committed receipts and spends nothing.
-  await send("Page.navigate", { url: `${BASE}/api/dev/verify` });
+  await sleep(600);
+  await clickByText("Unlock");
   await sleep(2500);
-  // The raw JSON is one unreadable block that happens to fit a single screen — which is
-  // also why the first take yielded 13 frames and nothing to read. Chrome's own
-  // Pretty-print control lives in the JSON viewer's shadow DOM and cannot be clicked
-  // from the page, so instead the browser is zoomed the way a judge would zoom it. That
-  // both enlarges the real response text and creates the scroll room the beat needs.
-  await send("Emulation.setPageScaleFactor", { pageScaleFactor: PAGE_SCALE });
-  await sleep(1200);
-  // A synthesised gesture scrolls the VISUAL viewport, which window.scrollTo does not
-  // once a page scale factor is in play — and it animates, so frames keep arriving.
+}
+// Free by construction: the default path replays committed receipts and spends nothing.
+await send("Page.navigate", { url: `${BASE}/api/dev/verify` });
+await sleep(2500);
+// If the cookie did not take, this route answers 401 and the beat would narrate replayed
+// task_ids over an error object. Fail instead.
+await waitFor("document.body.innerText.includes('units_spent_by_this_request')", {
+  label: "the verify contract (is APHRODITE_SHOT_CODE set and valid?)",
+});
+// The raw JSON fits one screen at 12px, which is unreadable and also why an early take
+// yielded 13 frames. Chrome's Pretty-print control sits in the JSON viewer's shadow DOM
+// and cannot be clicked from the page, so the browser is zoomed the way a judge would
+// zoom it: real response text, larger, and now with room to scroll.
+await send("Emulation.setPageScaleFactor", { pageScaleFactor: PAGE_SCALE });
+await sleep(1000);
+
+await record("b14-verify", 16_000, async () => {
+  await sleep(1500);
   // Gesture coordinates live in the SCALED visual viewport, which at scale 2 is only
   // 640x360 — the viewport centre is out of bounds there and the call rejects.
   await send("Input.synthesizeScrollGesture", {
     x: Math.round(WIDTH / (2 * PAGE_SCALE)) - 40,
     y: Math.round(HEIGHT / (2 * PAGE_SCALE)) - 40,
-    yDistance: -1400,
-    speed: 180,
+    yDistance: -1500,
+    speed: 150,
   });
   await sleep(1500);
-  await send("Emulation.setPageScaleFactor", { pageScaleFactor: 1 });
 });
+await send("Emulation.setPageScaleFactor", { pageScaleFactor: 1 });
 
 await ws.close();
 proc.kill();

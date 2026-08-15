@@ -34,27 +34,27 @@
 #     before that commit and false after it. If the panel is ever removed, b11 is a lie.
 
 # ACT 1 — Why this exists (target 0:00–0:24)
-b01-why | Most try-on demos stop at "here is a garment on you." But before a wedding I want three things in one place: what to do about my skin, what to wear for my colouring, and where to buy all of it.
+b01-why | Most try-on demos stop at "here is a garment on you." But before a wedding I want three answers in one place: my skin, what to wear for my colouring, and where to buy it.
 b02-promise | Every tool I tried answered one of the three. Aphrodite answers all three, from a single photo.
 
 # ACT 2 — The loop (target 0:24–0:58)
-b03-input | You give it the occasion and one selfie. It asks which cut you want rather than reading that off your face — a guess dressed up as a choice is worse than a question.
-b04-run | Then you watch it work. Four YouCam API steps chained in one run — and in demo mode the whole board lands in about four and a half seconds.
-b05-board | The board arrives whole: your skin read, your colours, a countdown to the day, the outfit rendered on you, and a basket that prices the lot.
+b03-input | You give it the occasion and one selfie. It asks which cut you want rather than reading it off your face — a guess dressed up as a choice is worse than a question.
+b04-run | Then you watch it work. Four YouCam API steps in one run — and in demo mode the board lands in about four and a half seconds.
+b05-board | The board arrives whole: your skin read, your colours, a countdown to the day, the outfit rendered on you, and a priced basket.
 
 # ACT 3 — The highlights, including the one thing it cannot do (target 0:58–1:52)
-b06-skin | YouCam Skin Analysis scores ten concerns, and the plan leads with the lowest one — not with the flattering ones.
+b06-skin | YouCam Skin Analysis scores ten concerns, and the plan leads with the lowest — not the flattering ones.
 b07-colour | YouCam Skin-Tone reads the real colour of this face: undertone, depth, a palette.
-b08-tryon | Apparel Try-On puts the Slate Blue three-piece on this exact photo, and Photo Lighting relights that same photo for the evening.
-b09-countdown | The countdown changes in kind with the date. Three weeks out it front-loads actives; the night before it stops them and switches to hydration.
-b10-second-face | Here is where the two halves meet. A second face reads cool, and the colour read has nine feminine cuts to choose among — so it picks a cool one, the Sky Wrap Maxi, rendered on her own photo.
-b11-honest-limit | On the first face it cannot — and the board says why, in its own words. Occasion, decisive. The cut, as you chose it. And YouCam's warm undertone, outweighed, because the one masculine cut in this wardrobe flatters cool.
+b08-tryon | Apparel Try-On puts the Slate Blue three-piece on this exact photo; Photo Lighting relights it for the evening.
+b09-countdown | The countdown changes in kind with the date. Three weeks out it front-loads actives; the night before it switches to hydration.
+b10-second-face | Here is where the two halves meet. A second face reads cool, and the colour read has nine feminine cuts to pick from — so it picks a cool one, the Sky Wrap Maxi, rendered on her own photo.
+b11-honest-limit | On the first face it cannot — and the board says why. Occasion, decisive. The cut, as you chose it. And YouCam's warm undertone, outweighed: the one masculine cut here flatters cool.
 
 # ACT 4 — The self-catch (target 1:52–2:24)
-b12-refuse | Now the part demos skip. This face has no captured relight, so the panel says so instead of borrowing one. Renders are keyed to the person they depict, and a test fails if a substitute ever comes back.
+b12-refuse | Now the part demos skip. This face has no captured relight, so the panel says so instead of borrowing one. Renders are keyed to the person they depict — a test fails if a substitute comes back.
 b13-ledger | The ledger is as blunt: nothing was called just now, these are captured renders, and three of these four are byte-identical to a committed Perfect Corp receipt. Hash them yourself.
 b14-verify | This endpoint replays the real task IDs behind those renders at zero cost — including the call that failed, and the one that rejected our own sample photo.
 
 # ACT 5 — How it is built, and the close (target 2:24–2:50)
-b15-engines | Two engines share one event stream. This run is the rule engine — no model key needed. Unlocked, GPT orchestrates the same APIs as tools; if it stalls, the rule engine finishes and says so out loud.
-b16-close | A hundred and twenty-six tests, one of which fails if a render ever claims a receipt it cannot match. It is live, it is open, and free to look at. Aphrodite — Skin AI and try-on, in one occasion.
+b15-engines | Two engines, one event stream. This run is the rule engine — no model key needed. Unlocked, GPT orchestrates the same APIs as tools; if it stalls, this one finishes and says so.
+b16-close | A hundred and twenty-six tests, one of which fails if a render ever claims a receipt it cannot match. Aphrodite is live, open, and free to look at.

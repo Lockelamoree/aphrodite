@@ -45,7 +45,7 @@ if (!FOOTAGE || !OUT) {
 }
 
 const PROVIDER = (process.env.TTS_PROVIDER ?? "openai").toLowerCase();
-const PAD_DUR = Number(process.env.VOICE_PAD ?? "0.45");
+const PAD_DUR = Number(process.env.VOICE_PAD ?? "0.32");
 
 // --- OpenAI TTS -------------------------------------------------------------
 const TTS_MODEL = process.env.TTS_MODEL ?? "gpt-4o-mini-tts";
