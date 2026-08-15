@@ -26,10 +26,12 @@
 #     for the second face, where nine feminine cuts give it room, and b11 states the
 #     limit outright.
 #   - that all four renders carry a receipt. Three of the four do, and b13 says so.
-#   - that the screen explains the limit. garmentColorClause returns "" on a mismatch
-#     (deterministic.ts:445-453), so the copy reads "right for a wedding" and says
-#     nothing about colour. b11 describes that silence instead of crediting a sentence
-#     nobody wrote.
+#   - that the garment copy explains the limit. garmentColorClause returns "" on a
+#     mismatch (deterministic.ts:445-453), so the companion line reads only "right for a
+#     wedding". b11 therefore points at the "Why this garment" panel, which DOES rank the
+#     three factors and names the undertone as outweighed. That panel arrived in 1f1b88a
+#     on 2026-08-15; an earlier draft of b11 called the screen silent, which was true
+#     before that commit and false after it. If the panel is ever removed, b11 is a lie.
 
 # ACT 1 — Why this exists (target 0:00–0:24)
 b01-why | Most try-on demos stop at "here is a garment on you." But before a wedding I want three things in one place: what to do about my skin, what to wear for my colouring, and where to buy all of it.
@@ -46,7 +48,7 @@ b07-colour | YouCam Skin-Tone reads the real colour of this face: undertone, dep
 b08-tryon | Apparel Try-On puts the Slate Blue three-piece on this exact photo, and Photo Lighting relights that same photo for the evening.
 b09-countdown | The countdown changes in kind with the date. Three weeks out it front-loads actives; the night before it stops them and switches to hydration.
 b10-second-face | Here is where the two halves meet. A second face reads cool, and the colour read has nine feminine cuts to choose among — so it picks a cool one, the Sky Wrap Maxi, rendered on her own photo.
-b11-honest-limit | On the first face it cannot. One masculine cut exists in this wardrobe, so formality decides — and the copy just reads "right for a wedding", with no colour reasoning at all. Silence, where there is nothing true to say.
+b11-honest-limit | On the first face it cannot — and the board says why, in its own words. Occasion, decisive. The cut, as you chose it. And YouCam's warm undertone, outweighed, because the one masculine cut in this wardrobe flatters cool.
 
 # ACT 4 — The self-catch (target 1:52–2:24)
 b12-refuse | Now the part demos skip. This face has no captured relight, so the panel says so instead of borrowing one. Renders are keyed to the person they depict, and a test fails if a substitute ever comes back.
@@ -55,4 +57,4 @@ b14-verify | This endpoint replays the real task IDs behind those renders at zer
 
 # ACT 5 — How it is built, and the close (target 2:24–2:50)
 b15-engines | Two engines share one event stream. This run is the rule engine — no model key needed. Unlocked, GPT orchestrates the same APIs as tools; if it stalls, the rule engine finishes and says so out loud.
-b16-close | A hundred and eighteen tests, one of which fails if a render ever claims a receipt it cannot match. It is live, it is open, and free to look at. Aphrodite — Skin AI and try-on, in one occasion.
+b16-close | A hundred and twenty-six tests, one of which fails if a render ever claims a receipt it cannot match. It is live, it is open, and free to look at. Aphrodite — Skin AI and try-on, in one occasion.

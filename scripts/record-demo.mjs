@@ -362,6 +362,19 @@ await record("b04-run", 15_000, async () => {
   await glideTo("Skin-prep countdown", 4000);
 });
 
+// With ONLY set, b03/b04 are skipped — and with them the clicks that drive the wedding
+// run, so every board beat below would have only the landing page to frame. The board
+// beats therefore drive the run themselves in that case. (Unguarded this would double
+// the run on a full pass.) Demo mode, so zero units either way.
+const WEDDING_BOARD_BEATS = [
+  "b05-board", "b06-skin", "b07-colour", "b08-tryon", "b09-countdown",
+  "b11-honest-limit", "b13-ledger", "b15-engines", "b16-close",
+];
+if (ONLY && WEDDING_BOARD_BEATS.includes(ONLY)) {
+  await goto(BASE);
+  await drive("Wedding · full-body");
+}
+
 await record("b05-board", 17_000, async () => {
   await glide(0, 2500);
   await glideTo("Shop the look", 12_000);
@@ -395,11 +408,16 @@ await record("b09-countdown", 15_000, async () => {
 });
 
 // The honest limit: the companion line that says nothing about colour.
+// The "Why this garment" panel (added 1f1b88a) ranks the three factors and names the
+// undertone as outweighed. It is the strongest honesty artifact on the wedding path, so
+// the beat frames THAT and not the companion sentence, which only says "right for a
+// wedding". No fallback chain: if the panel is gone, this beat must fail rather than
+// frame something else while the voice quotes it.
 await record("b11-honest-limit", 21_000, async () => {
-  await glideTo("right for a wedding", 6000).catch(() => glideTo("I'd put you in the", 6000));
-  await sleep(5000);
-  await glideTo("Shop the look", 6000);
-  await sleep(2000);
+  await glideTo("WHY THIS GARMENT", 6000, 0.2);
+  await sleep(7000);
+  await glideTo("YouCam undertone", 4000, 0.3);
+  await sleep(3000);
 });
 
 // ===== ACT 4 — the ledger, on the wedding board ===========================

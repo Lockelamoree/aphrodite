@@ -20,7 +20,7 @@ claiming "45 Vitest tests" against a measured 89.
 
 | Claim | Value | How it was measured | When | Appears in |
 |---|---|---|---|---|
-| Test suite | **117 tests in 12 files, all passing** | `npm test` (vitest 4.1.10) — "Test Files 12 passed (12), Tests 117 passed (117)" | 2026-08-12 | README "Testing", devpost "Hardened boundary" |
+| Test suite | **126 tests in 12 files, all passing** | `npm test` (vitest 4.1.10) — "Test Files 12 passed (12), Tests 126 passed (126)" | 2026-08-15 | README "Testing", devpost "Hardened boundary" |
 | Type check | clean, exit 0 | `npx tsc --noEmit` | 2026-08-10 | README, devpost |
 | Lint | clean, exit 0, no output | `npm run lint` (eslint) | 2026-08-10 | README, devpost |
 | Build | succeeds, 8 routes emitted | `npm run build` | 2026-08-10 | README, devpost |
