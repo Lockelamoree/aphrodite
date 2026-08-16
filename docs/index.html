@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Aphrodite — how it works, and how to check it</title>
+<meta name="description" content="One occasion and one selfie become a skin plan, a colour read, an outfit rendered on your own photo, and a priced basket — and every claim on this page is checkable without trusting me.">
+<!-- One scroll, self-contained. Every terminal block below is a verbatim
+     capture; screenshots are raw UI captures with no burned-in captions. -->
+<style>
+  :root{
+    --bg: #fdf7f9;
+    --panel: #ffffff;
+    --ink: #1a1014;
+    --muted: #6d5a61;
+    --line: #ecd9e0;
+    --accent: #aa4467;
+    --accent-2: #46587c;
+    --heading-font: Georgia, 'Times New Roman', serif;
+    --body-font: system-ui, -apple-system, 'Segoe UI', Arial, sans-serif;
+    --mono-font: ui-monospace, 'Cascadia Code', Consolas, monospace;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{background:var(--bg);color:var(--ink);font-family:var(--body-font);
+    line-height:1.55;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+  .wrap{max-width:1080px;margin:0 auto;padding:0 24px}
+  a{color:var(--accent);text-decoration:none}
+  a:hover{text-decoration:underline}
+  code,kbd{font-family:var(--mono-font);font-size:.86em}
+
+  nav{position:sticky;top:0;z-index:20;backdrop-filter:blur(8px);
+    background:color-mix(in srgb, var(--bg) 82%, transparent);
+    box-shadow:inset 0 -1px 0 var(--line)}
+  .nav-in{max-width:1080px;margin:0 auto;padding:13px 24px;display:flex;
+    align-items:center;justify-content:space-between;gap:16px}
+  .brand{display:flex;align-items:center;gap:12px;font-family:var(--mono-font);
+    font-size:15px;letter-spacing:.18em;text-transform:uppercase}
+  .mark{display:grid;place-items:center;width:32px;height:32px;
+    box-shadow:inset 0 0 0 2px var(--accent);color:var(--accent);
+    font-weight:800;font-size:14px;letter-spacing:0}
+  .nav-links{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .btn{font-family:var(--mono-font);font-size:12.5px;letter-spacing:.08em;
+    text-transform:uppercase;padding:9px 15px;color:var(--ink);
+    box-shadow:inset 0 0 0 1.5px var(--line);border-radius:2px;white-space:nowrap}
+  .btn:hover{box-shadow:inset 0 0 0 1.5px var(--accent);color:var(--accent);
+    text-decoration:none}
+  .btn.fill{background:var(--accent);color:#fff;font-weight:700;box-shadow:none}
+
+  header.hero{padding:78px 0 60px}
+  .kick{font-family:var(--mono-font);font-size:13px;font-weight:700;
+    letter-spacing:.18em;text-transform:uppercase;color:var(--accent);
+    margin-bottom:22px}
+  h1{font-family:var(--heading-font);font-weight:400;
+    font-size:clamp(42px,7.4vw,86px);line-height:.96;letter-spacing:-.03em;
+    max-width:16ch}
+  h1 em{color:var(--accent);font-style:normal}
+  .sub{margin-top:26px;max-width:62ch;font-size:clamp(16px,2vw,19px)}
+  .sub + .sub{margin-top:16px;font-size:16px;color:var(--muted)}
+  .cta{margin-top:34px;display:flex;gap:12px;flex-wrap:wrap}
+  .cta .btn{font-size:13px;padding:13px 20px}
+  .stats{margin-top:52px;display:grid;grid-template-columns:repeat(2,1fr);
+    box-shadow:inset 1px 1px 0 var(--line)}
+  @media(min-width:640px){.stats{grid-template-columns:repeat(4,1fr)}}
+  .stats div{padding:20px 22px;box-shadow:inset -1px -1px 0 var(--line)}
+  .stats b{display:block;font-family:var(--heading-font);font-size:38px;
+    color:var(--accent);font-weight:400;line-height:1}
+  .stats span{display:block;margin-top:7px;font-family:var(--mono-font);
+    font-size:11.5px;letter-spacing:.09em;text-transform:uppercase;
+    color:var(--muted)}
+
+  section{padding:56px 0;box-shadow:inset 0 1px 0 var(--line)}
+  .eyebrow{font-family:var(--mono-font);font-size:12px;font-weight:700;
+    letter-spacing:.17em;text-transform:uppercase;color:var(--accent-2);
+    margin-bottom:14px}
+  .eyebrow.alt{color:var(--accent)}
+  h2{font-family:var(--heading-font);font-weight:400;
+    font-size:clamp(28px,4.4vw,44px);line-height:1.05;letter-spacing:-.02em;
+    max-width:22ch}
+  .lead{margin-top:18px;max-width:64ch;font-size:17px}
+  .lead.small{font-size:15.5px;color:var(--muted)}
+
+  .term{margin-top:22px;border-radius:7px;overflow:hidden;background:#241a1f;
+    box-shadow:inset 0 0 0 1px #3a2c33}
+  .term-bar{display:flex;align-items:center;gap:8px;padding:10px 14px;
+    font-family:var(--mono-font);font-size:12px;color:#b39aa5;
+    box-shadow:inset 0 -1px 0 #3a2c33}
+  .term pre{margin:0;padding:16px 18px;overflow-x:auto;color:#f2e6eb;
+    font-family:var(--mono-font);font-size:12.8px;line-height:1.62}
+  .term pre .ok{color:#7fd0a2;font-weight:700}
+  .term pre .bad{color:#ff9d7a;font-weight:700}
+  .term pre .dim{color:#b39aa5}
+
+  .gallery{display:grid;gap:26px;margin-top:26px;grid-template-columns:1fr}
+  @media(min-width:860px){.gallery{grid-template-columns:1fr 1fr}}
+  figure img{width:100%;height:auto;display:block;border-radius:6px;
+    background:#fff;box-shadow:0 0 0 1px var(--line)}
+  figcaption{margin-top:11px;font-family:var(--mono-font);font-size:12px;
+    letter-spacing:.03em;color:var(--muted)}
+
+  .note{margin-top:26px;padding:16px 18px;outline:1px dashed var(--line);
+    outline-offset:-1px;border-radius:6px;font-size:14px;color:var(--muted)}
+  .note b{color:var(--ink);font-weight:600}
+
+  .video-slot{margin-top:26px;aspect-ratio:16/9;display:grid;
+    place-items:center;border-radius:7px;background:var(--panel);
+    box-shadow:inset 0 0 0 1px var(--line)}
+  .video-slot iframe{width:100%;height:100%;border:0;border-radius:7px}
+
+  footer{box-shadow:inset 0 1px 0 var(--line);padding:44px 0 66px;margin-top:20px}
+  .foot{display:flex;flex-wrap:wrap;gap:26px;justify-content:space-between;
+    align-items:flex-start}
+  .foot .links{display:flex;flex-wrap:wrap;gap:9px}
+  .foot .tag{font-family:var(--mono-font);font-size:12px;letter-spacing:.1em;
+    text-transform:uppercase;color:var(--muted);text-align:right}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-in">
+    <span class="brand"><span class="mark">A</span> Aphrodite</span>
+    <span class="nav-links">
+      <a class="btn" href="#proof">Proof</a>
+      <a class="btn" href="#verify">Verify it yourself</a>
+      <a class="btn" href="#judge">Judge mode</a>
+      <a class="btn" href="https://github.com/Lockelamoree/aphrodite">Source</a>
+      <a class="btn fill" href="https://aphrodite.max-gutowski.de">Try the demo &rarr;</a>
+    </span>
+  </div>
+</nav>
+
+<header class="hero wrap">
+  <p class="kick">Skin AI + Apparel VTO, fused · built on the YouCam API</p>
+  <h1>One occasion. One selfie. <em>The whole answer.</em></h1>
+  <p class="sub">Before a wedding or an interview I want three things answered in one place: what to do about my skin between now and the day, what to wear for my colouring, and where to buy it. Aphrodite answers all three from a single photo — the same YouCam skin read that drives the prep countdown also feeds the colour profile that picks the garment that gets rendered onto you.</p>
+  <p class="sub">This page shows how it works — and lets you check every claim yourself, without taking my word for it. A render is a claim about whose face is in it, so the app refuses to show you a render of anyone who isn't you.</p>
+  <div class="cta">
+    <a class="btn fill" href="https://aphrodite.max-gutowski.de">Try the live demo &rarr;</a>
+    <a class="btn" href="https://github.com/Lockelamoree/aphrodite">View the source</a>
+  </div>
+  <div class="stats">
+    <div><b>4</b><span>YouCam APIs in one run</span></div>
+    <div><b>~4.5&thinsp;s</b><span>full loop, demo mode</span></div>
+    <div><b>0</b><span>API units to look</span></div>
+    <div><b>126</b><span>tests, all passing</span></div>
+  </div>
+</header>
+
+<section class="wrap" id="proof">
+  <p class="eyebrow">Proof, not promises</p>
+  <h2>The provider's own answers, committed — failures included.</h2>
+  <p class="lead">Every render in the demo is a real YouCam capture of the face it is shown on, and three of the four carry a receipt in the repo with Perfect Corp's own task id, poll envelopes, and the sha256 of the returned bytes — the fourth, the landing hero, predates the receipt harness and the code says so instead of borrowing one. The strongest evidence isn't a success — it's that the receipts keep the failures too. This one is the live API rejecting our own bundled sample photo:</p>
+
+  <div class="term">
+    <div class="term-bar"><span>hackathon/receipts/001/receipt.json (excerpt) — the provider rejecting our own flagship sample, kept rather than hidden</span></div>
+<pre>"feature": "skin_analysis",
+"taskEndpoint": "/s2s/v2.1/task/skin-analysis",
+"taskId": "c7T3vNWgHHYWcLggioP64zfd0hdmoNT1O6zb356KzpFHOKctZv74OGxvIFr4TgWdZ1Dw5stRx3QX_3QtFuxIQ_pW0L5pGgwoOlVxfElKXLk",
+"pollEnvelopes": [
+  { "status": 200, "data": { "error": null, "results": null, "task_status": "running" } },
+  { "status": 200, "data": {
+      <span class="bad">"error": "error_src_face_too_small"</span>,
+      "error_message": "The face area in the uploaded image is too small", ...</pre>
+  </div>
+
+  <div class="term">
+    <div class="term-bar"><span>GET https://aphrodite.max-gutowski.de/healthz — live state, no key needed (excerpt)</span></div>
+<pre>{
+  "status": "ok",
+  "public_demo_mode": true,
+  <span class="ok">"live_runs_used": 2,
+  "live_runs_budget": 8,</span>
+  "garments": 11,
+  "skincare_skus": 17,
+  "youcam_apis_declared": 8,
+  <span class="ok">"youcam_apis_rendering": 4</span>,
+  "youcam": "key_present_unverified",
+  "youcam_reason": "key present; not probed because every YouCam task call costs units"
+}</pre>
+  </div>
+
+  <p class="lead small">The counts are honest on purpose: 8 endpoints declared, 4 rendering on the path you can drive. The other four return an honest empty state instead of an image — the table in the <a href="https://github.com/Lockelamoree/aphrodite#what-is-wired-versus-what-renders">README</a> names each one and why.</p>
+  <div class="note"><b>Honesty note.</b> Every figure on this page maps to a captured artifact in the repo. Anything not measured is labelled "not yet measured" — here, in the README, and in the submission copy.</div>
+</section>
+
+<section class="wrap" id="gallery">
+  <p class="eyebrow alt">The real interface</p>
+  <h2>What you actually see.</h2>
+  <div class="gallery">
+    <figure>
+      <img src="img/02-apparel-vto.jpg" alt="The wedding sample photo with the Slate Blue Three-Piece Suit rendered onto it by the YouCam Apparel VTO API, shown beside the original photo" loading="lazy">
+      <figcaption><b>Rendered on the photo, not described</b> — the landing's before/after: a real YouCam Apparel Try-On render beside the exact photo it was made from. Same person, same wall, same light.</figcaption>
+    </figure>
+    <figure>
+      <img src="img/11-why-this-garment.jpg" alt="The 'Why this garment' panel listing three ranked factors: occasion decisive, the cut you chose, and the YouCam undertone marked as outweighed" loading="lazy">
+      <figcaption><b>The reasoning, printed</b> — the board ranks the factors that picked the garment, including the run where the YouCam undertone was outweighed by occasion formality. It says so instead of pretending.</figcaption>
+    </figure>
+    <figure>
+      <img src="img/03-skin-scores.jpg" alt="Skin health scores panel showing ten YouCam Skin Analysis concerns scored 0 to 100, each with a text status label" loading="lazy">
+      <figcaption><b>Ten scores, lowest first</b> — YouCam Skin Analysis drives the skincare countdown, and the plan leads with the weakest areas rather than the flattering ones.</figcaption>
+    </figure>
+    <figure>
+      <img src="img/07-provenance-ledger.jpg" alt="The provenance ledger naming the four Perfect Corp APIs that produced the samples, with the sentence: nothing was called just now" loading="lazy">
+      <figcaption><b>The ledger is blunt</b> — it names which YouCam API produced each result, and states that nothing was called during your visit. Three of the four renders are byte-identical to a committed receipt.</figcaption>
+    </figure>
+  </div>
+</section>
+
+<section class="wrap" id="verify">
+  <p class="eyebrow">Verify it yourself — no account, no key</p>
+  <h2>Three commands, one hash, three ways.</h2>
+  <p class="lead">The bytes the live site serves, the file committed in the repo, and the hash inside the Perfect Corp receipt are the same object. That chain can't be faked without real provider calls — and you can reproduce it from any shell:</p>
+  <div class="term">
+    <div class="term-bar"><span>run this — captured output below, last verified logged-out 2026-08-16</span></div>
+<pre><span class="dim">$</span> curl -s https://aphrodite.max-gutowski.de/fixtures/finish-wedding.jpg | sha256sum
+<span class="ok">2823726249d36b5825c0b86ad0b1a3953e34461cd7e3208d25948262415ddf87</span>  -
+<span class="dim">$</span> sha256sum hackathon/receipts/002/photo_lighting.render.jpg
+<span class="ok">2823726249d36b5825c0b86ad0b1a3953e34461cd7e3208d25948262415ddf87</span>  hackathon/receipts/002/photo_lighting.render.jpg
+<span class="dim">$</span> grep -o '"sha256": "[a-f0-9]*"' hackathon/receipts/002/receipt.json
+"sha256": "<span class="ok">2823726249d36b5825c0b86ad0b1a3953e34461cd7e3208d25948262415ddf87</span>"</pre>
+  </div>
+  <p class="lead small">A test in the suite (<code>tests/fixture-identity.test.ts</code>) fails if any served render ever stops matching its receipt — so this page can't silently rot either.</p>
+</section>
+
+<section class="wrap" id="judge">
+  <p class="eyebrow alt">Judge mode — the paths that spend money</p>
+  <h2>Free to look. A code to spend.</h2>
+  <p class="lead">Everything above is the keyless demo: captured YouCam renders, zero API units per visit, and the page says so on screen. Two paths cost real money and sit behind an access code — <b>live YouCam renders of your own photo</b>, and the <b>GPT-driven agentic engine</b> that orchestrates the APIs as tools. Judges get the code in the Devpost testing field and redeem it at <a href="https://aphrodite.max-gutowski.de/unlock">/unlock</a>; it becomes a 12-hour cookie, and unlocked runs are metered by a ledger you can read at <a href="https://aphrodite.max-gutowski.de/healthz">/healthz</a>. When the budget is gone the app keeps working on captured samples and states that on screen — it never passes one off as the other.</p>
+  <p class="lead small">With the cookie, <code>/api/dev/verify</code> replays the full request/response contract from the committed receipts at zero cost — real task ids, the four-step sequence, the hashes, and the two calls that failed. Append <code>&amp;spend=1&amp;image=&lt;url&gt;</code> and it makes real calls instead, metered by the same ledger.</p>
+</section>
+
+<!-- Demo video: paste the YouTube embed once uploaded, then remove this comment.
+<section class="wrap" id="video">
+  <p class="eyebrow alt">The demo video</p>
+  <h2>2:44 — product on screen by 0:20.</h2>
+  <div class="video-slot">
+    <iframe src="https://www.youtube-nocookie.com/embed/VIDEO_ID"
+            title="Aphrodite demo video"
+            allow="encrypted-media; picture-in-picture" allowfullscreen></iframe>
+  </div>
+</section>
+-->
+
+<footer class="wrap">
+  <div class="foot">
+    <div class="links">
+      <a class="btn fill" href="https://aphrodite.max-gutowski.de">Try the live demo &rarr;</a>
+      <a class="btn" href="https://github.com/Lockelamoree/aphrodite">Source (MIT)</a>
+      <a class="btn" href="https://github.com/Lockelamoree/aphrodite#readme">README</a>
+    </div>
+    <div class="tag">Built on the YouCam / Perfect Corp API<br>aphrodite.max-gutowski.de</div>
+  </div>
+</footer>
+
+</body>
+</html>
