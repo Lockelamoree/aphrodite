@@ -24,7 +24,8 @@ No signup, no key, nothing to install. The bundled *"Wedding · full-body"* samp
 the complete loop. What you see is **captured YouCam renders**, and the announcement bar
 and the provenance ledger both say so — nothing here passes a sample off as a live call.
 State is checkable from outside at
-[`/healthz`](https://aphrodite.max-gutowski.de/healthz).
+[`/healthz`](https://aphrodite.max-gutowski.de/healthz). A one-page overview with the
+proof artifacts inline: **https://lockelamoree.github.io/aphrodite/**.
 
 **Live renders and the LLM engine are behind a code**, because both spend money. The
 judging code is in the *Testing instructions* field of this submission; redeem it at

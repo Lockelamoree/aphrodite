@@ -16,7 +16,7 @@ Most virtual try-on demos stop at "here's a garment on you." I wanted the thing 
 | **0** API units to look | every publicly reachable path is fixture-served, and the page says so |
 | **11 / 17** catalogue | garments / skincare SKUs, cross-checkable at [`/healthz`](https://aphrodite.max-gutowski.de/healthz) |
 
-What you see there are **captured YouCam renders**, not live ones, and the page states that in the announcement bar and again in the provenance ledger. Live renders and the LLM engine sit behind an access code, because both spend money — see [Judge mode](#judge-mode). Every number above resolves to a measurement in [`hackathon/CLAIM_PROOF_MAP.md`](hackathon/CLAIM_PROOF_MAP.md).
+What you see there are **captured YouCam renders**, not live ones, and the page states that in the announcement bar and again in the provenance ledger. Live renders and the LLM engine sit behind an access code, because both spend money — see [Judge mode](#judge-mode). Every number above resolves to a measurement in [`hackathon/CLAIM_PROOF_MAP.md`](hackathon/CLAIM_PROOF_MAP.md). There is also a one-page overview with the proof artifacts inline: **https://lockelamoree.github.io/aphrodite/**.
 
 ## What it does
 
