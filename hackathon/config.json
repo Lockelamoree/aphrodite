@@ -153,7 +153,8 @@
     "The wardrobe is 9 feminine cuts to 1 masculine and 1 neutral, so any 'no preference' default resolves feminine in practice. Until the catalog is widened, the UI must keep ASKING for the cut rather than defaulting — a default here is a guess about the person, and on 2026-08-09 it was rendering the bundled masculine sample in an evening gown with earrings and heels in the basket.",
     "Passing a captured fixture render off as a live YouCam render. Mitigated by a demo flag on the mode event that makes the UI and the print footer say 'demo mode · sample renders · 0 API units'.",
     "Claiming a colour or formality match the wardrobe cannot actually satisfy — a 'tone shift' announced when the catalogue has nothing in that direction.",
-    "Skin scores read as medical or worth-based judgements. Scores are health-framed, no-shame wording, and the lowest score is a 'priority area', not a defect."
+    "Skin scores read as medical or worth-based judgements. Scores are health-framed, no-shame wording, and the lowest score is a 'priority area', not a defect.",
+    "A judge access code leaked into this public repository: the review-003 panel quoted it in hackathon/reviews/003-*, committed 2026-08-14 and readable on raw.githubusercontent.com. Found 2026-08-16 while checking that the code had NOT reached the public Devpost page. Both codes and APHRODITE_AUTH_SECRET were rotated on the host the same hour, which also invalidated every cookie minted with the leaked code; the old code now returns /unlock?error=1, verified. The files are redacted, but git history still contains the dead string. Cause: the code was passed to the judging panel as liveAccess and the agents echoed it into their findings. Rule that follows: anything handed to a subagent can end up in its report, so a secret must never be part of a prompt whose output gets committed."
   ],
   "vocabulary": {
     "use": [
