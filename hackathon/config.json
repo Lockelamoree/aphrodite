@@ -282,7 +282,8 @@
     "allocation": "UNDECIDED as of 2026-08-10 — the operator splits the 584 after review 002. Candidates: judge-facing live runs (APHRODITE_LIVE_RUN_BUDGET, currently 8), a studio/menswear fixture capture session, a video re-record.",
     "fixtureDefault": "YOUCAM_FIXTURES=1 is the committed default and costs zero units.",
     "unitsSpentLog": [
-      "2026-08-12: 2 tasks (receipts/002 lighting on full-body.jpg, receipts/003 cloth-v3 on selfie-2.jpg), both success"
+      "2026-08-12: 2 tasks (receipts/002 lighting on full-body.jpg, receipts/003 cloth-v3 on selfie-2.jpg), both success",
+      "2026-08-15/16: 2 live runs claimed through the app's ledger (0/8 -> 2/8), both operator test runs against the deployed instance with the judge cookie, confirmed by the operator on 2026-08-16. Not anonymous traffic: the public path cannot spend. Roughly 4-5 units each."
     ]
   },
   "llm": {
