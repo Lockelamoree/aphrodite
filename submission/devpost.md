@@ -11,6 +11,8 @@
 
 **→ https://aphrodite.max-gutowski.de**
 
+**Demo video (2:44):** https://youtu.be/ucrsgkAdgyE
+
 | | |
 |---|---|
 | **4** YouCam APIs chained in one run, each with a **committed receipt** | Skin Analysis → Skin-Tone → Apparel Try-On → Photo Lighting. Every render in demo mode is a real capture of the face it is shown on — `hackathon/receipts/` carries the provider's own task ids and hashes |
