@@ -1,6 +1,6 @@
 # Review 003 — 2026-08-14, pre-submission panel
 
-Ten agents at `effort: high` against `main` @ `90915ab`, the live instance and the committed
+Ten independent review passes against `main` @ `90915ab`, the live instance and the committed
 artifacts. **Zero YouCam units:** the ledger read `live_runs_used: 0` of 8 before the run and
 still reads 0/8 after. Previous review: 002 (2026-08-10, 30/50, Stage One FAIL).
 

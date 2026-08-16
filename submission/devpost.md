@@ -18,7 +18,7 @@
 | **0** API units to look | every public path is fixture-served, and the page says so on screen |
 | **126** tests in 12 files | `tsc` / `lint` / `build` green too, measured 2026-08-15 |
 | **8** APIs declared, **4** rendering on a reachable path | the honest surface — see "YouCam APIs used" below |
-| **88 s** demo video, spoken narration | inside the 1–3 min window, cut from a production build; rebuildable from `submission/narration.txt` |
+| **2:44** demo video, spoken narration | inside the 1–3 min window, cut from a production build; rebuildable from `submission/narration.txt` |
 
 No signup, no key, nothing to install. The bundled *"Wedding · full-body"* sample drives
 the complete loop. What you see is **captured YouCam renders**, and the announcement bar
@@ -94,7 +94,7 @@ The **special-category** goal — Skin AI **and** Apparel VTO fused into one exp
 
 - **Coherence across horizons.** Making the countdown differ in *kind* (weeks vs. a day out) instead of just restating scores took real rule design, and keeping every "→ product" chip resolvable to a priced basket row.
 - **Not mis-gendering the styling.** Undertone-driven selection kept defaulting to one wardrobe; fixing it meant reworking the scoring and expanding the catalog, locked down with regression tests.
-- **Honesty under demo constraints.** A render is a claim about whose face is in it, and that turned out to be the hardest constraint in the build. Captured fixtures were keyed by *kind* of garment, so an uploaded photo got a stranger's render under "Your outfit", and the board's hero image was a fourth person captioned "rendered by YouCam AI". Both were found by looking at the frames, not by reading the code. Fixtures are now keyed to the person by content fingerprint and to the garment by id; everything else refuses and says so. For two days the visible cost was that the sample path credited three APIs instead of four; then the missing relight was captured and it credits four again, each behind a render of the face it is shown on. The last of those four is a July capture that predates the receipt harness — the code says so instead of citing a receipt whose bytes differ, which is a mistake this project made and caught by hashing.
+- **Honesty under demo constraints.** A render is a claim about whose face is in it, and that turned out to be the hardest constraint in the build. Captured fixtures were keyed by *kind* of garment, so an uploaded photo got a stranger's render under "Your outfit", and the board's hero image was a fourth person captioned "rendered by YouCam AI". Both were found by looking at the frames, not by reading the code. Fixtures are now keyed to the person by content fingerprint and to the garment by id; everything else refuses and says so. For two days the visible cost was that the sample path credited three APIs instead of four; then the missing relight was captured and it credits four again, each behind a render of the face it is shown on. The last of those four is a July capture that predates the receipt harness — the code says so plainly, because I had first cited a receipt whose bytes didn't match, and only caught it by hashing.
 
 ## Accomplishments I'm proud of
 

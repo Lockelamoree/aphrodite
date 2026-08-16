@@ -173,7 +173,7 @@ instead of live ones, at zero API cost, and the page says so in the announcement
 bar and again in the provenance ledger. What an access code unlocks is only the two
 paths that spend money: real YouCam renders, and the LLM-driven engine.
 
-Two schranken, not one, because a code answers *who* may spend and not *how many
+Two gates, not one, because a code answers *who* may spend and not *how many
 times*. The YouCam free tier is finite and one full run costs four to five API
 tasks, so unlocked runs are metered by a ledger. When the budget is gone the app
 keeps working and states on screen that it fell back to captured samples — it never
@@ -257,7 +257,7 @@ npm test
 
 **126 tests in 12 files, all passing** (measured 2026-08-15). Vitest covers occasion parsing, the catalog and garment selection (including guards against mis-gendered styling), the cut preference and the catalogue's 9:1:1 shape, the access gate, the provenance ledger, request validation, rate limiting, stripping raw provider fields out of the stream, and the evidence route — including an assertion that its free mode reaches no network at all, and one that every row of the pinned API contract still matches the receipt it was transcribed from. The API route validates the request body (zod), caps payload size, and rate-limits per IP.
 
-The four gates this project holds itself to, all green as of 2026-08-10:
+The four checks I hold every change to, all green:
 
 ```bash
 npx tsc --noEmit && npm test && npm run lint && npm run build

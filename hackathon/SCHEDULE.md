@@ -61,7 +61,7 @@ Both were deliberately deferred until review 002 existed:
 - **How to split the 584 remaining YouCam units** between judge-facing live runs
   (`APHRODITE_LIVE_RUN_BUDGET`, currently 8), a fixture capture session, and a video
   re-record.
-- **Studio: merge or cut.** `claude/focused-mayer-367773` adds live hair colour,
+- **Studio: merge or cut.** `studio-live-hair-color` adds live hair colour,
   hairstyle and makeup plus a skin re-check. Cut order says it goes first; review 002
   says a second skin fixture buys more tiebreaker points for fewer units.
 
